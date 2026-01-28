@@ -1,0 +1,6 @@
+@QLBS_HostAddress = http://localhost:5110
+
+GET {{QLBS_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
