@@ -1,7 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Text;
 using QLBS.Models;
+using QLBS.Repository.Interfaces;
+using QLBS.Repository.Implementations;
+using QLBS.Services.Interfaces;
+using QLBS.Services.Implementations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,21 +16,18 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowBlazorOrigin",
         policy =>
         {
-            policy.WithOrigins("https://localhost:7241", "http://localhost:5285") // Thay bằng Port của FE_QLBS bạn đã thấy trong launchSettings
+            policy.WithOrigins("https://localhost:7241", "http://localhost:5285") 
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
 });
 
-// Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "QLCHBS API", Version = "v1" });
-
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
@@ -32,7 +35,7 @@ builder.Services.AddSwaggerGen(c =>
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
-    }); 
+    });
     c.AddSecurityRequirement(new OpenApiSecurityRequirement()
     {
         {
@@ -52,14 +55,38 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-
 builder.Services.AddDbContext<QLBSDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
+
+        ValidateIssuer = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+
+        ValidateAudience = true,
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -71,9 +98,10 @@ app.UseHttpsRedirection();
 app.UseCors("AllowBlazorOrigin");
 
 app.UseAuthentication();
-
 app.UseAuthorization();
 
 app.MapControllers();
 
 app.Run();
+
+
