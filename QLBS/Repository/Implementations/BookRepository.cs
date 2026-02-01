@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using QLBS.Data;
 using QLBS.Models;
 using QLBS.Repository.Interfaces;
 
