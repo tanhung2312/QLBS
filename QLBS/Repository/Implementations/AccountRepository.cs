@@ -82,6 +82,19 @@ namespace QLBS.Repository.Implementations
                 .FirstOrDefaultAsync(r => r.RoleName == roleName);
             return role?.RoleId;
         }
+
+        public async Task<bool> UpdateAccountOtpAsync(Account account)
+        {
+            try
+            {
+                account.UpdatedAt = DateTime.UtcNow;
+                _context.Accounts.Update(account);
+                return await _context.SaveChangesAsync() > 0;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
     }
 }
-

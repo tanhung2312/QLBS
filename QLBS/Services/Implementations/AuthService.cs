@@ -180,6 +180,71 @@ namespace QLBS.Services.Implementations
             rng.GetBytes(randomBytes);
             return Convert.ToBase64String(randomBytes);
         }
+
+        public async Task<string> ForgotPasswordAsync(string email)
+        {
+            var account = await _accountRepository.GetAccountByEmailAsync(email);
+            if (account == null)
+            {
+                return "Không tìm thấy tài khoản với email này";
+            }
+
+            var otp = new Random().Next(100000, 999999).ToString();
+
+            account.OTP = otp;
+            account.OtpExpires = DateTime.UtcNow.AddMinutes(15);
+
+            var success = await _accountRepository.UpdateAccountOtpAsync(account);
+            if (!success)
+            {
+                return "Không thể tạo mã OTP. Vui lòng thử lại";
+            }
+            return otp;
+        }
+
+        public async Task<bool> VerifyOtpAsync(VerifyOtpDto verifyOtpDto)
+        {
+            var account = await _accountRepository.GetAccountByEmailAsync(verifyOtpDto.Email);
+            if (account == null)
+            {
+                return false;
+            }
+
+            if (account.OTP == verifyOtpDto.OtpCode && account.OtpExpires > DateTime.UtcNow)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public async Task<string> ResetPasswordAsync(ResetPasswordDto resetPasswordDto)
+        {
+            var account = await _accountRepository.GetAccountByEmailAsync(resetPasswordDto.Email);
+            if (account == null)
+            {
+                return "Không tìm thấy tài khoản với email này";
+            }
+
+            if (account.OTP != resetPasswordDto.OtpCode || account.OtpExpires <= DateTime.UtcNow)
+            {
+                return "Mã OTP không hợp lệ hoặc đã hết hạn";
+            }
+
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(resetPasswordDto.NewPassword);
+
+            account.Password = hashedPassword;
+            account.OTP = null;
+            account.OtpExpires = null;
+
+            var success = await _accountRepository.UpdateAccountAsync(account);
+            if (!success)
+            {
+                return "Không thể đặt lại mật khẩu. Vui lòng thử lại";
+            }
+
+            return "Đặt lại mật khẩu thành công";
+        }
     }
 }
 

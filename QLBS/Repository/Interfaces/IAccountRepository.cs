@@ -10,5 +10,6 @@ namespace QLBS.Repository.Interfaces
         Task<bool> UpdateAccountAsync(Account account);
         Task<int> SaveChangesAsync();
         Task<int?> GetRoleIdByNameAsync(string roleName);
+        Task<bool> UpdateAccountOtpAsync(Account account);
     }
 }

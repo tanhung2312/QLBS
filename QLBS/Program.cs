@@ -8,8 +8,20 @@ using QLBS.Repository.Interfaces;
 using QLBS.Repository.Implementations;
 using QLBS.Services.Interfaces;
 using QLBS.Services.Implementations;
+using CloudinaryDotNet;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var cloudinarySection = builder.Configuration.GetSection("CloudinarySettings");
+var account = new CloudinaryDotNet.Account(
+    cloudinarySection["CloudName"],
+    cloudinarySection["ApiKey"],
+    cloudinarySection["ApiSecret"]
+);
+
+// Đăng ký Cloudinary như một Singleton hoặc Scoped
+Cloudinary cloudinary = new Cloudinary(account);
+builder.Services.AddSingleton(cloudinary);
 
 builder.Services.AddCors(options =>
 {
@@ -60,6 +72,8 @@ builder.Services.AddDbContext<QLBSDbContext>(options =>
 
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
+builder.Services.AddScoped<IUserProfileService, UserProfileService>();
 
 builder.Services.AddAuthentication(options =>
 {
