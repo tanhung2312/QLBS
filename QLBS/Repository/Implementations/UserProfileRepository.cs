@@ -31,7 +31,7 @@ namespace QLBS.Repository.Implementations
                 return false;
             }
         }
-        public async Task<UserProfile?> GetProfileByAccountIdAsync(int accountId)
+        public async Task<UserProfile?> GetProfileDetailsAsync(int accountId)
         {
             return await _context.UserProfiles
                 .AsNoTracking()

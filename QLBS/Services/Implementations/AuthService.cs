@@ -150,26 +150,47 @@ namespace QLBS.Services.Implementations
 
         private string GenerateAccessToken(Account account)
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_configuration["JwtSettings:SecretKey"] ?? "your-secret-key-minimum-32-characters-long-for-security");
+            var secretKey = _configuration["JwtSettings:SecretKey"];
+            var issuer = _configuration["JwtSettings:Issuer"];
+            var audience = _configuration["JwtSettings:Audience"];
+
+            if (string.IsNullOrEmpty(secretKey) || secretKey.Length < 32)
+            {
+                throw new InvalidOperationException("Cấu hình 'JwtSettings:SecretKey' bị thiếu hoặc quá ngắn (tối thiểu 32 ký tự).");
+            }
+
+            if (string.IsNullOrEmpty(issuer))
+            {
+                throw new InvalidOperationException("Cấu hình 'JwtSettings:Issuer' bị thiếu.");
+            }
+
+            if (string.IsNullOrEmpty(audience))
+            {
+                throw new InvalidOperationException("Cấu hình 'JwtSettings:Audience' bị thiếu.");
+            }
+
+            var key = Encoding.UTF8.GetBytes(secretKey);
 
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, account.AccountId.ToString()),
                 new Claim(ClaimTypes.Email, account.Email),
-                new Claim(ClaimTypes.Role, account.Role?.RoleName ?? QLBSRoles.Customer)
+                new Claim(ClaimTypes.Role, account.Role?.RoleName ?? QLBSRoles.Customer),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()) 
             };
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddMinutes(15),
-                Issuer = _configuration["JwtSettings:Issuer"] ?? "QLBS_API",
-                Audience = _configuration["JwtSettings:Audience"] ?? "QLBS_Client",
+                Issuer = issuer,
+                Audience = audience,
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
+            var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
+
             return tokenHandler.WriteToken(token);
         }
 
@@ -189,10 +210,19 @@ namespace QLBS.Services.Implementations
                 return "Không tìm thấy tài khoản với email này";
             }
 
-            var otp = new Random().Next(100000, 999999).ToString();
+            string otp;
 
-            account.OTP = otp;
-            account.OtpExpires = DateTime.UtcNow.AddMinutes(15);
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                var bytes = new byte[4];
+                rng.GetBytes(bytes);
+                var value = BitConverter.ToUInt32(bytes, 0);
+                var otpNumber = value % 1000000;
+                otp = otpNumber.ToString("D6");
+
+                account.OTP = otp;
+                account.OtpExpires = DateTime.UtcNow.AddMinutes(15);
+            }
 
             var success = await _accountRepository.UpdateAccountOtpAsync(account);
             if (!success)

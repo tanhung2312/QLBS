@@ -114,7 +114,7 @@ namespace QLBS.Controllers
                     return NotFound(new { message = result });
                 }
 
-                return Ok(new { message = "OTP has been sent", otp = result });
+                return Ok(new { message = "OTP đã được gửi đến email của bạn" });
             }
             catch (Exception ex)
             {

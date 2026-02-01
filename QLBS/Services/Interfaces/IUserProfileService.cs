@@ -6,7 +6,7 @@ namespace QLBS.Services.Interfaces
 {
     public interface IUserProfileService
     {
-        Task<UserProfile?> UpdateProfileAsync(int accountId, UpdateProfileDto dto);
+        Task<UserProfileDto?> UpdateProfileAsync(int accountId, UpdateProfileDto dto);
         Task<UserProfileDto?> GetUserProfileAsync(int accountId);
     }
 }

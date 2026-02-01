@@ -7,6 +7,6 @@ namespace QLBS.Repository.Interfaces
     {
         Task<UserProfile?> GetByAccountIdAsync(int accountId);
         Task<bool> UpdateProfileAsync(UserProfile profile);
-        Task<UserProfile> GetProfileByAccountIdAsync(int accountId);
+        Task<UserProfile> GetProfileDetailsAsync(int accountId);
     }
 }

@@ -14,7 +14,7 @@ namespace QLBS.Services.Implementations
             _userProfileRepository = userProfileRepository;
         }
 
-        public async Task<UserProfile?> UpdateProfileAsync(int accountId, UpdateProfileDto dto)
+        public async Task<UserProfileDto?> UpdateProfileAsync(int accountId, UpdateProfileDto dto)
         {
             var profile = await _userProfileRepository.GetByAccountIdAsync(accountId);
             if (profile == null)
@@ -23,41 +23,32 @@ namespace QLBS.Services.Implementations
             }
 
             if (!string.IsNullOrWhiteSpace(dto.FullName))
-            {
                 profile.FullName = dto.FullName;
-            }
 
             if (dto.DateOfBirth.HasValue)
-            {
                 profile.DateOfBirth = dto.DateOfBirth.Value;
-            }
 
             if (!string.IsNullOrWhiteSpace(dto.Address))
-            {
                 profile.Address = dto.Address;
-            }
 
             if (!string.IsNullOrWhiteSpace(dto.PhoneNumber))
-            {
                 profile.PhoneNumber = dto.PhoneNumber;
-            }
 
             if (!string.IsNullOrWhiteSpace(dto.AvatarUrl))
-            {
                 profile.AvatarUrl = dto.AvatarUrl;
-            }
 
             var success = await _userProfileRepository.UpdateProfileAsync(profile);
             if (!success)
             {
                 return null;
             }
-            return profile;
+
+            return await GetUserProfileAsync(accountId);
         }
 
         public async Task<UserProfileDto?> GetUserProfileAsync(int accountId)
         {
-            var profile = await _userProfileRepository.GetProfileByAccountIdAsync(accountId);
+            var profile = await _userProfileRepository.GetProfileDetailsAsync(accountId);
 
             if (profile == null)
             {
