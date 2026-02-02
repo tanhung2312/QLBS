@@ -31,7 +31,7 @@ namespace QLBS.Models
 
         public DbSet<DiscountCode> DiscountCodes { get; set; }
 
-        public DbSet<OrderTable> Orders { get; set; }
+        public DbSet<OrderTable> OrderTables { get; set; }
         public DbSet<OrderDetail> OrderDetails { get; set; }
 
         public DbSet<Supplier> Suppliers { get; set; }

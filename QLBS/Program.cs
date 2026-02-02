@@ -9,6 +9,7 @@ using QLBS.Repository.Implementations;
 using QLBS.Services.Interfaces;
 using QLBS.Services.Implementations;
 using CloudinaryDotNet;
+using QLBS.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -83,6 +84,14 @@ builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<IDiscountRepository, DiscountRepository>();
 builder.Services.AddScoped<IDiscountService, DiscountService>();
+builder.Services.AddScoped<ICartRepository, CartRepository>();
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IVnPayService, VnPayService>();
+builder.Services.Configure<VnPaySettings>(builder.Configuration.GetSection("VnPay"));
+builder.Services.AddHttpClient<IGhnService, GhnService>();
+builder.Services.Configure<GhnSettings>(builder.Configuration.GetSection("GhnSettings"));
 
 builder.Services.AddAuthentication(options =>
 {
@@ -97,7 +106,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
 
-        ValidateIssuer = true,
+        ValidateIssuer = true,  
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
 
         ValidateAudience = true,
