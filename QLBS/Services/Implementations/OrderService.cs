@@ -217,5 +217,79 @@ namespace QLBS.Services.Implementations
                 return false;
             }
         }
+
+        public async Task<IEnumerable<OrderHistoryDto>> GetOrderHistoryAsync(int accountId)
+        {
+            var profile = await _userProfileRepository.GetByAccountIdAsync(accountId);
+            if (profile == null) return new List<OrderHistoryDto>();
+
+            var orders = await _orderRepository.GetOrdersByUserIdAsync(profile.UserId);
+
+            return orders.Select(o =>
+            {
+                var payment = o.Payments.FirstOrDefault();
+                return new OrderHistoryDto
+                {
+                    OrderId = o.OrderId,
+                    OrderDate = o.OrderDate,
+                    TotalAmount = o.TotalAmount,
+                    TotalQuantity = o.TotalQuantity,
+                    OrderStatus = o.OrderStatus,
+                    OrderStatusName = GetOrderStatusName(o.OrderStatus),
+                    GhnOrderCode = o.GhnOrderCode,
+                    PaymentMethod = payment != null ? PaymentMethodConstants.GetMethodName(payment.PaymentMethodId) : "N/A",
+                    PaymentStatus = payment != null && payment.PaymentStatus == PaymentStatusConstants.Success ? "Đã thanh toán" : "Chưa thanh toán"
+                };
+            });
+        }
+
+        public async Task<OrderDetailResponseDto?> GetOrderDetailAsync(int accountId, int orderId)
+        {
+            var profile = await _userProfileRepository.GetByAccountIdAsync(accountId);
+            if (profile == null) return null;
+
+            var order = await _orderRepository.GetByIdAsync(orderId);
+
+            if (order == null || order.UserId != profile.UserId) return null;
+
+            var payment = order.Payments.FirstOrDefault();
+
+            return new OrderDetailResponseDto
+            {
+                OrderId = order.OrderId,
+                OrderDate = order.OrderDate,
+                TotalAmount = order.TotalAmount,
+                ShippingFee = order.ShippingFee,
+                ReceiverName = order.ReceiverName,
+                ReceiverPhone = order.ReceiverPhone,
+                ShippingAddress = order.ShippingAddress,
+                GhnOrderCode = order.GhnOrderCode,
+                OrderStatusName = GetOrderStatusName(order.OrderStatus),
+                PaymentMethod = payment != null ? PaymentMethodConstants.GetMethodName(payment.PaymentMethodId) : "N/A",
+                PaymentStatus = payment != null && payment.PaymentStatus == PaymentStatusConstants.Success ? "Đã thanh toán" : "Chưa thanh toán",
+                Items = order.OrderDetails.Select(d => new OrderItemDto
+                {
+                    BookId = d.BookId,
+                    BookTitle = d.Book.BookTitle,
+                    Quantity = d.Quantity,
+                    UnitPrice = d.UnitPrice,
+                    BookImageUrl = d.Book.BookImages?.FirstOrDefault(img => img.IsCover)?.URL
+                                   ?? d.Book.BookImages?.FirstOrDefault()?.URL
+                }).ToList()
+            };
+        }
+
+        private string GetOrderStatusName(byte status)
+        {
+            return status switch
+            {
+                OrderStatusConstants.Pending => "Chờ xử lý",
+                OrderStatusConstants.Processing => "Đang giao hàng",
+                OrderStatusConstants.Confirmed => "Đã xác nhận",
+                OrderStatusConstants.Completed => "Hoàn thành",
+                OrderStatusConstants.Cancelled => "Đã hủy",
+                _ => "Không xác định"
+            };
+        }
     }
 }

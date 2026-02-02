@@ -10,5 +10,6 @@ namespace QLBS.Repository.Interfaces
         Task UpdatePaymentStatusAsync(int orderId, byte status, string? transactionCode);
         Task UpdateOrderGhnCodeAsync(int orderId, string ghnCode);
         Task CancelOrderAndRestoreStockAsync(int orderId);
+        Task<IEnumerable<OrderTable>> GetOrdersByUserIdAsync(int userId);
     }
 }

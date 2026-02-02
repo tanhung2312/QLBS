@@ -57,5 +57,46 @@ namespace QLBS.Controllers
                 return StatusCode(500, new { message = ex.Message });
             }
         }
+
+        [HttpGet("history")]
+        [Authorize]
+        public async Task<IActionResult> GetHistory()
+        {
+            try
+            {
+                var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (claim == null || !int.TryParse(claim.Value, out int accountId)) return Unauthorized();
+
+                var result = await _orderService.GetOrderHistoryAsync(accountId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Get History Error");
+                return StatusCode(500, new { message = "Lỗi hệ thống" });
+            }
+        }
+
+        [HttpGet("{id}")]
+        [Authorize]
+        public async Task<IActionResult> GetDetail(int id)
+        {
+            try
+            {
+                var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (claim == null || !int.TryParse(claim.Value, out int accountId)) return Unauthorized();
+
+                var result = await _orderService.GetOrderDetailAsync(accountId, id);
+
+                if (result == null) return NotFound(new { message = "Không tìm thấy đơn hàng hoặc bạn không có quyền truy cập." });
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Get Order Detail Error");
+                return StatusCode(500, new { message = "Lỗi hệ thống" });
+            }
+        }
     }
 }

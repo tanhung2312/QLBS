@@ -99,8 +99,10 @@ namespace QLBS.Repository.Implementations
         public async Task<OrderTable?> GetByIdAsync(int id)
         {
             return await _context.OrderTables
-                .Include(o => o.OrderDetails).ThenInclude(d => d.Book)
                 .Include(o => o.Payments)
+                .Include(o => o.OrderDetails)
+                    .ThenInclude(od => od.Book)
+                        .ThenInclude(b => b.BookImages)
                 .FirstOrDefaultAsync(o => o.OrderId == id);
         }
 
@@ -135,6 +137,16 @@ namespace QLBS.Repository.Implementations
                 await transaction.RollbackAsync();
                 throw;
             }
+        }
+
+        public async Task<IEnumerable<OrderTable>> GetOrdersByUserIdAsync(int userId)
+        {
+            return await _context.OrderTables
+                .AsNoTracking()
+                .Include(o => o.Payments)
+                .Where(o => o.UserId == userId)
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
         }
     }
 }

@@ -7,5 +7,7 @@ namespace QLBS.Services.Interfaces
     {
         Task<OrderResultDto?> CreateOrderAsync(int accountId, CreateOrderDto dto, HttpContext context);
         Task<bool> HandlePaymentCallback(PaymentResponseModel model);
+        Task<IEnumerable<OrderHistoryDto>> GetOrderHistoryAsync(int accountId);
+        Task<OrderDetailResponseDto?> GetOrderDetailAsync(int accountId, int orderId);
     }
 }
