@@ -70,6 +70,7 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddDbContext<QLBSDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddSignalR();
 
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -92,6 +93,8 @@ builder.Services.AddScoped<IVnPayService, VnPayService>();
 builder.Services.Configure<VnPaySettings>(builder.Configuration.GetSection("VnPay"));
 builder.Services.AddHttpClient<IGhnService, GhnService>();
 builder.Services.Configure<GhnSettings>(builder.Configuration.GetSection("GhnSettings"));
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
 
 builder.Services.AddAuthentication(options =>
 {
