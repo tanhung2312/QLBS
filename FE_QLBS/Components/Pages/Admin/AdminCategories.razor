@@ -1,0 +1,1847 @@
+﻿@page "/admin/categories"
+@rendermode InteractiveServer
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<PageTitle>Quản lý Danh mục - BookStore Admin</PageTitle>
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    :root {
+        --bg: #F4F2EE;
+        --surface: #FFFFFF;
+        --surface2: #FAFAF8;
+        --brown: #6B4C2A;
+        --amber: #D4860B;
+        --amber-lt: #F5A623;
+        --amber-dim: rgba(212,134,11,0.10);
+        --ink: #1A1208;
+        --text-pri: #1A1208;
+        --text-sec: #6B5A46;
+        --text-muted: #A8947A;
+        --border: #E8E2D9;
+        --border2: #DDD7CE;
+        --sidebar-w: 252px;
+        --green: #2E7D52;
+        --green-dim: rgba(46,125,82,0.09);
+        --red: #C0392B;
+        --red-dim: rgba(192,57,43,0.09);
+        --blue: #2563A8;
+        --blue-dim: rgba(37,99,168,0.09);
+        --purple: #7B3F7B;
+        --purple-dim: rgba(123,63,123,0.09);
+        --shadow-sm: 0 1px 3px rgba(26,18,8,0.06), 0 1px 8px rgba(26,18,8,0.04);
+        --radius: 14px;
+    }
+
+    body {
+        background: var(--bg);
+        color: var(--text-pri);
+        font-family: 'DM Sans', sans-serif;
+    }
+
+    .adm-shell {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    /* ── SIDEBAR ── */
+    .adm-sidebar {
+        width: var(--sidebar-w);
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 100;
+    }
+
+    .adm-logo {
+        padding: 22px 20px 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .adm-logo-icon {
+        width: 38px;
+        height: 38px;
+        background: var(--brown);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        color: #fff;
+        flex-shrink: 0;
+        box-shadow: 0 3px 10px rgba(107,76,42,.22);
+    }
+
+    .adm-logo-text {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.22rem;
+        font-weight: 800;
+        color: var(--ink);
+    }
+
+        .adm-logo-text span {
+            color: var(--amber);
+        }
+
+    .adm-logo-badge {
+        margin-left: auto;
+        font-size: .58rem;
+        font-weight: 800;
+        letter-spacing: .1em;
+        background: var(--amber-dim);
+        color: var(--amber);
+        border: 1px solid rgba(212,134,11,.25);
+        border-radius: 5px;
+        padding: 2px 7px;
+    }
+
+    .adm-nav {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px 12px;
+        scrollbar-width: none;
+    }
+
+        .adm-nav::-webkit-scrollbar {
+            width: 0;
+        }
+
+    .adm-nav-section {
+        margin-bottom: 22px;
+    }
+
+    .adm-nav-label {
+        font-size: .67rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        color: var(--text-muted);
+        padding: 0 10px 6px;
+        text-transform: uppercase;
+    }
+
+    .adm-nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 10px;
+        border-radius: 9px;
+        cursor: pointer;
+        color: var(--text-sec);
+        font-size: .875rem;
+        font-weight: 500;
+        margin-bottom: 1px;
+        text-decoration: none;
+        transition: all .15s;
+    }
+
+        .adm-nav-item:hover {
+            background: var(--bg);
+            color: var(--text-pri);
+        }
+
+        .adm-nav-item.active {
+            background: var(--amber-dim);
+            color: var(--brown);
+            font-weight: 600;
+        }
+
+    .adm-nav-icon {
+        width: 18px;
+        text-align: center;
+        font-size: .92rem;
+        flex-shrink: 0;
+    }
+
+    .adm-nav-badge-cnt {
+        margin-left: auto;
+        background: var(--amber);
+        color: #fff;
+        font-size: .63rem;
+        font-weight: 800;
+        border-radius: 20px;
+        padding: 1px 7px;
+    }
+
+    .adm-sidebar-footer {
+        padding: 12px;
+        border-top: 1px solid var(--border);
+    }
+
+    .adm-user-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: 9px;
+        cursor: pointer;
+        transition: background .15s;
+    }
+
+        .adm-user-row:hover {
+            background: var(--bg);
+        }
+
+    .adm-avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--brown), var(--amber));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .75rem;
+        font-weight: 800;
+        color: #fff;
+        flex-shrink: 0;
+    }
+
+    .adm-user-name {
+        font-size: .84rem;
+        font-weight: 600;
+        color: var(--text-pri);
+    }
+
+    .adm-user-role {
+        font-size: .71rem;
+        color: var(--text-muted);
+        margin-top: 1px;
+    }
+
+    /* ── MAIN ── */
+    .adm-main {
+        margin-left: var(--sidebar-w);
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    .adm-topbar {
+        height: 60px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        padding: 0 28px;
+        gap: 14px;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .adm-topbar-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.12rem;
+        font-weight: 700;
+        color: var(--ink);
+    }
+
+    .adm-breadcrumb {
+        font-size: .77rem;
+        color: var(--text-muted);
+        margin-left: 2px;
+    }
+
+        .adm-breadcrumb span {
+            color: var(--amber);
+        }
+
+    .adm-search {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--bg);
+        border: 1px solid var(--border2);
+        border-radius: 9px;
+        padding: 7px 14px;
+        transition: all .18s;
+    }
+
+        .adm-search:focus-within {
+            border-color: var(--amber);
+            box-shadow: 0 0 0 3px var(--amber-dim);
+            background: var(--surface);
+        }
+
+        .adm-search i {
+            color: var(--text-muted);
+            font-size: .85rem;
+        }
+
+        .adm-search input {
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text-pri);
+            font-family: 'DM Sans', sans-serif;
+            font-size: .85rem;
+            width: 210px;
+        }
+
+            .adm-search input::placeholder {
+                color: var(--text-muted);
+            }
+
+    .adm-topbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .adm-icon-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--text-sec);
+        font-size: .88rem;
+        transition: all .15s;
+        position: relative;
+    }
+
+        .adm-icon-btn:hover {
+            border-color: var(--amber);
+            color: var(--amber);
+            background: var(--amber-dim);
+        }
+
+    .adm-notif-dot {
+        position: absolute;
+        top: 7px;
+        right: 7px;
+        width: 6px;
+        height: 6px;
+        background: var(--amber);
+        border-radius: 50%;
+        border: 1.5px solid var(--surface);
+    }
+
+    /* ── BODY ── */
+    .adm-body {
+        padding: 24px 28px;
+        flex: 1;
+    }
+
+    .page-hd {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 22px;
+        animation: fadeUp .3s ease both;
+    }
+
+    .page-hd-left h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--ink);
+        margin-bottom: 3px;
+    }
+
+    .page-hd-left p {
+        font-size: .84rem;
+        color: var(--text-muted);
+    }
+
+    /* Stats */
+    .cat-stats {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 20px;
+        animation: fadeUp .3s .05s ease both;
+    }
+
+    .cstat {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 11px;
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 1;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .cstat-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .cstat-val {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--ink);
+        line-height: 1;
+    }
+
+    .cstat-lbl {
+        font-size: .76rem;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+
+    /* Layout: card grid + table side by side */
+    .cat-layout {
+        display: grid;
+        grid-template-columns: 340px 1fr;
+        gap: 20px;
+        animation: fadeUp .3s .1s ease both;
+    }
+
+    /* Category cards grid */
+    .cat-cards-wrap {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .cat-cards-header {
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .cat-cards-title {
+        font-family: 'Playfair Display', serif;
+        font-size: .95rem;
+        font-weight: 700;
+        color: var(--ink);
+    }
+
+    .cat-cards-body {
+        padding: 14px;
+        flex: 1;
+        overflow-y: auto;
+        max-height: 520px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        scrollbar-width: thin;
+        scrollbar-color: var(--border2) transparent;
+    }
+
+    .cat-card {
+        background: var(--bg);
+        border: 1.5px solid var(--border);
+        border-radius: 11px;
+        padding: 13px 15px;
+        cursor: pointer;
+        transition: all .15s;
+        display: flex;
+        align-items: flex-start;
+        gap: 11px;
+    }
+
+        .cat-card:hover {
+            border-color: var(--amber);
+            background: rgba(212,134,11,.04);
+        }
+
+        .cat-card.selected {
+            border-color: var(--amber);
+            background: var(--amber-dim);
+            box-shadow: 0 0 0 3px rgba(212,134,11,.12);
+        }
+
+    .cat-card-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .95rem;
+        flex-shrink: 0;
+    }
+
+    .cat-card-name {
+        font-size: .875rem;
+        font-weight: 600;
+        color: var(--text-pri);
+        margin-bottom: 3px;
+    }
+
+    .cat-card-desc {
+        font-size: .75rem;
+        color: var(--text-muted);
+        line-height: 1.45;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .cat-card-id {
+        font-size: .68rem;
+        color: var(--text-muted);
+        margin-top: 4px;
+    }
+
+    .cat-card-actions {
+        margin-left: auto;
+        display: flex;
+        gap: 3px;
+        flex-shrink: 0;
+        opacity: 0;
+        transition: opacity .15s;
+    }
+
+    .cat-card:hover .cat-card-actions {
+        opacity: 1;
+    }
+
+    /* Main table card */
+    .main-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .toolbar {
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .tb-search {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--bg);
+        border: 1px solid var(--border2);
+        border-radius: 9px;
+        padding: 7px 13px;
+        transition: all .15s;
+        flex: 1;
+        min-width: 180px;
+    }
+
+        .tb-search:focus-within {
+            border-color: var(--amber);
+            box-shadow: 0 0 0 3px var(--amber-dim);
+            background: var(--surface);
+        }
+
+        .tb-search i {
+            color: var(--text-muted);
+            font-size: .85rem;
+        }
+
+        .tb-search input {
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text-pri);
+            font-family: 'DM Sans', sans-serif;
+            font-size: .84rem;
+            width: 100%;
+        }
+
+            .tb-search input::placeholder {
+                color: var(--text-muted);
+            }
+
+    .tbl-wrap {
+        overflow-x: auto;
+        flex: 1;
+    }
+
+    .adm-tbl {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .adm-tbl th {
+            padding: 10px 16px;
+            text-align: left;
+            font-size: .69rem;
+            font-weight: 700;
+            letter-spacing: .07em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            background: var(--surface2);
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+            .adm-tbl th.sortable {
+                cursor: pointer;
+                user-select: none;
+            }
+
+                .adm-tbl th.sortable:hover {
+                    color: var(--amber);
+                }
+
+        .adm-tbl td {
+            padding: 13px 16px;
+            font-size: .84rem;
+            color: var(--text-sec);
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .adm-tbl tr:last-child td {
+            border-bottom: none;
+        }
+
+        .adm-tbl tbody tr:hover td {
+            background: var(--surface2);
+        }
+
+        .adm-tbl tbody tr {
+            transition: background .12s;
+        }
+
+    /* Category icon cell */
+    .cat-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .cat-icon-sm {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .9rem;
+        flex-shrink: 0;
+    }
+
+    .cat-name {
+        font-weight: 600;
+        color: var(--text-pri);
+        font-size: .85rem;
+    }
+
+    .cat-id-sub {
+        font-size: .72rem;
+        color: var(--text-muted);
+        margin-top: 1px;
+    }
+
+    .desc-cell {
+        max-width: 260px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: var(--text-muted);
+        font-size: .82rem;
+    }
+
+    /* Buttons */
+    .btn {
+        padding: 7px 16px;
+        border-radius: 8px;
+        font-size: .82rem;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: 'DM Sans', sans-serif;
+        border: 1px solid transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all .15s;
+        white-space: nowrap;
+        text-decoration: none;
+    }
+
+    .btn-primary {
+        background: var(--brown);
+        color: #fff !important;
+        box-shadow: 0 2px 8px rgba(107,76,42,.2);
+    }
+
+        .btn-primary:hover {
+            background: var(--amber);
+            box-shadow: 0 3px 12px rgba(212,134,11,.3);
+        }
+
+    .btn-amber {
+        background: var(--amber);
+        color: #fff !important;
+    }
+
+        .btn-amber:hover {
+            background: var(--amber-lt);
+        }
+
+    .btn-outline {
+        background: var(--bg);
+        color: var(--text-sec) !important;
+        border-color: var(--border2);
+    }
+
+        .btn-outline:hover {
+            border-color: var(--amber);
+            color: var(--amber) !important;
+        }
+
+    .btn-danger {
+        background: var(--red-dim);
+        color: var(--red) !important;
+        border-color: rgba(192,57,43,.2);
+    }
+
+        .btn-danger:hover {
+            background: var(--red);
+            color: #fff !important;
+        }
+
+    .btn-ghost-sm {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-family: 'DM Sans', sans-serif;
+        font-size: .8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 5px 9px;
+        border-radius: 7px;
+        transition: all .15s;
+    }
+
+        .btn-ghost-sm.edit {
+            color: var(--blue);
+        }
+
+            .btn-ghost-sm.edit:hover {
+                background: var(--blue-dim);
+            }
+
+        .btn-ghost-sm.del {
+            color: var(--red);
+        }
+
+            .btn-ghost-sm.del:hover {
+                background: var(--red-dim);
+            }
+
+    .btn:disabled {
+        opacity: .5;
+        cursor: not-allowed;
+    }
+
+    /* Pagination */
+    .pagination-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 13px 18px;
+        border-top: 1px solid var(--border);
+    }
+
+    .pagination-info {
+        font-size: .8rem;
+        color: var(--text-muted);
+    }
+
+    .page-btns {
+        display: flex;
+        gap: 4px;
+    }
+
+    .page-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 7px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .78rem;
+        font-family: 'DM Sans', sans-serif;
+        color: var(--text-sec);
+        transition: all .15s;
+    }
+
+        .page-btn:hover {
+            border-color: var(--amber);
+            color: var(--amber);
+        }
+
+        .page-btn.active {
+            background: var(--brown);
+            border-color: var(--brown);
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .page-btn:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+        }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 50px 20px;
+    }
+
+    .empty-icon {
+        font-size: 2.8rem;
+        margin-bottom: 12px;
+        opacity: .4;
+    }
+
+    .empty-state h3 {
+        font-family: 'Playfair Display', serif;
+        font-size: 1rem;
+        color: var(--text-sec);
+        margin-bottom: 6px;
+    }
+
+    .empty-state p {
+        font-size: .82rem;
+        color: var(--text-muted);
+    }
+
+    /* Alert */
+    .alert-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        border-radius: 10px;
+        margin-bottom: 18px;
+        font-size: .84rem;
+        animation: fadeUp .25s ease both;
+    }
+
+    .alert-success {
+        background: var(--green-dim);
+        color: var(--green);
+        border: 1px solid rgba(46,125,82,.2);
+    }
+
+    .alert-error {
+        background: var(--red-dim);
+        color: var(--red);
+        border: 1px solid rgba(192,57,43,.2);
+    }
+
+    /* ── MODAL (prefixed bk- to avoid Bootstrap collision) ── */
+    .bk-modal-backdrop {
+        position: fixed !important;
+        inset: 0;
+        background: rgba(26,18,8,.5);
+        z-index: 9998;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        backdrop-filter: blur(3px);
+        animation: fadeIn .18s ease;
+    }
+
+    .bk-modal-box {
+        background: var(--surface);
+        border-radius: 18px;
+        width: 100%;
+        max-width: 520px;
+        box-shadow: 0 20px 60px rgba(26,18,8,.22);
+        animation: slideUp .22s ease;
+        overflow: hidden;
+        position: relative;
+        z-index: 9999;
+    }
+
+    .bk-modal-header {
+        padding: 22px 24px 18px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .bk-modal-header-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .bk-modal-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--ink);
+    }
+
+    .bk-modal-sub {
+        font-size: .78rem;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+
+    .bk-modal-close {
+        margin-left: auto;
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--text-muted);
+        transition: all .15s;
+    }
+
+        .bk-modal-close:hover {
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+    .bk-modal-body {
+        padding: 22px 24px;
+    }
+
+    .bk-modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        background: var(--surface2);
+    }
+
+    /* Form */
+    .form-field {
+        margin-bottom: 16px;
+    }
+
+        .form-field label {
+            display: block;
+            font-size: .8rem;
+            font-weight: 600;
+            color: var(--ink);
+            margin-bottom: 6px;
+        }
+
+            .form-field label span {
+                color: var(--red);
+                margin-left: 2px;
+            }
+
+    .form-input-wrap {
+        position: relative;
+    }
+
+    .form-input-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        font-size: .9rem;
+        pointer-events: none;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: .72rem 1rem .72rem 2.6rem;
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: .88rem;
+        color: var(--text-pri);
+        background: var(--surface);
+        transition: all .15s;
+    }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--amber);
+            box-shadow: 0 0 0 3px var(--amber-dim);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+    .form-textarea {
+        width: 100%;
+        padding: .72rem 1rem;
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: .88rem;
+        color: var(--text-pri);
+        background: var(--surface);
+        transition: all .15s;
+        resize: vertical;
+        min-height: 90px;
+    }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--amber);
+            box-shadow: 0 0 0 3px var(--amber-dim);
+        }
+
+        .form-textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+    .form-error {
+        font-size: .75rem;
+        color: var(--red);
+        margin-top: 4px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    /* Icon picker */
+    .icon-picker {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 6px;
+        margin-top: 8px;
+    }
+
+    .icon-opt {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        border: 1.5px solid var(--border);
+        background: var(--bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all .15s;
+    }
+
+        .icon-opt:hover {
+            border-color: var(--amber);
+            background: var(--amber-dim);
+        }
+
+        .icon-opt.picked {
+            border-color: var(--amber);
+            background: var(--amber-dim);
+            box-shadow: 0 0 0 2px rgba(212,134,11,.2);
+        }
+
+    /* Delete modal */
+    .bk-del-modal {
+        max-width: 400px;
+    }
+
+    .del-icon-wrap {
+        width: 56px;
+        height: 56px;
+        background: var(--red-dim);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin: 0 auto 16px;
+    }
+
+    .del-body {
+        padding: 28px 24px 20px;
+        text-align: center;
+    }
+
+        .del-body h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--ink);
+            margin-bottom: 8px;
+        }
+
+        .del-body p {
+            font-size: .85rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+    .del-name {
+        color: var(--red);
+        font-weight: 700;
+    }
+
+    /* Spinner / Skeleton */
+    .spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255,255,255,.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin .7s linear infinite;
+    }
+
+    .spinner-dark {
+        border-color: rgba(26,18,8,.15);
+        border-top-color: var(--brown);
+    }
+
+    .skel {
+        background: linear-gradient(90deg, var(--border) 25%, var(--surface2) 50%, var(--border) 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.3s infinite;
+        border-radius: 6px;
+    }
+
+    @@keyframes shimmer {
+        to {
+            background-position: -200% 0;
+        }
+    }
+
+    @@keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    @@keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px) scale(.97);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    ::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--border2);
+        border-radius: 10px;
+    }
+</style>
+
+<div class="adm-shell">
+
+    <!-- SIDEBAR -->
+    <aside class="adm-sidebar">
+        <div class="adm-logo">
+            <div class="adm-logo-icon"><i class="bi bi-book-half"></i></div>
+            <span class="adm-logo-text">Book<span>Store</span></span>
+            <span class="adm-logo-badge">ADMIN</span>
+        </div>
+        <nav class="adm-nav">
+            <div class="adm-nav-section">
+                <div class="adm-nav-label">Tổng quan</div>
+                <a href="/admin" class="adm-nav-item"><span class="adm-nav-icon"><i class="bi bi-grid-fill"></i></span>Dashboard</a>
+                <a href="/admin/analytics" class="adm-nav-item"><span class="adm-nav-icon"><i class="bi bi-bar-chart-line-fill"></i></span>Thống kê</a>
+            </div>
+            <div class="adm-nav-section">
+                <div class="adm-nav-label">Quản lý</div>
+                <a href="/admin/orders" class="adm-nav-item"><span class="adm-nav-icon"><i class="bi bi-bag-fill"></i></span>Đơn hàng<span class="adm-nav-badge-cnt">12</span></a>
+                <a href="/admin/books" class="adm-nav-item"><span class="adm-nav-icon"><i class="bi bi-journals"></i></span>Sách</a>
+                <a href="/admin/authors" class="adm-nav-item"><span class="adm-nav-icon"><i class="bi bi-person-lines-fill"></i></span>Tác giả</a>
+                <a href="/admin/categories" class="adm-nav-item active"><span class="adm-nav-icon"><i class="bi bi-tags-fill"></i></span>Danh mục</a>
+                <a href="/admin/customers" class="adm-nav-item"><span class="adm-nav-icon"><i class="bi bi-people-fill"></i></span>Khách hàng</a>
+                <a href="/admin/reviews" class="adm-nav-item"><span class="adm-nav-icon"><i class="bi bi-star-fill"></i></span>Đánh giá<span class="adm-nav-badge-cnt">3</span></a>
+            </div>
+            <div class="adm-nav-section">
+                <div class="adm-nav-label">Hệ thống</div>
+                <a href="/admin/promotions" class="adm-nav-item"><span class="adm-nav-icon"><i class="bi bi-gift-fill"></i></span>Khuyến mãi</a>
+                <a href="/admin/settings" class="adm-nav-item"><span class="adm-nav-icon"><i class="bi bi-gear-fill"></i></span>Cài đặt</a>
+            </div>
+        </nav>
+        <div class="adm-sidebar-footer">
+            <div class="adm-user-row">
+                <div class="adm-avatar">AD</div>
+                <div><div class="adm-user-name">Admin</div><div class="adm-user-role">Super Admin</div></div>
+                <div style="margin-left:auto;color:var(--text-muted)"><i class="bi bi-three-dots-vertical"></i></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="adm-main">
+        <header class="adm-topbar">
+            <div>
+                <div class="adm-topbar-title">Danh mục</div>
+                <div class="adm-breadcrumb">Admin / Quản lý / <span>Danh mục</span></div>
+            </div>
+            <div class="adm-search">
+                <i class="bi bi-search"></i>
+                <input type="text" placeholder="Tìm kiếm..." />
+            </div>
+            <div class="adm-topbar-actions">
+                <div class="adm-icon-btn"><i class="bi bi-bell"></i><span class="adm-notif-dot"></span></div>
+                <div class="adm-avatar" style="width:34px;height:34px;font-size:.75rem;cursor:pointer;">AD</div>
+            </div>
+        </header>
+
+        <div class="adm-body">
+
+            <!-- Page header -->
+            <div class="page-hd">
+                <div class="page-hd-left">
+                    <h2>Quản lý Danh mục</h2>
+                    <p>Phân loại sách theo chủ đề và thể loại</p>
+                </div>
+                <button class="btn btn-primary" @onclick="OpenCreateModal">
+                    <i class="bi bi-plus-lg"></i> Thêm danh mục
+                </button>
+            </div>
+
+            <!-- Alert -->
+            @if (!string.IsNullOrEmpty(alertMsg))
+            {
+                <div class="alert-bar @(alertIsError ? "alert-error" : "alert-success")">
+                    <i class="bi @(alertIsError ? "bi-exclamation-circle-fill" : "bi-check-circle-fill")"></i>
+                    @alertMsg
+                </div>
+            }
+
+            <!-- Stats -->
+            <div class="cat-stats">
+                <div class="cstat">
+                    <div class="cstat-icon" style="background:var(--amber-dim);color:var(--amber)"><i class="bi bi-tags-fill"></i></div>
+                    <div><div class="cstat-val">@categories.Count</div><div class="cstat-lbl">Tổng danh mục</div></div>
+                </div>
+                <div class="cstat">
+                    <div class="cstat-icon" style="background:var(--green-dim);color:var(--green)"><i class="bi bi-check-circle-fill"></i></div>
+                    <div><div class="cstat-val">@categories.Count(c => !string.IsNullOrEmpty(c.Description))</div><div class="cstat-lbl">Có mô tả</div></div>
+                </div>
+                <div class="cstat">
+                    <div class="cstat-icon" style="background:var(--blue-dim);color:var(--blue)"><i class="bi bi-search"></i></div>
+                    <div><div class="cstat-val">@FilteredCategories.Count()</div><div class="cstat-lbl">Kết quả hiện tại</div></div>
+                </div>
+            </div>
+
+            <!-- Layout: card panel + table -->
+            <div class="cat-layout">
+
+                <!-- Left: category cards -->
+                <div class="cat-cards-wrap">
+                    <div class="cat-cards-header">
+                        <span class="cat-cards-title">Tất cả danh mục</span>
+                        <span style="font-size:.75rem;color:var(--text-muted)">@categories.Count mục</span>
+                    </div>
+                    <div class="cat-cards-body">
+                        @if (isLoading)
+                        {
+                            @for (int i = 0; i < 6; i++)
+                            {
+                                <div style="display:flex;gap:10px;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--bg)">
+                                    <div class="skel" style="width:36px;height:36px;border-radius:9px;flex-shrink:0"></div>
+                                    <div style="flex:1"><div class="skel" style="height:14px;width:70%;margin-bottom:6px"></div><div class="skel" style="height:11px;width:90%"></div></div>
+                                </div>
+                            }
+                        }
+                        else if (!categories.Any())
+                        {
+                            <div class="empty-state" style="padding:30px 10px">
+                                <div class="empty-icon">🏷️</div>
+                                <h3>Chưa có danh mục</h3>
+                                <p>Thêm danh mục đầu tiên</p>
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (var c in categories.OrderBy(x => x.CategoryName))
+                            {
+                                <div class="cat-card @(selectedId == c.CategoryId ? "selected" : "")"
+                                     @onclick="@(() => SelectCategory(c))">
+                                    <div class="cat-card-icon" style="background:@GetCatColor(c.CategoryName, true);color:@GetCatColor(c.CategoryName, false)">
+                                        <i class="bi bi-@GetCatIcon(c.CategoryName)"></i>
+                                    </div>
+                                    <div style="flex:1;min-width:0">
+                                        <div class="cat-card-name">@c.CategoryName</div>
+                                        @if (!string.IsNullOrEmpty(c.Description))
+                                        {
+                                            <div class="cat-card-desc">@c.Description</div>
+                                        }
+                                        else
+                                        {
+                                            <div class="cat-card-desc" style="font-style:italic">Chưa có mô tả</div>
+                                        }
+                                        <div class="cat-card-id">#@c.CategoryId</div>
+                                    </div>
+                                    <div class="cat-card-actions">
+                                        <button class="btn-ghost-sm edit" @onclick:stopPropagation @onclick="@(() => OpenEditModal(c))"><i class="bi bi-pencil-fill"></i></button>
+                                        <button class="btn-ghost-sm del" @onclick:stopPropagation @onclick="@(() => OpenDeleteModal(c))"><i class="bi bi-trash3-fill"></i></button>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+
+                <!-- Right: table with search + pagination -->
+                <div class="main-card">
+                    <div class="toolbar">
+                        <div class="tb-search">
+                            <i class="bi bi-search"></i>
+                            <input type="text" placeholder="Tìm theo tên hoặc mô tả..."
+                                   @bind="searchText" @bind:event="oninput" />
+                        </div>
+                        <select class="btn btn-outline" style="padding:7px 12px;font-size:.82rem" @bind="pageSize">
+                            <option value="10">10 / trang</option>
+                            <option value="20">20 / trang</option>
+                            <option value="50">50 / trang</option>
+                        </select>
+                        <button class="btn btn-outline" @onclick="LoadCategories" disabled="@isLoading">
+                            @if (isLoading)
+                            {
+                                <span class="spinner spinner-dark"></span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-arrow-clockwise"></i>
+                            }
+                            Làm mới
+                        </button>
+                    </div>
+
+                    <div class="tbl-wrap">
+                        @if (isLoading)
+                        {
+                            <table class="adm-tbl">
+                                <thead><tr><th>#</th><th>Danh mục</th><th>Mô tả</th><th>Thao tác</th></tr></thead>
+                                <tbody>
+                                    @for (int s = 0; s < 6; s++)
+                                    {
+                                        <tr>
+                                            <td><div class="skel" style="height:14px;width:30px"></div></td>
+                                            <td><div class="skel" style="height:14px;width:150px"></div></td>
+                                            <td><div class="skel" style="height:14px;width:240px"></div></td>
+                                            <td><div class="skel" style="height:14px;width:80px"></div></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else if (!PagedCategories.Any())
+                        {
+                            <div class="empty-state">
+                                <div class="empty-icon">🏷️</div>
+                                <h3>@(string.IsNullOrEmpty(searchText) ? "Chưa có danh mục nào" : "Không tìm thấy kết quả")</h3>
+                                <p>@(string.IsNullOrEmpty(searchText) ? "Hãy thêm danh mục đầu tiên." : $"Không khớp với \"{searchText}\".")</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <table class="adm-tbl">
+                                <thead>
+                                    <tr>
+                                        <th style="width:50px">#</th>
+                                        <th class="sortable" @onclick="@(() => SetSort("name"))">
+                                            Danh mục <i class="bi bi-@(sortCol=="name"?(sortAsc?"sort-up":"sort-down"):"chevron-expand")"></i>
+                                        </th>
+                                        <th>Mô tả</th>
+                                        <th style="width:120px">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var c in PagedCategories)
+                                    {
+                                        <tr style="@(selectedId == c.CategoryId ? "background:var(--amber-dim)" : "")">
+                                            <td style="color:var(--text-muted);font-size:.75rem">#@c.CategoryId</td>
+                                            <td>
+                                                <div class="cat-cell" @onclick="@(() => SelectCategory(c))" style="cursor:pointer">
+                                                    <div class="cat-icon-sm" style="background:@GetCatColor(c.CategoryName, true);color:@GetCatColor(c.CategoryName, false)">
+                                                        <i class="bi bi-@GetCatIcon(c.CategoryName)"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="cat-name">@c.CategoryName</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(c.Description))
+                                                {
+                                                    <span class="desc-cell" title="@c.Description">@c.Description</span>
+                                                }
+                                                else
+                                                {
+                                                    <span style="color:var(--text-muted);font-style:italic;font-size:.78rem">—</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <div style="display:flex;gap:4px">
+                                                    <button class="btn-ghost-sm edit" @onclick="@(() => OpenEditModal(c))"><i class="bi bi-pencil-fill"></i> Sửa</button>
+                                                    <button class="btn-ghost-sm del" @onclick="@(() => OpenDeleteModal(c))"><i class="bi bi-trash3-fill"></i> Xoá</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                    </div>
+
+                    @if (TotalPages > 1)
+                    {
+                        <div class="pagination-bar">
+                            <span class="pagination-info">
+                                @(((currentPage - 1) * pageSize) + 1)–@(Math.Min(currentPage * pageSize, FilteredCategories.Count())) / @FilteredCategories.Count()
+                            </span>
+                            <div class="page-btns">
+                                <button class="page-btn" @onclick="PrevPage" disabled="@(currentPage<=1)"><i class="bi bi-chevron-left"></i></button>
+                                @for (int p = 1; p <= TotalPages; p++)
+                                {
+                                    var pg = p;
+                                    <button class="page-btn @(pg==currentPage?"active":"")" @onclick="@(() => GoPage(pg))">@pg</button>
+                                }
+                                <button class="page-btn" @onclick="NextPage" disabled="@(currentPage>=TotalPages)"><i class="bi bi-chevron-right"></i></button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ── FORM MODAL ── *@
+@if (showFormModal)
+{
+    <div class="bk-modal-backdrop" @onclick="CloseFormModal">
+        <div class="bk-modal-box" @onclick:stopPropagation>
+            <div class="bk-modal-header">
+                <div class="bk-modal-header-icon"
+                     style="background:@(isEditMode?"var(--blue-dim)":"var(--green-dim)");color:@(isEditMode?"var(--blue)":"var(--green)")">
+                    <i class="bi bi-@(isEditMode ? "pencil-fill" : "tags")"></i>
+                </div>
+                <div>
+                    <div class="bk-modal-title">@(isEditMode ? "Chỉnh sửa danh mục" : "Thêm danh mục mới")</div>
+                    <div class="bk-modal-sub">@(isEditMode ? $"Đang sửa: {formModel.CategoryName}" : "Điền thông tin danh mục")</div>
+                </div>
+                <button class="bk-modal-close" @onclick="CloseFormModal"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="bk-modal-body">
+                @if (!string.IsNullOrEmpty(modalError))
+                {
+                    <div class="alert-bar alert-error" style="margin-bottom:14px">
+                        <i class="bi bi-exclamation-circle-fill"></i> @modalError
+                    </div>
+                }
+
+                <!-- Tên danh mục -->
+                <div class="form-field">
+                    <label>Tên danh mục <span>*</span></label>
+                    <div class="form-input-wrap">
+                        <i class="bi bi-tag form-input-icon"></i>
+                        <input class="form-input" placeholder="VD: Văn học, Khoa học..." @bind="formModel.CategoryName" @bind:event="oninput" />
+                    </div>
+                    @if (submitted && string.IsNullOrWhiteSpace(formModel.CategoryName))
+                    {
+                        <div class="form-error"><i class="bi bi-exclamation-circle"></i> Tên danh mục không được để trống.</div>
+                    }
+                </div>
+
+                <!-- Mô tả -->
+                <div class="form-field">
+                    <label>Mô tả</label>
+                    <textarea class="form-textarea" placeholder="Mô tả ngắn về danh mục này..."
+                              @bind="formModel.Description" @bind:event="oninput"></textarea>
+                </div>
+
+                <!-- Preview -->
+                @if (!string.IsNullOrWhiteSpace(formModel.CategoryName))
+                {
+                    <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+                        <div class="cat-icon-sm" style="background:@GetCatColor(formModel.CategoryName,true);color:@GetCatColor(formModel.CategoryName,false)">
+                            <i class="bi bi-@GetCatIcon(formModel.CategoryName)"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight:600;font-size:.85rem;color:var(--text-pri)">@formModel.CategoryName</div>
+                            <div style="font-size:.74rem;color:var(--text-muted)">Preview</div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="bk-modal-footer">
+                <button class="btn btn-outline" @onclick="CloseFormModal">Huỷ</button>
+                <button class="btn @(isEditMode?"btn-amber":"btn-primary")" @onclick="SubmitForm" disabled="@isSaving">
+                    @if (isSaving)
+                    {
+                        <span class="spinner"></span>
+                        <span>Đang lưu...</span>
+                    }
+                    else if (isEditMode)
+                    {
+                        <i class="bi bi-check-lg"></i>
+                        <span>Cập nhật</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-plus-lg"></i>
+                        <span>Thêm danh mục</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@* ── DELETE MODAL ── *@
+@if (showDeleteModal && categoryToDelete != null)
+{
+    <div class="bk-modal-backdrop" @onclick="CloseDeleteModal">
+        <div class="bk-modal-box bk-del-modal" @onclick:stopPropagation>
+            <div class="del-body">
+                <div class="del-icon-wrap">🗑️</div>
+                <h3>Xác nhận xoá?</h3>
+                <p>
+                    Bạn có chắc muốn xoá danh mục<br />
+                    <span class="del-name">"@categoryToDelete.CategoryName"</span>?<br />
+                    Các sách thuộc danh mục này có thể bị ảnh hưởng.
+                </p>
+            </div>
+            @if (!string.IsNullOrEmpty(modalError))
+            {
+                <div style="padding:0 24px 16px">
+                    <div class="alert-bar alert-error">
+                        <i class="bi bi-exclamation-circle-fill"></i> @modalError
+                    </div>
+                </div>
+            }
+            <div class="bk-modal-footer">
+                <button class="btn btn-outline" @onclick="CloseDeleteModal">Không, giữ lại</button>
+                <button class="btn btn-danger" @onclick="ConfirmDelete" disabled="@isSaving">
+                    @if (isSaving)
+                    {
+                        <span class="spinner" style="border-top-color:var(--red)"></span>
+                        <span>Đang xoá...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-trash3-fill"></i>
+                        <span>Xoá danh mục</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    // ── State ──────────────────────────────────────────────────────
+    private List<CategoryDto> categories = new();
+    private bool isLoading = true;
+    private bool isSaving = false;
+
+    private string searchText = "";
+    private string sortCol = "name";
+    private bool sortAsc = true;
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private int selectedId = 0;
+
+    private string alertMsg = "";
+    private bool alertIsError = false;
+
+    private bool showFormModal = false;
+    private bool isEditMode = false;
+    private bool submitted = false;
+    private string modalError = "";
+    private CategoryFormModel formModel = new();
+    private int editingId = 0;
+
+    private bool showDeleteModal = false;
+    private CategoryDto? categoryToDelete = null;
+
+    // ── Lifecycle ──────────────────────────────────────────────────
+    protected override async Task OnInitializedAsync() => await LoadCategories();
+
+    private async Task SetAuthorizationHeader()
+    {
+        var token = await JS.InvokeAsync<string>("localStorage.getItem", "accessToken");
+        if (!string.IsNullOrEmpty(token))
+        {
+            Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        }
+    }
+
+    // ── Data ───────────────────────────────────────────────────────
+    private async Task LoadCategories()
+    {
+        isLoading = true; alertMsg = "";
+        try
+        {
+            await SetAuthorizationHeader();
+            var result = await Http.GetFromJsonAsync<List<CategoryDto>>("api/Category");
+            categories = result ?? new();
+        }
+        catch { ShowAlert("Không thể tải danh sách danh mục. Vui lòng thử lại.", true); }
+        finally { isLoading = false; }
+    }
+
+    // ── Computed ───────────────────────────────────────────────────
+    private IEnumerable<CategoryDto> FilteredCategories =>
+        categories.Where(c =>
+            string.IsNullOrEmpty(searchText) ||
+            c.CategoryName.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+            (c.Description ?? "").Contains(searchText, StringComparison.OrdinalIgnoreCase));
+
+    private IEnumerable<CategoryDto> SortedFiltered =>
+        sortAsc ? FilteredCategories.OrderBy(c => c.CategoryName)
+                : FilteredCategories.OrderByDescending(c => c.CategoryName);
+
+    private int TotalPages => (int)Math.Ceiling(FilteredCategories.Count() / (double)pageSize);
+
+    private IEnumerable<CategoryDto> PagedCategories =>
+        SortedFiltered.Skip((currentPage - 1) * pageSize).Take(pageSize);
+
+    // ── Sort / Page ────────────────────────────────────────────────
+    private void SetSort(string col) { sortAsc = sortCol == col ? !sortAsc : true; sortCol = col; currentPage = 1; }
+    private void GoPage(int p) => currentPage = p;
+    private void PrevPage() { if (currentPage > 1) currentPage--; }
+    private void NextPage() { if (currentPage < TotalPages) currentPage++; }
+    private void SelectCategory(CategoryDto c) => selectedId = selectedId == c.CategoryId ? 0 : c.CategoryId;
+
+    // ── Create modal ───────────────────────────────────────────────
+    private async Task OpenCreateModal()
+    {
+        isEditMode = false; submitted = false; modalError = "";
+        formModel = new();
+        showFormModal = true;
+        await Task.Yield();
+        await JS.InvokeVoidAsync("document.body.style.setProperty", "overflow", "hidden");
+    }
+
+    // ── Edit modal ─────────────────────────────────────────────────
+    private async Task OpenEditModal(CategoryDto c)
+    {
+        isEditMode = true; submitted = false; modalError = "";
+        editingId = c.CategoryId;
+        formModel = new CategoryFormModel { CategoryName = c.CategoryName, Description = c.Description };
+        showFormModal = true;
+        await Task.Yield();
+        await JS.InvokeVoidAsync("document.body.style.setProperty", "overflow", "hidden");
+    }
+
+    private async Task CloseFormModal()
+    {
+        showFormModal = false; modalError = "";
+        await JS.InvokeVoidAsync("document.body.style.removeProperty", "overflow");
+    }
+
+    // ── Submit ─────────────────────────────────────────────────────
+    private async Task SubmitForm()
+    {
+        submitted = true;
+        if (string.IsNullOrWhiteSpace(formModel.CategoryName)) return;
+
+        isSaving = true; modalError = "";
+        try
+        {
+            await SetAuthorizationHeader();
+            if (isEditMode)
+            {
+                // PUT api/Category/{id}  →  UpdateCategoryDto { CategoryName, Description }
+                var payload = new { categoryName = formModel.CategoryName, description = formModel.Description };
+                var resp = await Http.PutAsJsonAsync($"api/Category/{editingId}", payload);
+                if (resp.IsSuccessStatusCode)
+                {
+                    await CloseFormModal();
+                    ShowAlert($"Cập nhật \"{formModel.CategoryName}\" thành công!", false);
+                    await LoadCategories();
+                }
+                else { modalError = "Cập nhật thất bại. Vui lòng thử lại."; }
+            }
+            else
+            {
+                // POST api/Category  →  CategoryResponseDto { CategoryName, Description }
+                var payload = new { categoryName = formModel.CategoryName, description = formModel.Description };
+                var resp = await Http.PostAsJsonAsync("api/Category", payload);
+                if (resp.IsSuccessStatusCode || resp.StatusCode == System.Net.HttpStatusCode.Created)
+                {
+                    await CloseFormModal();
+                    ShowAlert($"Thêm \"{formModel.CategoryName}\" thành công!", false);
+                    await LoadCategories();
+                }
+                else
+                {
+                    var body = await resp.Content.ReadAsStringAsync();
+                    modalError = body.Contains("trùng") ? "Tên danh mục đã tồn tại." : "Thêm thất bại. Vui lòng thử lại.";
+                }
+            }
+        }
+        catch { modalError = "Lỗi kết nối. Vui lòng thử lại."; }
+        finally { isSaving = false; }
+    }
+
+    // ── Delete ─────────────────────────────────────────────────────
+    private async Task OpenDeleteModal(CategoryDto c)
+    {
+        categoryToDelete = c; showDeleteModal = true; modalError = "";
+        await Task.Yield();
+        await JS.InvokeVoidAsync("document.body.style.setProperty", "overflow", "hidden");
+    }
+
+    private async Task CloseDeleteModal()
+    {
+        showDeleteModal = false; categoryToDelete = null; modalError = "";
+        await JS.InvokeVoidAsync("document.body.style.removeProperty", "overflow");
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (categoryToDelete == null) return;
+        isSaving = true; modalError = "";
+        try
+        {
+            await SetAuthorizationHeader();
+            var resp = await Http.DeleteAsync($"api/Category/{categoryToDelete.CategoryId}");
+            if (resp.IsSuccessStatusCode)
+            {
+                var name = categoryToDelete.CategoryName;
+                if (selectedId == categoryToDelete.CategoryId) selectedId = 0;
+                await CloseDeleteModal();
+                ShowAlert($"Đã xoá \"{name}\" thành công.", false);
+                await LoadCategories();
+            }
+            else { modalError = "Xoá thất bại. Danh mục có thể đang được dùng bởi sách."; }
+        }
+        catch { modalError = "Lỗi kết nối. Vui lòng thử lại."; }
+        finally { isSaving = false; }
+    }
+
+    // ── Helpers ────────────────────────────────────────────────────
+    private void ShowAlert(string msg, bool isError)
+    {
+        alertMsg = msg; alertIsError = isError;
+        _ = Task.Delay(4000).ContinueWith(_ => { alertMsg = ""; InvokeAsync(StateHasChanged); });
+    }
+
+    // Auto icon dựa theo tên danh mục
+    private string GetCatIcon(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return "tag";
+        var n = name.ToLower();
+        if (n.Contains("văn học") || n.Contains("tiểu thuyết") || n.Contains("truyện")) return "book";
+        if (n.Contains("khoa học") || n.Contains("science")) return "flask";
+        if (n.Contains("lịch sử") || n.Contains("history")) return "hourglass-split";
+        if (n.Contains("kinh tế") || n.Contains("tài chính") || n.Contains("kinh doanh")) return "graph-up-arrow";
+        if (n.Contains("tâm lý") || n.Contains("kỹ năng") || n.Contains("self")) return "lightbulb";
+        if (n.Contains("thiếu nhi") || n.Contains("trẻ em")) return "balloon-heart";
+        if (n.Contains("nấu ăn") || n.Contains("ẩm thực")) return "egg-fried";
+        if (n.Contains("nghệ thuật") || n.Contains("âm nhạc") || n.Contains("hội họa")) return "palette";
+        if (n.Contains("thể thao") || n.Contains("sức khỏe")) return "trophy";
+        if (n.Contains("công nghệ") || n.Contains("lập trình") || n.Contains("it")) return "cpu";
+        if (n.Contains("triết") || n.Contains("tôn giáo")) return "yin-yang";
+        if (n.Contains("du lịch") || n.Contains("địa lý")) return "compass";
+        if (n.Contains("y học") || n.Contains("sức khỏe")) return "heart-pulse";
+        if (n.Contains("pháp lý") || n.Contains("luật")) return "balance2";
+        return "tag";
+    }
+
+    // Auto color dựa theo tên (trả về bg hoặc text color)
+    private string GetCatColor(string name, bool isBg)
+    {
+        var palettes = new[]
+        {
+            ("rgba(212,134,11,0.12)", "#D4860B"),
+            ("rgba(37,99,168,0.10)", "#2563A8"),
+            ("rgba(46,125,82,0.10)", "#2E7D52"),
+            ("rgba(123,63,123,0.10)", "#7B3F7B"),
+            ("rgba(192,57,43,0.10)", "#C0392B"),
+            ("rgba(107,76,42,0.10)", "#6B4C2A"),
+            ("rgba(26,107,90,0.10)", "#1A6B5A"),
+            ("rgba(13,110,253,0.10)", "#0D6EFD"),
+        };
+        var idx = Math.Abs(name?.GetHashCode() ?? 0) % palettes.Length;
+        return isBg ? palettes[idx].Item1 : palettes[idx].Item2;
+    }
+
+    // ── DTOs ───────────────────────────────────────────────────────
+    public class CategoryDto
+    {
+        public int CategoryId { get; set; }
+        public string CategoryName { get; set; } = "";
+        public string? Description { get; set; }
+    }
+
+    public class CategoryFormModel
+    {
+        public string CategoryName { get; set; } = "";
+        public string? Description { get; set; }
+    }
+}

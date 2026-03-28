@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using QLBS.Constants;
 using QLBS.Models;
 using QLBS.Repository.Interfaces;
 
@@ -79,5 +80,61 @@ namespace QLBS.Repository.Implementations
             _context.BookImages.Remove(bookImage);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<IEnumerable<Book>> GetTopSellingBooksAsync(int top = 8)
+        {
+
+            var topSellingData = await _context.OrderDetails
+                .Where(od => od.Order.OrderStatus == OrderStatusConstants.Completed)
+                .GroupBy(od => od.BookId)
+                .Select(g => new
+                {
+                    BookId = g.Key,
+                    TotalSold = g.Sum(od => od.Quantity)
+                })
+                .OrderByDescending(x => x.TotalSold)
+                .Take(top)
+                .ToListAsync();
+
+            if (!topSellingData.Any()) return new List<Book>();
+
+            var topBookIds = topSellingData.Select(x => x.BookId).ToList();
+
+
+            var books = await _context.Books
+                .Include(b => b.Category)
+                .Include(b => b.Author)
+                .Include(b => b.BookImages) 
+                .Where(b => topBookIds.Contains(b.BookId) && b.IsDeleted == false)
+                .ToListAsync();
+
+
+            var result = topSellingData
+                .Select(ts => books.FirstOrDefault(b => b.BookId == ts.BookId))
+                .Where(b => b != null) 
+                .ToList();
+
+            return result!;
+        }
+
+        public async Task<IEnumerable<Book>> GetByCategoryIdAsync(int categoryId)
+        {
+            return await _context.Books
+                .AsNoTracking()
+                .Where(b => b.CategoryId == categoryId && !b.IsDeleted)
+                .Include(b => b.Author)
+                .Include(b => b.Category)
+                .Include(b => b.BookImages)
+                .OrderByDescending(b => b.EntryDate)
+                .ToListAsync();
+        }
+
+        public async Task<int> CountByCategoryIdAsync(int categoryId)
+        {
+            return await _context.Books
+                .AsNoTracking()
+                .CountAsync(b => b.CategoryId == categoryId && !b.IsDeleted);
+        }
+
     }
 }

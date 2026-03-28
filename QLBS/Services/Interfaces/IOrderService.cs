@@ -1,13 +1,17 @@
-﻿using QLBS.Dtos.Order;
-using QLBS.Models;
+﻿using QLBS.Dtos;
+using QLBS.Dtos.Order;
 
 namespace QLBS.Services.Interfaces
 {
     public interface IOrderService
     {
+        // User
         Task<OrderResultDto?> CreateOrderAsync(int accountId, CreateOrderDto dto, HttpContext context);
-        Task<bool> HandlePaymentCallback(PaymentResponseModel model);
         Task<IEnumerable<OrderHistoryDto>> GetOrderHistoryAsync(int accountId);
         Task<OrderDetailResponseDto?> GetOrderDetailAsync(int accountId, int orderId);
+
+        // Admin
+        Task<IEnumerable<AdminOrderSummaryDto>> GetAllOrdersForAdminAsync();
+        Task<AdminOrderDetailDto?> GetOrderDetailForAdminAsync(int orderId);
     }
 }

@@ -1,0 +1,2092 @@
+﻿@page "/admin/books"
+@rendermode InteractiveServer
+@using System.Net.Http.Headers
+@using System.Text.Json
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<PageTitle>Quản lý Sách - BookStore Admin</PageTitle>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+<style>
+    *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    :root {
+        --bg: #F4F2EE;
+        --surface: #FFFFFF;
+        --surface2: #FAFAF8;
+        --brown: #6B4C2A;
+        --amber: #D4860B;
+        --amber-lt: #F5A623;
+        --amber-dim: rgba(212,134,11,0.10);
+        --ink: #1A1208;
+        --text-pri: #1A1208;
+        --text-sec: #6B5A46;
+        --text-muted: #A8947A;
+        --border: #E8E2D9;
+        --border2: #DDD7CE;
+        --sidebar-w: 252px;
+        --green: #2E7D52;
+        --green-dim: rgba(46,125,82,0.09);
+        --red: #C0392B;
+        --red-dim: rgba(192,57,43,0.09);
+        --blue: #2563A8;
+        --blue-dim: rgba(37,99,168,0.09);
+        --shadow-sm: 0 1px 3px rgba(26,18,8,0.06), 0 1px 8px rgba(26,18,8,0.04);
+        --shadow-md: 0 6px 24px rgba(26,18,8,0.10);
+        --radius: 14px;
+    }
+
+    body {
+        background: var(--bg);
+        color: var(--text-pri);
+        font-family: 'DM Sans', sans-serif;
+    }
+
+    .adm-shell {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    /* ── SIDEBAR ── */
+    .adm-sidebar {
+        width: var(--sidebar-w);
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 100;
+        transition: z-index 0s;
+    }
+        /* FIX: khi modal mở thì hạ sidebar xuống dưới overlay */
+        .adm-sidebar.modal-open {
+            z-index: 1 !important;
+        }
+
+    .adm-logo {
+        padding: 22px 20px 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .adm-logo-icon {
+        width: 38px;
+        height: 38px;
+        background: var(--brown);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        color: #fff;
+        flex-shrink: 0;
+        box-shadow: 0 3px 10px rgba(107,76,42,0.22);
+    }
+
+    .adm-logo-text {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.22rem;
+        font-weight: 800;
+        color: var(--ink);
+    }
+
+        .adm-logo-text span {
+            color: var(--amber);
+        }
+
+    .adm-logo-badge {
+        margin-left: auto;
+        font-size: .58rem;
+        font-weight: 800;
+        letter-spacing: .1em;
+        background: var(--amber-dim);
+        color: var(--amber);
+        border: 1px solid rgba(212,134,11,0.25);
+        border-radius: 5px;
+        padding: 2px 7px;
+    }
+
+    .adm-nav {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px 12px;
+        scrollbar-width: none;
+    }
+
+        .adm-nav::-webkit-scrollbar {
+            width: 0;
+        }
+
+    .adm-nav-section {
+        margin-bottom: 22px;
+    }
+
+    .adm-nav-label {
+        font-size: .67rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        color: var(--text-muted);
+        padding: 0 10px 6px;
+        text-transform: uppercase;
+    }
+
+    .adm-nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 10px;
+        border-radius: 9px;
+        cursor: pointer;
+        color: var(--text-sec);
+        font-size: .875rem;
+        font-weight: 500;
+        margin-bottom: 1px;
+        text-decoration: none;
+        transition: all .15s;
+    }
+
+        .adm-nav-item:hover {
+            background: var(--bg);
+            color: var(--text-pri);
+        }
+
+        .adm-nav-item.active {
+            background: var(--amber-dim);
+            color: var(--brown);
+            font-weight: 600;
+        }
+
+    .adm-nav-icon {
+        width: 18px;
+        text-align: center;
+        font-size: .92rem;
+        flex-shrink: 0;
+    }
+
+    .adm-nav-badge {
+        margin-left: auto;
+        background: var(--amber);
+        color: #fff;
+        font-size: .63rem;
+        font-weight: 800;
+        border-radius: 20px;
+        padding: 1px 7px;
+    }
+
+    .adm-sidebar-footer {
+        padding: 12px;
+        border-top: 1px solid var(--border);
+    }
+
+    .adm-user-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: 9px;
+        cursor: pointer;
+        transition: background .15s;
+    }
+
+        .adm-user-row:hover {
+            background: var(--bg);
+        }
+
+    .adm-avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--brown), var(--amber));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .75rem;
+        font-weight: 800;
+        color: #fff;
+        flex-shrink: 0;
+    }
+
+    .adm-user-name {
+        font-size: .84rem;
+        font-weight: 600;
+        color: var(--text-pri);
+    }
+
+    .adm-user-role {
+        font-size: .71rem;
+        color: var(--text-muted);
+        margin-top: 1px;
+    }
+
+    .adm-user-opts {
+        margin-left: auto;
+        color: var(--text-muted);
+    }
+
+    /* ── MAIN ── */
+    .adm-main {
+        margin-left: var(--sidebar-w);
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    .adm-topbar {
+        height: 60px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        padding: 0 28px;
+        gap: 14px;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .adm-topbar-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.12rem;
+        font-weight: 700;
+        color: var(--ink);
+    }
+
+    .adm-breadcrumb {
+        font-size: .77rem;
+        color: var(--text-muted);
+        margin-left: 2px;
+    }
+
+        .adm-breadcrumb span {
+            color: var(--amber);
+        }
+
+    .adm-search {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--bg);
+        border: 1px solid var(--border2);
+        border-radius: 9px;
+        padding: 7px 14px;
+        transition: all .18s;
+    }
+
+        .adm-search:focus-within {
+            border-color: var(--amber);
+            box-shadow: 0 0 0 3px var(--amber-dim);
+            background: var(--surface);
+        }
+
+        .adm-search i {
+            color: var(--text-muted);
+            font-size: .85rem;
+        }
+
+        .adm-search input {
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text-pri);
+            font-family: 'DM Sans', sans-serif;
+            font-size: .85rem;
+            width: 210px;
+        }
+
+            .adm-search input::placeholder {
+                color: var(--text-muted);
+            }
+
+    .adm-topbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .adm-icon-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--text-sec);
+        font-size: .88rem;
+        transition: all .15s;
+        position: relative;
+    }
+
+        .adm-icon-btn:hover {
+            border-color: var(--amber);
+            color: var(--amber);
+            background: var(--amber-dim);
+        }
+
+    .adm-notif-dot {
+        position: absolute;
+        top: 7px;
+        right: 7px;
+        width: 6px;
+        height: 6px;
+        background: var(--amber);
+        border-radius: 50%;
+        border: 1.5px solid var(--surface);
+    }
+
+    /* ── BODY ── */
+    .adm-body {
+        padding: 24px 28px;
+        flex: 1;
+    }
+
+    .page-hd {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 22px;
+        animation: fadeUp .3s ease both;
+    }
+
+        .page-hd h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: var(--ink);
+            margin-bottom: 3px;
+        }
+
+        .page-hd p {
+            font-size: .84rem;
+            color: var(--text-muted);
+        }
+
+    .page-hd-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    /* Stats */
+    .books-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .bstat {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px 18px;
+        box-shadow: var(--shadow-sm);
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        animation: fadeUp .3s ease both;
+        transition: box-shadow .2s, transform .2s;
+    }
+
+        .bstat:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .bstat:nth-child(1) {
+            animation-delay: .04s
+        }
+
+        .bstat:nth-child(2) {
+            animation-delay: .08s
+        }
+
+        .bstat:nth-child(3) {
+            animation-delay: .12s
+        }
+
+        .bstat:nth-child(4) {
+            animation-delay: .16s
+        }
+
+    .bstat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .bstat-val {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--ink);
+        line-height: 1;
+    }
+
+    .bstat-lbl {
+        font-size: .76rem;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+
+    /* Toolbar */
+    .books-toolbar {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+        box-shadow: var(--shadow-sm);
+        animation: fadeUp .3s .18s ease both;
+    }
+
+    .toolbar-search {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--bg);
+        border: 1px solid var(--border2);
+        border-radius: 9px;
+        padding: 7px 13px;
+        flex: 1;
+        min-width: 220px;
+        transition: all .18s;
+    }
+
+        .toolbar-search:focus-within {
+            border-color: var(--amber);
+            box-shadow: 0 0 0 3px var(--amber-dim);
+            background: var(--surface);
+        }
+
+        .toolbar-search i {
+            color: var(--text-muted);
+            font-size: .85rem;
+        }
+
+        .toolbar-search input {
+            background: none;
+            border: none;
+            outline: none;
+            font-family: 'DM Sans', sans-serif;
+            font-size: .85rem;
+            color: var(--text-pri);
+            width: 100%;
+        }
+
+            .toolbar-search input::placeholder {
+                color: var(--text-muted);
+            }
+
+    .filter-select {
+        background: var(--bg);
+        border: 1px solid var(--border2);
+        border-radius: 9px;
+        padding: 7px 28px 7px 12px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: .83rem;
+        color: var(--text-sec);
+        cursor: pointer;
+        outline: none;
+        transition: all .15s;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23A8947A'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        background-color: var(--bg);
+    }
+
+        .filter-select:focus {
+            border-color: var(--amber);
+            box-shadow: 0 0 0 3px var(--amber-dim);
+        }
+
+    .toolbar-sep {
+        width: 1px;
+        height: 28px;
+        background: var(--border);
+        flex-shrink: 0;
+    }
+
+    /* Table */
+    .books-tbl-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+        animation: fadeUp .3s .22s ease both;
+    }
+
+    .adm-tbl {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .adm-tbl th {
+            padding: 10px 16px;
+            text-align: left;
+            font-size: .69rem;
+            font-weight: 700;
+            letter-spacing: .06em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            background: var(--surface2);
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .adm-tbl td {
+            padding: 12px 16px;
+            font-size: .82rem;
+            color: var(--text-sec);
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .adm-tbl tr:last-child td {
+            border-bottom: none;
+        }
+
+        .adm-tbl tbody tr {
+            transition: background .12s;
+        }
+
+            .adm-tbl tbody tr:hover td {
+                background: var(--surface2);
+            }
+
+    .book-cell {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+    }
+
+    .book-thumb {
+        width: 38px;
+        height: 52px;
+        border-radius: 5px;
+        border: 1px solid var(--border);
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        background: var(--surface2);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .book-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+    .book-thumb-stripe {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+    }
+
+    .book-title {
+        font-size: .84rem;
+        font-weight: 600;
+        color: var(--text-pri);
+        white-space: nowrap;
+        max-width: 180px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .book-author {
+        font-size: .72rem;
+        color: var(--text-muted);
+        margin-top: 1px;
+    }
+
+    .cat-tag {
+        display: inline-block;
+        padding: 3px 9px;
+        border-radius: 20px;
+        font-size: .71rem;
+        font-weight: 600;
+        white-space: nowrap;
+        background: var(--amber-dim);
+        color: var(--amber);
+    }
+
+    .price-val {
+        font-weight: 700;
+        color: var(--ink);
+        font-size: .84rem;
+    }
+
+    .stock-bar-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .stock-bar {
+        flex: 1;
+        height: 5px;
+        background: var(--border);
+        border-radius: 3px;
+        overflow: hidden;
+        min-width: 50px;
+    }
+
+    .stock-bar-fill {
+        height: 100%;
+        border-radius: 3px;
+    }
+
+    .stock-num {
+        font-size: .8rem;
+        font-weight: 700;
+        white-space: nowrap;
+        min-width: 24px;
+        text-align: right;
+    }
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 9px;
+        border-radius: 20px;
+        font-size: .7rem;
+        font-weight: 700;
+    }
+
+        .badge::before {
+            content: '●';
+            font-size: .42rem;
+        }
+
+    .bg-ok {
+        background: var(--green-dim);
+        color: var(--green);
+    }
+
+    .bg-pnd {
+        background: var(--amber-dim);
+        color: var(--amber);
+    }
+
+    .bg-x {
+        background: var(--red-dim);
+        color: var(--red);
+    }
+
+    .tbl-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .tbl-action-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: .8rem;
+        color: var(--text-muted);
+        transition: all .15s;
+    }
+
+        .tbl-action-btn:hover {
+            border-color: var(--amber);
+            color: var(--amber);
+            background: var(--amber-dim);
+        }
+
+        .tbl-action-btn.del:hover {
+            border-color: var(--red);
+            color: var(--red);
+            background: var(--red-dim);
+        }
+
+    .checkbox-cell {
+        width: 40px;
+    }
+
+    .adm-checkbox {
+        width: 15px;
+        height: 15px;
+        accent-color: var(--amber);
+        cursor: pointer;
+    }
+
+    /* Skeleton */
+    .skeleton {
+        background: linear-gradient(90deg, var(--border) 25%, var(--surface2) 50%, var(--border) 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.4s infinite;
+        border-radius: 6px;
+    }
+
+    @@keyframes shimmer {
+        0% {
+            background-position: 200% 0
+        }
+
+        100% {
+            background-position: -200% 0
+        }
+    }
+
+    .sk-row td {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    /* Pagination */
+    .pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 18px;
+        border-top: 1px solid var(--border);
+        background: var(--surface2);
+    }
+
+    .pag-info {
+        font-size: .78rem;
+        color: var(--text-muted);
+    }
+
+        .pag-info b {
+            color: var(--text-sec);
+            font-weight: 600;
+        }
+
+    .pag-btns {
+        display: flex;
+        gap: 4px;
+    }
+
+    .pag-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: .8rem;
+        font-weight: 600;
+        color: var(--text-sec);
+        font-family: 'DM Sans', sans-serif;
+        transition: all .15s;
+    }
+
+        .pag-btn:hover:not(:disabled):not(.on) {
+            border-color: var(--amber);
+            color: var(--amber);
+            background: var(--amber-dim);
+        }
+
+        .pag-btn.on {
+            background: var(--amber);
+            color: #fff;
+            border-color: var(--amber);
+        }
+
+        .pag-btn:disabled {
+            opacity: .4;
+            cursor: default;
+            pointer-events: none;
+        }
+
+    /* Empty */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-muted);
+    }
+
+        .empty-state i {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            display: block;
+            opacity: .4;
+        }
+
+        .empty-state p {
+            font-size: .9rem;
+        }
+
+    /* Buttons */
+    .btn {
+        padding: 7px 14px;
+        border-radius: 8px;
+        font-size: .8rem;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: 'DM Sans', sans-serif;
+        border: 1px solid transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: all .15s;
+    }
+
+        .btn:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+    .btn-primary {
+        background: var(--amber);
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(212,134,11,.2);
+    }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--amber-lt);
+        }
+
+    .btn-outline {
+        background: var(--bg);
+        color: var(--text-sec);
+        border-color: var(--border2);
+    }
+
+        .btn-outline:hover:not(:disabled) {
+            border-color: var(--amber);
+            color: var(--amber);
+        }
+
+    .btn-danger {
+        background: var(--red-dim);
+        color: var(--red);
+        border-color: rgba(192,57,43,0.2);
+    }
+
+        .btn-danger:hover:not(:disabled) {
+            background: var(--red);
+            color: #fff;
+        }
+
+    /* Toast */
+    .toast-wrap {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 99999;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        pointer-events: none;
+    }
+
+    .toast {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--ink);
+        color: #fff;
+        padding: 12px 18px;
+        border-radius: 11px;
+        font-size: .84rem;
+        font-weight: 500;
+        box-shadow: var(--shadow-md);
+        animation: slideInRight .25s ease;
+        min-width: 260px;
+        pointer-events: auto;
+    }
+
+        .toast.success {
+            background: var(--green);
+        }
+
+        .toast.error {
+            background: var(--red);
+        }
+
+        .toast i {
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+    @@keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(30px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0)
+        }
+    }
+
+    /* ── MODAL — z-index cao hơn mọi thứ ── */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(26,18,8,0.5);
+        z-index: 99999; /* cao hơn sidebar (100) */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(3px);
+        animation: fadeIn .18s ease;
+    }
+
+    .modal-panel {
+        background: var(--surface);
+        border-radius: 18px;
+        width: 700px;
+        max-width: 96vw;
+        max-height: 92vh;
+        overflow-y: auto;
+        box-shadow: 0 24px 80px rgba(26,18,8,0.25);
+        animation: slideUp .22s ease;
+    }
+
+    .modal-hd {
+        padding: 22px 26px 18px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: sticky;
+        top: 0;
+        background: var(--surface);
+        z-index: 5;
+        border-radius: 18px 18px 0 0;
+    }
+
+    .modal-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.12rem;
+        font-weight: 800;
+        color: var(--ink);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .modal-title-badge {
+        font-family: 'DM Sans', sans-serif;
+        font-size: .68rem;
+        font-weight: 700;
+        background: var(--amber-dim);
+        color: var(--amber);
+        border: 1px solid rgba(212,134,11,0.25);
+        border-radius: 6px;
+        padding: 2px 8px;
+    }
+
+    .modal-close {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--text-muted);
+        font-size: .9rem;
+        transition: all .15s;
+        flex-shrink: 0;
+    }
+
+        .modal-close:hover {
+            border-color: var(--red);
+            color: var(--red);
+            background: var(--red-dim);
+        }
+
+    .modal-body {
+        padding: 22px 26px;
+    }
+
+    .modal-ft {
+        padding: 16px 26px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        background: var(--surface2);
+        border-radius: 0 0 18px 18px;
+        position: sticky;
+        bottom: 0;
+    }
+
+    /* Form */
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        position: relative;
+        z-index: 1;
+    }
+
+        .form-group:focus-within {
+            z-index: 10;
+        }
+
+        .form-group.span2 {
+            grid-column: 1 / -1;
+        }
+
+    .form-label {
+        font-size: .77rem;
+        font-weight: 700;
+        color: var(--text-sec);
+        letter-spacing: .02em;
+    }
+
+        .form-label .req {
+            color: var(--red);
+            margin-left: 2px;
+        }
+
+    .form-input, .form-select, .form-textarea {
+        background: var(--bg);
+        border: 1px solid var(--border2);
+        border-radius: 9px;
+        padding: 9px 13px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: .85rem;
+        color: var(--text-pri);
+        outline: none;
+        transition: all .18s;
+        width: 100%;
+    }
+
+    .form-select {
+        appearance: none;
+        cursor: pointer;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23A8947A'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-color: var(--bg);
+        padding-right: 32px;
+    }
+
+    .form-textarea {
+        resize: vertical;
+        min-height: 82px;
+    }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            border-color: var(--amber);
+            box-shadow: 0 0 0 3px var(--amber-dim);
+            background: var(--surface);
+        }
+
+    .form-input.invalid {
+        border-color: var(--red) !important;
+        box-shadow: 0 0 0 3px var(--red-dim) !important;
+    }
+
+    .form-input::placeholder, .form-textarea::placeholder {
+        color: var(--text-muted);
+    }
+
+    .form-hint {
+        font-size: .71rem;
+        color: var(--text-muted);
+    }
+
+    .form-err {
+        font-size: .72rem;
+        color: var(--red);
+        display: flex;
+        align-items: center;
+        gap: 3px;
+    }
+
+    .section-divider {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 4px 0;
+    }
+
+        .section-divider span {
+            font-size: .72rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .section-divider::before, .section-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+    /* Upload */
+    .upload-zone {
+        border: 2px dashed var(--border2);
+        border-radius: 10px;
+        padding: 22px 16px;
+        text-align: center;
+        cursor: pointer;
+        transition: all .18s;
+        background: var(--surface2);
+        display: block;
+    }
+
+        .upload-zone:hover {
+            border-color: var(--amber);
+            background: var(--amber-dim);
+        }
+
+        .upload-zone i {
+            font-size: 1.8rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .upload-zone p {
+            font-size: .8rem;
+            color: var(--text-muted);
+        }
+
+        .upload-zone span {
+            color: var(--amber);
+            font-weight: 600;
+        }
+
+    .upload-preview {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+    }
+
+        .upload-preview img {
+            width: 40px;
+            height: 54px;
+            object-fit: cover;
+            border-radius: 5px;
+            border: 1px solid var(--border);
+        }
+
+    .upload-preview-name {
+        font-size: .82rem;
+        font-weight: 600;
+        color: var(--text-sec);
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .upload-preview-remove {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--text-muted);
+        font-size: .75rem;
+        transition: all .15s;
+        flex-shrink: 0;
+    }
+
+        .upload-preview-remove:hover {
+            border-color: var(--red);
+            color: var(--red);
+            background: var(--red-dim);
+        }
+
+    /* Confirm */
+    .confirm-panel {
+        background: var(--surface);
+        border-radius: 16px;
+        width: 400px;
+        max-width: 94vw;
+        box-shadow: 0 20px 60px rgba(26,18,8,0.22);
+        animation: slideUp .2s ease;
+        padding: 28px 26px 22px;
+        text-align: center;
+    }
+
+    .confirm-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        background: var(--red-dim);
+        color: var(--red);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        margin: 0 auto 14px;
+    }
+
+    .confirm-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.08rem;
+        font-weight: 800;
+        color: var(--ink);
+        margin-bottom: 6px;
+    }
+
+    .confirm-msg {
+        font-size: .84rem;
+        color: var(--text-sec);
+        margin-bottom: 20px;
+        line-height: 1.5;
+    }
+
+        .confirm-msg b {
+            color: var(--ink);
+        }
+
+    .confirm-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+    }
+
+    .spin-inline {
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255,255,255,.35);
+        border-top-color: #fff;
+        border-radius: 50%;
+        display: inline-block;
+        animation: spin .7s linear infinite;
+        flex-shrink: 0;
+    }
+
+    @@keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0)
+        }
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0
+        }
+
+        to {
+            opacity: 1
+        }
+    }
+
+    @@keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(16px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0)
+        }
+    }
+
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg)
+        }
+    }
+
+    ::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--border2);
+        border-radius: 10px;
+    }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+</style>
+
+<div class="adm-shell">
+
+    <!-- SIDEBAR — thêm class modal-open khi modal đang hiện để hạ z-index xuống -->
+    <aside class="adm-sidebar @(showModal || showDeleteConfirm ? "modal-open" : "")">
+        <div class="adm-logo">
+            <div class="adm-logo-icon"><i class="bi bi-book-half"></i></div>
+            <span class="adm-logo-text">Book<span>Store</span></span>
+            <span class="adm-logo-badge">ADMIN</span>
+        </div>
+        <nav class="adm-nav">
+            <div class="adm-nav-section">
+                <div class="adm-nav-label">Tổng quan</div>
+                <a href="/admin" class="adm-nav-item"><span class="adm-nav-icon"><i class="bi bi-grid-fill"></i></span> Dashboard</a>
+                <a href="/admin/analytics" class="adm-nav-item"><span class="adm-nav-icon"><i class="bi bi-bar-chart-line-fill"></i></span> Thống kê</a>
+            </div>
+            <div class="adm-nav-section">
+                <div class="adm-nav-label">Quản lý</div>
+                <a href="/admin/orders" class="adm-nav-item"><span class="adm-nav-icon"><i class="bi bi-bag-fill"></i></span> Đơn hàng <span class="adm-nav-badge">12</span></a>
+                <a href="/admin/books" class="adm-nav-item active"><span class="adm-nav-icon"><i class="bi bi-journals"></i></span> Sách</a>
+                <a href="/admin/authors" class="adm-nav-item"><span class="adm-nav-icon"><i class="bi bi-person-lines-fill"></i></span> Tác giả</a>
+                <a href="/admin/categories" class="adm-nav-item"><span class="adm-nav-icon"><i class="bi bi-tags-fill"></i></span> Danh mục</a>
+                <a href="/admin/customers" class="adm-nav-item"><span class="adm-nav-icon"><i class="bi bi-people-fill"></i></span> Khách hàng</a>
+                <a href="/admin/reviews" class="adm-nav-item"><span class="adm-nav-icon"><i class="bi bi-star-fill"></i></span> Đánh giá <span class="adm-nav-badge">3</span></a>
+            </div>
+            <div class="adm-nav-section">
+                <div class="adm-nav-label">Hệ thống</div>
+                <a href="/admin/promotions" class="adm-nav-item"><span class="adm-nav-icon"><i class="bi bi-gift-fill"></i></span> Khuyến mãi</a>
+                <a href="/admin/settings" class="adm-nav-item"><span class="adm-nav-icon"><i class="bi bi-gear-fill"></i></span> Cài đặt</a>
+            </div>
+        </nav>
+        <div class="adm-sidebar-footer">
+            <div class="adm-user-row">
+                <div class="adm-avatar">AD</div>
+                <div><div class="adm-user-name">Admin</div><div class="adm-user-role">Super Admin</div></div>
+                <div class="adm-user-opts"><i class="bi bi-three-dots-vertical"></i></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="adm-main">
+        <header class="adm-topbar">
+            <div>
+                <div class="adm-topbar-title">Quản lý Sách</div>
+                <div class="adm-breadcrumb">Admin / <span>Sách</span></div>
+            </div>
+            <div class="adm-search">
+                <i class="bi bi-search"></i>
+                <input type="text" placeholder="Tìm kiếm sách, tác giả..." value="@searchQuery" @oninput="OnSearchInput" />
+            </div>
+            <div class="adm-topbar-actions">
+                <div class="adm-icon-btn"><i class="bi bi-bell"></i><span class="adm-notif-dot"></span></div>
+                <div class="adm-icon-btn"><i class="bi bi-question-circle"></i></div>
+                <div class="adm-avatar" style="width:34px;height:34px;font-size:.75rem;cursor:pointer;">AD</div>
+            </div>
+        </header>
+
+        <div class="adm-body">
+
+            <!-- Page Header -->
+            <div class="page-hd">
+                <div>
+                    <h2>Danh sách Sách 📚</h2>
+                    <p>Quản lý toàn bộ kho sách của BookStore.</p>
+                </div>
+                <div class="page-hd-actions">
+                    <button class="btn btn-outline"><i class="bi bi-download"></i> Export</button>
+                    <button class="btn btn-primary" @onclick="OpenAddModal">
+                        <i class="bi bi-plus-lg"></i> Thêm sách mới
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="books-stats">
+                <div class="bstat">
+                    <div class="bstat-icon" style="background:var(--amber-dim);color:var(--amber)"><i class="bi bi-journals"></i></div>
+                    <div><div class="bstat-val">@books.Count</div><div class="bstat-lbl">Tổng đầu sách</div></div>
+                </div>
+                <div class="bstat">
+                    <div class="bstat-icon" style="background:var(--green-dim);color:var(--green)"><i class="bi bi-check-circle-fill"></i></div>
+                    <div><div class="bstat-val">@books.Count(b => b.Quantity > 5)</div><div class="bstat-lbl">Còn hàng tốt</div></div>
+                </div>
+                <div class="bstat">
+                    <div class="bstat-icon" style="background:var(--amber-dim);color:var(--amber)"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                    <div><div class="bstat-val">@books.Count(b => b.Quantity > 0 && b.Quantity <= 5)</div><div class="bstat-lbl">Sắp hết hàng</div></div>
+                </div>
+                <div class="bstat">
+                    <div class="bstat-icon" style="background:var(--red-dim);color:var(--red)"><i class="bi bi-x-circle-fill"></i></div>
+                    <div><div class="bstat-val">@books.Count(b => b.Quantity == 0)</div><div class="bstat-lbl">Hết hàng</div></div>
+                </div>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="books-toolbar">
+                <div class="toolbar-search">
+                    <i class="bi bi-search"></i>
+                    <input type="text" placeholder="Tìm tên sách, tác giả..." value="@searchQuery" @oninput="OnSearchInput" />
+                </div>
+                <select class="filter-select" @bind="filterCategory" @bind:after="ApplyFilters">
+                    <option value="">Tất cả danh mục</option>
+                    @foreach (var cat in categories)
+                    {
+                        <option value="@cat">@cat</option>
+                    }
+                </select>
+                <select class="filter-select" @bind="filterStock" @bind:after="ApplyFilters">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="ok">Còn hàng</option>
+                    <option value="low">Sắp hết</option>
+                    <option value="out">Hết hàng</option>
+                </select>
+                <select class="filter-select" @bind="sortBy" @bind:after="ApplyFilters">
+                    <option value="newest">Mới nhất</option>
+                    <option value="name">Tên A → Z</option>
+                    <option value="price_asc">Giá thấp → cao</option>
+                    <option value="price_desc">Giá cao → thấp</option>
+                    <option value="stock_asc">Tồn kho ít nhất</option>
+                </select>
+                <div class="toolbar-sep"></div>
+                <div style="font-size:.78rem;color:var(--text-muted);white-space:nowrap">
+                    <b style="color:var(--text-sec)">@filteredBooks.Count</b> kết quả
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="books-tbl-card">
+                <table class="adm-tbl">
+                    <thead>
+                        <tr>
+                            <th class="checkbox-cell"><input type="checkbox" class="adm-checkbox" /></th>
+                            <th>Sách</th>
+                            <th>Danh mục</th>
+                            <th>Tác giả</th>
+                            <th>Giá bán</th>
+                            <th>Tồn kho</th>
+                            <th>Năm XB</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (isLoading)
+                        {
+                            @for (int s = 0; s < 6; s++)
+                            {
+                                <tr class="sk-row">
+                                    <td><div class="skeleton" style="width:15px;height:15px;border-radius:3px"></div></td>
+                                    <td>
+                                        <div style="display:flex;align-items:center;gap:10px">
+                                            <div class="skeleton" style="width:38px;height:52px;border-radius:5px;flex-shrink:0"></div>
+                                            <div><div class="skeleton" style="width:140px;height:13px;margin-bottom:6px"></div><div class="skeleton" style="width:80px;height:11px"></div></div>
+                                        </div>
+                                    </td>
+                                    <td><div class="skeleton" style="width:80px;height:22px;border-radius:20px"></div></td>
+                                    <td><div class="skeleton" style="width:100px;height:13px"></div></td>
+                                    <td><div class="skeleton" style="width:70px;height:13px"></div></td>
+                                    <td><div class="skeleton" style="width:90px;height:8px;border-radius:4px"></div></td>
+                                    <td><div class="skeleton" style="width:36px;height:13px"></div></td>
+                                    <td><div class="skeleton" style="width:70px;height:22px;border-radius:20px"></div></td>
+                                    <td><div style="display:flex;gap:4px"><div class="skeleton" style="width:28px;height:28px;border-radius:7px"></div><div class="skeleton" style="width:28px;height:28px;border-radius:7px"></div></div></td>
+                                </tr>
+                            }
+                        }
+                        else if (!pagedBooks.Any())
+                        {
+                            <tr><td colspan="9"><div class="empty-state"><i class="bi bi-journal-x"></i><p>Không tìm thấy sách nào</p></div></td></tr>
+                        }
+                        else
+                        {
+                            @foreach (var book in pagedBooks)
+                            {
+                                var qty = book.Quantity;
+                                var stockStatus = qty == 0 ? "out" : qty <= 5 ? "low" : "ok";
+                                var stockColor = qty == 0 ? "var(--red)" : qty <= 5 ? "var(--amber)" : "var(--green)";
+                                var stockMax = Math.Max(qty, 30);
+                                var stockPct = stockMax > 0 ? (int)((double)qty / stockMax * 100) : 0;
+                                var badgeCls = stockStatus == "ok" ? "bg-ok" : stockStatus == "low" ? "bg-pnd" : "bg-x";
+                                var badgeTxt = stockStatus == "ok" ? "Còn hàng" : stockStatus == "low" ? "Sắp hết" : "Hết hàng";
+                                <tr>
+                                    <td class="checkbox-cell"><input type="checkbox" class="adm-checkbox" /></td>
+                                    <td>
+                                        <div class="book-cell">
+                                            <div class="book-thumb">
+                                                @if (!string.IsNullOrEmpty(book.ImageUrl))
+                                                {
+                                                    <img src="@book.ImageUrl" alt="@book.BookTitle" />
+                                                }
+                                                else
+                                                {
+                                                    <div class="book-thumb-stripe" style="background:var(--amber)"></div>
+                                                    <span>📖</span>
+                                                }
+                                            </div>
+                                            <div>
+                                                <div class="book-title" title="@book.BookTitle">@book.BookTitle</div>
+                                                <div class="book-author">@(book.Publisher ?? "—")</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><span class="cat-tag">@(book.CategoryName ?? "—")</span></td>
+                                    <td style="font-size:.82rem">@(book.AuthorName ?? "—")</td>
+                                    <td><span class="price-val">@book.Price.ToString("N0")đ</span></td>
+                                    <td>
+                                        <div class="stock-bar-wrap">
+                                            <div class="stock-bar"><div class="stock-bar-fill" style="width:@(stockPct)%;background:@stockColor"></div></div>
+                                            <span class="stock-num" style="color:@stockColor">@qty</span>
+                                        </div>
+                                    </td>
+                                    <td style="color:var(--text-muted);font-size:.8rem">@(book.PublishYear > 0 ? book.PublishYear.ToString() : "—")</td>
+                                    <td><span class="badge @badgeCls">@badgeTxt</span></td>
+                                    <td>
+                                        <div class="tbl-actions">
+                                            <button class="tbl-action-btn" title="Chỉnh sửa" @onclick="() => OpenEditModal(book)"><i class="bi bi-pencil"></i></button>
+                                            <button class="tbl-action-btn del" title="Xoá" @onclick="() => OpenDeleteConfirm(book)"><i class="bi bi-trash"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+
+                @if (!isLoading && filteredBooks.Count > pageSize)
+                {
+                    <div class="pagination">
+                        <div class="pag-info">
+                            Hiển thị <b>@((currentPage - 1) * pageSize + 1)–@(Math.Min(currentPage * pageSize, filteredBooks.Count))</b>
+                            trong <b>@filteredBooks.Count</b> sách
+                        </div>
+                        <div class="pag-btns">
+                            <button class="pag-btn" disabled="@(currentPage==1)" @onclick="()=>GoToPage(currentPage-1)"><i class="bi bi-chevron-left"></i></button>
+                            @for (int p = 1; p <= totalPages; p++)
+                            {
+                                var pg = p;
+                                if (pg == 1 || pg == totalPages || (pg >= currentPage - 1 && pg <= currentPage + 1))
+                                {
+                                    <button class="pag-btn @(pg==currentPage?"on":"")" @onclick="()=>GoToPage(pg)">@pg</button>
+                                }
+                                else if (pg == currentPage - 2 || pg == currentPage + 2)
+                                {
+                                    <button class="pag-btn" style="cursor:default;pointer-events:none">…</button>
+                                }
+                            }
+                            <button class="pag-btn" disabled="@(currentPage==totalPages)" @onclick="()=>GoToPage(currentPage+1)"><i class="bi bi-chevron-right"></i></button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ MODAL THÊM / SỬA ══ -->
+@if (showModal)
+{
+    <div class="modal-overlay" @onclick="CloseModal">
+        <div class="modal-panel" @onclick:stopPropagation="true">
+            <div class="modal-hd">
+                <div class="modal-title">
+                    @(isEditMode ? "✏️ Chỉnh sửa sách" : "✚ Thêm sách mới")
+                    <span class="modal-title-badge">@(isEditMode ? "EDIT" : "NEW")</span>
+                </div>
+                <button class="modal-close" @onclick="CloseModal"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+
+                    <div class="form-group span2">
+                        <label class="form-label">Tên sách <span class="req">*</span></label>
+                        <input class="form-input @(formErrors.ContainsKey("BookTitle")?"invalid":"")"
+                               type="text" placeholder="Nhập tên sách..."
+                               value="@formModel.BookTitle"
+                               @oninput="e => formModel.BookTitle = e.Value?.ToString() ?? string.Empty" />
+                        @if (formErrors.ContainsKey("BookTitle"))
+                        {
+                            <span class="form-err"><i class="bi bi-exclamation-circle"></i> @formErrors["BookTitle"]</span>
+                        }
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Danh mục <span class="req">*</span></label>
+                        @if (isLoadingCategories)
+                        {
+                            <div style="display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--bg);border:1px solid var(--border2);border-radius:9px;font-size:.85rem;color:var(--text-muted)">
+                                <span class="spin-inline" style="border-color:var(--border2);border-top-color:var(--amber)"></span> Đang tải...
+                            </div>
+                        }
+                        else
+                        {
+                            <select class="form-select @(formErrors.ContainsKey("CategoryId")?"invalid":"")" @bind="formModel.CategoryId">
+                                <option value="0">— Chọn danh mục —</option>
+                                @foreach (var c in categoryList)
+                                {
+                                    <option value="@c.CategoryId">@c.CategoryName</option>
+                                }
+                            </select>
+                        }
+                        @if (formErrors.ContainsKey("CategoryId"))
+                        {
+                            <span class="form-err"><i class="bi bi-exclamation-circle"></i> @formErrors["CategoryId"]</span>
+                        }
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Tác giả <span class="req">*</span></label>
+                        @if (isLoadingAuthors)
+                        {
+                            <div style="display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--bg);border:1px solid var(--border2);border-radius:9px;font-size:.85rem;color:var(--text-muted)">
+                                <span class="spin-inline" style="border-color:var(--border2);border-top-color:var(--amber)"></span> Đang tải...
+                            </div>
+                        }
+                        else
+                        {
+                            <select class="form-select @(formErrors.ContainsKey("AuthorId")?"invalid":"")" @bind="formModel.AuthorId">
+                                <option value="0">— Chọn tác giả —</option>
+                                @foreach (var a in authorList)
+                                {
+                                    <option value="@a.AuthorId">@a.AuthorName</option>
+                                }
+                            </select>
+                        }
+                        @if (formErrors.ContainsKey("AuthorId"))
+                        {
+                            <span class="form-err"><i class="bi bi-exclamation-circle"></i> @formErrors["AuthorId"]</span>
+                        }
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Nhà xuất bản</label>
+                        <input class="form-input" type="text" placeholder="NXB Kim Đồng, Trẻ..." @bind="formModel.Publisher" />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Năm xuất bản</label>
+                        <input class="form-input" type="number" placeholder="2024" @bind="formModel.PublishYear" />
+                    </div>
+
+                    <div class="form-group span2">
+                        <div class="section-divider"><span>Giá & Kho</span></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Giá bán <span class="req">*</span></label>
+                        <input class="form-input @(formErrors.ContainsKey("Price")?"invalid":"")"
+                               type="number" min="0" placeholder="149000" @bind="formModel.Price" />
+                        <span class="form-hint">Đơn vị: VNĐ</span>
+                        @if (formErrors.ContainsKey("Price"))
+                        {
+                            <span class="form-err"><i class="bi bi-exclamation-circle"></i> @formErrors["Price"]</span>
+                        }
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Tồn kho <span class="req">*</span></label>
+                        <input class="form-input @(formErrors.ContainsKey("Quantity")?"invalid":"")"
+                               type="number" min="0" placeholder="0" @bind="formModel.Quantity" />
+                        @if (formErrors.ContainsKey("Quantity"))
+                        {
+                            <span class="form-err"><i class="bi bi-exclamation-circle"></i> @formErrors["Quantity"]</span>
+                        }
+                    </div>
+
+                    <div class="form-group span2">
+                        <div class="section-divider"><span>Mô tả</span></div>
+                    </div>
+
+                    <div class="form-group span2">
+                        <label class="form-label">Mô tả</label>
+                        <textarea class="form-textarea" placeholder="Tóm tắt nội dung sách..." @bind="formModel.Description"></textarea>
+                    </div>
+
+                    <div class="form-group span2">
+                        <div class="section-divider"><span>Ảnh bìa</span></div>
+                    </div>
+
+                    <div class="form-group span2">
+                        @if (selectedFile != null)
+                        {
+                            <div class="upload-preview">
+                                <i class="bi bi-file-earmark-image" style="font-size:1.4rem;color:var(--amber);flex-shrink:0"></i>
+                                <span class="upload-preview-name">@selectedFile.Name</span>
+                                <span style="font-size:.72rem;color:var(--text-muted);white-space:nowrap">@(selectedFile.Size / 1024) KB</span>
+                                <div class="upload-preview-remove" @onclick="ClearFile"><i class="bi bi-x"></i></div>
+                            </div>
+                        }
+                        else if (isEditMode && !string.IsNullOrEmpty(formModel.ExistingImageUrl))
+                        {
+                            <div class="upload-preview" style="margin-bottom:8px">
+                                <img src="@formModel.ExistingImageUrl" alt="cover" />
+                                <span class="upload-preview-name">Ảnh bìa hiện tại</span>
+                                <span style="font-size:.72rem;color:var(--text-muted)">Tải ảnh mới để thay thế</span>
+                            </div>
+                            <label class="upload-zone" for="fileInput" style="padding:12px">
+                                <i class="bi bi-arrow-repeat" style="font-size:1.2rem;margin-bottom:4px"></i>
+                                <p><span>Nhấp để chọn ảnh mới</span></p>
+                            </label>
+                        }
+                        else
+                        {
+                            <label class="upload-zone" for="fileInput">
+                                <i class="bi bi-cloud-upload"></i>
+                                <p><span>Nhấp để tải ảnh</span> hoặc kéo thả vào đây</p>
+                                <p style="margin-top:4px;font-size:.7rem">PNG, JPG tối đa 5MB — Khuyến nghị 400×600px</p>
+                            </label>
+                        }
+                        <InputFile id="fileInput" OnChange="OnFileSelected" accept="image/*" style="display:none" />
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal-ft">
+                <button class="btn btn-outline" @onclick="CloseModal" disabled="@isSaving">Huỷ</button>
+                <button class="btn btn-primary" @onclick="SubmitForm" disabled="@isSaving">
+                    @if (isSaving)
+                    {
+                        <span class="spin-inline"></span>
+
+                        <span>Đang lưu...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-check-lg"></i>
+                        <span>@(isEditMode ? "Lưu thay đổi" : "Thêm sách")</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- ══ XÁC NHẬN XOÁ ══ -->
+@if (showDeleteConfirm && bookToDelete != null)
+{
+    <div class="modal-overlay" @onclick="() => showDeleteConfirm = false">
+        <div class="confirm-panel" @onclick:stopPropagation="true">
+            <div class="confirm-icon"><i class="bi bi-trash3-fill"></i></div>
+            <div class="confirm-title">Xoá sách này?</div>
+            <div class="confirm-msg">
+                Bạn chắc chắn muốn xoá cuốn <b>"@bookToDelete.BookTitle"</b>?<br />
+                Hành động này <b>không thể hoàn tác</b>.
+            </div>
+            <div class="confirm-actions">
+                <button class="btn btn-outline" @onclick="() => showDeleteConfirm = false" disabled="@isSaving">Huỷ bỏ</button>
+                <button class="btn btn-danger" @onclick="ConfirmDelete" disabled="@isSaving">
+                    @if (isSaving)
+                    {
+                        <span class="spin-inline" style="border-color:rgba(255,255,255,.35);border-top-color:#fff"></span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-trash3"></i>
+                    }
+                    Xoá sách
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- TOAST -->
+<div class="toast-wrap">
+    @foreach (var t in toasts)
+    {
+        <div class="toast @t.Type">
+            <i class="bi @(t.Type=="success"?"bi-check-circle-fill":"bi-x-circle-fill")"></i>
+            @t.Message
+        </div>
+    }
+</div>
+
+@code {
+    private List<BookResponseDto> books = new();
+    private List<BookResponseDto> filteredBooks = new();
+    private List<BookResponseDto> pagedBooks = new();
+    private List<string> categories = new();
+    private bool isLoading = true;
+    private bool isSaving = false;
+    private string searchQuery = "";
+    private string filterCategory = "";
+    private string filterStock = "";
+    private string sortBy = "newest";
+    private CancellationTokenSource? searchCts;
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private int totalPages => (int)Math.Ceiling((double)filteredBooks.Count / pageSize);
+    private bool showModal = false;
+    private bool isEditMode = false;
+    private BookFormModel formModel = new();
+    private IBrowserFile? selectedFile;
+    private Dictionary<string, string> formErrors = new();
+    private bool showDeleteConfirm = false;
+    private BookResponseDto? bookToDelete;
+    private List<ToastItem> toasts = new();
+    private List<AuthorDto> authorList = new();
+    private List<CategoryDto> categoryList = new();
+    private bool isLoadingAuthors = false;
+    private bool isLoadingCategories = false;
+
+    protected override void OnInitialized() => isLoading = true;
+
+    private async Task SetAuthorizationHeader()
+    {
+        var token = await JS.InvokeAsync<string>("localStorage.getItem", "accessToken");
+        if (!string.IsNullOrEmpty(token))
+            Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadBooks();
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadBooks()
+    {
+        isLoading = true;
+        try
+        {
+            await SetAuthorizationHeader();
+            var result = await Http.GetFromJsonAsync<List<BookResponseDto>>("api/book");
+            books = result ?? new();
+            categories = books.Where(b => !string.IsNullOrEmpty(b.CategoryName)).Select(b => b.CategoryName!).Distinct().OrderBy(c => c).ToList();
+            ApplyFilters();
+        }
+        catch { ShowToast("Không thể tải danh sách sách", "error"); }
+        finally { isLoading = false; }
+    }
+
+    private async Task<string?> GetToken()
+        => await JS.InvokeAsync<string?>("localStorage.getItem", "accessToken");
+
+    private async Task LoadAuthors()
+    {
+        isLoadingAuthors = true;
+        try
+        {
+            await SetAuthorizationHeader(); // dùng cùng hàm với LoadCategories
+            var result = await Http.GetFromJsonAsync<List<AuthorDto>>("api/Author");
+            authorList = result ?? new();
+        }
+        catch (Exception ex)
+        {
+            ShowToast("Lỗi tác giả: " + ex.Message, "error");
+            Console.WriteLine($"AUTHOR EX: {ex}");
+        }
+        finally { isLoadingAuthors = false; }
+    }
+
+    private async Task LoadCategories()
+    {
+        isLoadingCategories = true;
+        try
+        {
+            await SetAuthorizationHeader();
+            var result = await Http.GetFromJsonAsync<List<CategoryDto>>("api/Category");
+            categoryList = result ?? new();
+        }
+        catch (Exception ex)
+        {
+            ShowToast("Lỗi danh mục: " + ex.Message, "error");
+            Console.WriteLine($"CATEGORY EX: {ex}");
+        }
+        finally { isLoadingCategories = false; }
+    }
+
+    private void ApplyFilters()
+    {
+        var q = books.AsEnumerable();
+        if (!string.IsNullOrWhiteSpace(searchQuery))
+        {
+            var kw = searchQuery.Trim().ToLower();
+            q = q.Where(b => (b.BookTitle?.ToLower().Contains(kw) ?? false) || (b.AuthorName?.ToLower().Contains(kw) ?? false) || (b.Publisher?.ToLower().Contains(kw) ?? false));
+        }
+        if (!string.IsNullOrEmpty(filterCategory)) q = q.Where(b => b.CategoryName == filterCategory);
+        q = filterStock switch { "ok" => q.Where(b => b.Quantity > 5), "low" => q.Where(b => b.Quantity > 0 && b.Quantity <= 5), "out" => q.Where(b => b.Quantity == 0), _ => q };
+        q = sortBy switch { "name" => q.OrderBy(b => b.BookTitle), "price_asc" => q.OrderBy(b => b.Price), "price_desc" => q.OrderByDescending(b => b.Price), "stock_asc" => q.OrderBy(b => b.Quantity), _ => q.OrderByDescending(b => b.BookId) };
+        filteredBooks = q.ToList();
+        currentPage = 1;
+        UpdatePage();
+    }
+
+    private void UpdatePage() => pagedBooks = filteredBooks.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
+
+    private void GoToPage(int page) { if (page < 1 || page > totalPages) return; currentPage = page; UpdatePage(); }
+
+    private async Task OnSearchInput(ChangeEventArgs e)
+    {
+        searchQuery = e.Value?.ToString() ?? "";
+        searchCts?.Cancel();
+        searchCts = new CancellationTokenSource();
+        try { await Task.Delay(300, searchCts.Token); ApplyFilters(); }
+        catch (TaskCanceledException) { }
+    }
+
+    private async Task OpenAddModal()
+    {
+        isEditMode = false;
+        formModel = new();
+        selectedFile = null;
+        formErrors.Clear();
+        showModal = true;
+        StateHasChanged();
+        // Load lại mỗi lần mở để đảm bảo có data
+        await Task.WhenAll(LoadAuthors(), LoadCategories());
+        StateHasChanged();
+    }
+
+    private async Task OpenEditModal(BookResponseDto book)
+    {
+        isEditMode = true;
+        formModel = new BookFormModel
+            {
+                BookId = book.BookId,
+                BookTitle = book.BookTitle ?? "",
+                CategoryId = book.CategoryId,
+                AuthorId = book.AuthorId,
+                Publisher = book.Publisher ?? "",
+                PublishYear = book.PublishYear,
+                Price = book.Price,
+                Quantity = book.Quantity,
+                Description = book.Description ?? "",
+                ExistingImageUrl = book.ImageUrl
+            };
+        selectedFile = null;
+        formErrors.Clear();
+        showModal = true;
+        StateHasChanged();
+        await Task.WhenAll(LoadAuthors(), LoadCategories());
+        StateHasChanged();
+    }
+
+    private void CloseModal() { showModal = false; formErrors.Clear(); StateHasChanged(); }
+    private void OnFileSelected(InputFileChangeEventArgs e) => selectedFile = e.File;
+    private void ClearFile() => selectedFile = null;
+
+    private bool ValidateForm()
+    {
+        formErrors.Clear();
+        if (string.IsNullOrWhiteSpace(formModel.BookTitle)) formErrors["BookTitle"] = "Tên sách không được để trống";
+        if (formModel.AuthorId <= 0) formErrors["AuthorId"] = "Vui lòng chọn tác giả";
+        if (formModel.CategoryId <= 0) formErrors["CategoryId"] = "Vui lòng chọn danh mục";
+        if (formModel.Price <= 0) formErrors["Price"] = "Giá bán phải lớn hơn 0";
+        if (formModel.Quantity < 0) formErrors["Quantity"] = "Số lượng không được âm";
+        return !formErrors.Any();
+    }
+
+    private async Task SubmitForm()
+    {
+        if (!ValidateForm()) return;
+        isSaving = true; StateHasChanged();
+        try
+        {
+            await SetAuthorizationHeader();
+            using var content = new MultipartFormDataContent();
+            content.Add(new StringContent(formModel.BookTitle), "BookTitle");
+            content.Add(new StringContent(formModel.CategoryId.ToString()), "CategoryId");
+            content.Add(new StringContent(formModel.AuthorId.ToString()), "AuthorId");
+            content.Add(new StringContent(formModel.PublishYear.ToString()), "PublishYear");
+            content.Add(new StringContent(formModel.Publisher ?? ""), "Publisher");
+            content.Add(new StringContent(formModel.Price.ToString()), "Price");
+            content.Add(new StringContent(formModel.Quantity.ToString()), "Quantity");
+            content.Add(new StringContent(formModel.Description ?? ""), "Description");
+            if (selectedFile != null)
+            {
+                var stream = selectedFile.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+                var sc = new StreamContent(stream);
+                sc.Headers.ContentType = new MediaTypeHeaderValue(selectedFile.ContentType);
+                content.Add(sc, "ImageFile", selectedFile.Name);
+            }
+            var response = isEditMode ? await Http.PutAsync($"api/book/{formModel.BookId}", content) : await Http.PostAsync("api/book", content);
+            if (response.IsSuccessStatusCode)
+            {
+                ShowToast(isEditMode ? "Cập nhật sách thành công!" : "Thêm sách mới thành công!", "success");
+                CloseModal();
+                await LoadBooks();
+            }
+            else { ShowToast($"Thất bại ({(int)response.StatusCode}): {response.ReasonPhrase}", "error"); }
+        }
+        catch (Exception ex) { ShowToast($"Lỗi: {ex.Message}", "error"); }
+        finally { isSaving = false; }
+    }
+
+    private void OpenDeleteConfirm(BookResponseDto book) { bookToDelete = book; showDeleteConfirm = true; StateHasChanged(); }
+
+    private async Task ConfirmDelete()
+    {
+        if (bookToDelete == null) return;
+        isSaving = true; StateHasChanged();
+        try
+        {
+            await SetAuthorizationHeader();
+            var response = await Http.DeleteAsync($"api/book/{bookToDelete.BookId}");
+            if (response.IsSuccessStatusCode)
+            {
+                ShowToast($"Đã xoá \"{bookToDelete.BookTitle}\"", "success");
+                showDeleteConfirm = false; bookToDelete = null;
+                await LoadBooks();
+            }
+            else { ShowToast("Xoá thất bại, vui lòng thử lại", "error"); }
+        }
+        catch { ShowToast("Đã xảy ra lỗi khi xoá", "error"); }
+        finally { isSaving = false; }
+    }
+
+    private async void ShowToast(string message, string type = "success")
+    {
+        var toast = new ToastItem { Message = message, Type = type };
+        toasts.Add(toast); StateHasChanged();
+        await Task.Delay(3500);
+        toasts.Remove(toast); StateHasChanged();
+    }
+
+    public class BookResponseDto { public int BookId { get; set; } public string? BookTitle { get; set; } public int CategoryId { get; set; } public string? CategoryName { get; set; } public int AuthorId { get; set; } public string? AuthorName { get; set; } public int PublishYear { get; set; } public string? Publisher { get; set; } public decimal Price { get; set; } public int Quantity { get; set; } public string? Description { get; set; } public string? ImageUrl { get; set; } }
+    public class BookFormModel { public int BookId { get; set; } public string BookTitle { get; set; } = ""; public int CategoryId { get; set; } public int AuthorId { get; set; } public string Publisher { get; set; } = ""; public int PublishYear { get; set; } public decimal Price { get; set; } public int Quantity { get; set; } public string Description { get; set; } = ""; public string? ExistingImageUrl { get; set; } }
+    public class ToastItem { public string Message { get; set; } = ""; public string Type { get; set; } = "success"; }
+    public class AuthorDto { public int AuthorId { get; set; } public string? AuthorName { get; set; } public int? BirthYear { get; set; } public string? Nationality { get; set; } }
+    public class CategoryDto { public int CategoryId { get; set; } public string? CategoryName { get; set; } public string? Description { get; set; } }
+}

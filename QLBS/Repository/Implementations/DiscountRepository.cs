@@ -59,5 +59,11 @@ namespace QLBS.Repository.Implementations
         {
             return await _context.DiscountCodes.AnyAsync(d => d.Code == code);
         }
+
+        public async Task UpdateDiscountAsync(DiscountCode discountCode)
+        {
+            _context.DiscountCodes.Update(discountCode);
+            await _context.SaveChangesAsync();
+        }
     }
 }

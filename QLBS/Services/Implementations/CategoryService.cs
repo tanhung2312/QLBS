@@ -1,4 +1,5 @@
-﻿using QLBS.Dtos.Category;
+﻿using QLBS.Dtos.Book;
+using QLBS.Dtos.Category;
 using QLBS.Models;
 using QLBS.Repository.Interfaces;
 using QLBS.Services.Interfaces;
@@ -8,10 +9,13 @@ namespace QLBS.Services.Implementations
     public class CategoryService : ICategoryService
     {
         private readonly ICategoryRepository _categoryRepository;
+        private readonly IBookRepository _bookRepository;
 
-        public CategoryService(ICategoryRepository categoryRepository)
+        public CategoryService(ICategoryRepository categoryRepository, IBookRepository bookRepository)
         {
             _categoryRepository = categoryRepository;
+            _bookRepository = bookRepository;
+            _bookRepository = bookRepository;
         }
 
         public async Task<IEnumerable<CategoryResponseDto>> GetAllCategoriesAsync()
@@ -81,6 +85,45 @@ namespace QLBS.Services.Implementations
         public async Task<bool> DeleteCategoryAsync(int id)
         {
             return await _categoryRepository.DeleteAsync(id);
+        }
+
+        public async Task<BookByCategoryResponseDto?> GetBooksByCategoryIdAsync(int categoryId)
+        {
+            // 1. Kiểm tra danh mục tồn tại
+            var category = await _categoryRepository.GetByIdAsync(categoryId);
+            if (category == null) return null;
+
+            // 2. Lấy tất cả sách của danh mục
+            var books = await _bookRepository.GetByCategoryIdAsync(categoryId);
+
+            // 3. Map sang DTO
+            var bookDtos = books.Select(b => new BookResponseDto
+            {
+                BookId = b.BookId,
+                BookTitle = b.BookTitle,
+                CategoryId = b.CategoryId,
+                CategoryName = b.Category?.CategoryName ?? string.Empty,
+                AuthorId = b.AuthorId,
+                AuthorName = b.Author?.AuthorName ?? string.Empty,
+                PublishYear = b.PublishYear,
+                Publisher = b.Publisher,
+                Price = b.Price,
+                Quantity = b.Quantity,
+                Description = b.Description,
+                // Ưu tiên ảnh bìa (IsCover = true), fallback ảnh OrderIndex nhỏ nhất
+                ImageUrl = b.BookImages != null && b.BookImages.Any()
+                    ? (b.BookImages.FirstOrDefault(img => img.IsCover)?.URL
+                       ?? b.BookImages.OrderBy(img => img.OrderIndex).First().URL)
+                    : null
+            });
+
+            return new BookByCategoryResponseDto
+            {
+                CategoryId = category.CategoryId,
+                CategoryName = category.CategoryName,
+                TotalCount = bookDtos.Count(),
+                Books = bookDtos
+            };
         }
     }
 }

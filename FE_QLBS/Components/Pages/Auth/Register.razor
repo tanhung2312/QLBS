@@ -1,0 +1,469 @@
+﻿@page "/register"
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<PageTitle>Đăng ký - BookStore</PageTitle>
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    cream: '#FAF7F2',
+                    ink:   '#1A1208',
+                    brown: '#6B4C2A',
+                    amber: '#D4860B',
+                    'amber-lt': '#F5A623',
+                    rust:  '#C0392B',
+                    sand:  '#EDE8DF',
+                    muted: '#9B8B7A',
+                    pale:  '#C4B8A8',
+                },
+                fontFamily: {
+                    serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+                    sans:  ['"Plus Jakarta Sans"', 'sans-serif'],
+                },
+            }
+        }
+    }
+</script>
+
+<style>
+    body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        margin: 0;
+    }
+
+    @@keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(14px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @@keyframes pulse-ring {
+        0% {
+            transform: scale(1);
+            opacity: .6;
+        }
+
+        100% {
+            transform: scale(1.5);
+            opacity: 0;
+        }
+    }
+
+    .anim-1 {
+        animation: fadeUp .4s ease both;
+    }
+
+    .anim-2 {
+        animation: fadeUp .4s ease .06s both;
+    }
+
+    .anim-3 {
+        animation: fadeUp .4s ease .12s both;
+    }
+
+    .anim-4 {
+        animation: fadeUp .4s ease .18s both;
+    }
+
+    .anim-5 {
+        animation: fadeUp .4s ease .24s both;
+    }
+
+    .anim-6 {
+        animation: fadeUp .4s ease .30s both;
+    }
+
+    .anim-7 {
+        animation: fadeUp .4s ease .36s both;
+    }
+
+    .spin-anim {
+        animation: spin .7s linear infinite;
+    }
+
+    .field-wrap input {
+        width: 100%;
+        padding: .66rem 1rem .66rem 2.6rem;
+        border: 1.5px solid #EDE8DF;
+        border-radius: 10px;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: .875rem;
+        color: #1A1208;
+        background: #fff;
+        outline: none;
+        transition: border-color .18s, box-shadow .18s;
+        box-sizing: border-box;
+    }
+
+        .field-wrap input::placeholder {
+            color: #C4B8A8;
+        }
+
+        .field-wrap input:focus {
+            border-color: #D4860B;
+            box-shadow: 0 0 0 3px rgba(212,134,11,.11);
+        }
+
+    .field-wrap .has-toggle {
+        padding-right: 2.6rem;
+    }
+
+    input[type="checkbox"] {
+        accent-color: #D4860B;
+    }
+
+    .tab-pill {
+        transition: all .22s ease;
+    }
+
+        .tab-pill.on {
+            background: #6B4C2A;
+            color: #fff;
+            box-shadow: 0 2px 12px rgba(107,76,42,.28);
+        }
+
+    .blob {
+        position: fixed;
+        border-radius: 50%;
+        filter: blur(80px);
+        pointer-events: none;
+        z-index: 0;
+    }
+</style>
+
+<!-- Background blobs -->
+<div class="blob w-96 h-96 bg-amber/10" style="top:-100px;right:-80px;"></div>
+<div class="blob w-80 h-80" style="bottom:-80px;left:-60px;background:rgba(107,76,42,0.07);"></div>
+<div class="blob w-64 h-64 bg-amber/5" style="top:50%;left:50%;transform:translate(-50%,-50%);"></div>
+
+<div class="min-h-screen bg-cream flex flex-col items-center justify-center px-4 py-10 relative" style="font-family:'Plus Jakarta Sans',sans-serif;">
+
+    <!-- Logo -->
+    <a href="/" class="relative z-10 inline-flex items-center gap-3 no-underline mb-7 anim-1">
+        <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-white text-lg flex-shrink-0 relative"
+             style="background:linear-gradient(135deg,#D4860B,#F5A623);box-shadow:0 4px 20px rgba(212,134,11,.4);">
+            <i class="bi bi-book-half"></i>
+            <span class="absolute inset-0 rounded-2xl border-2 border-amber/50"
+                  style="animation:pulse-ring 2.2s ease-out infinite;"></span>
+        </div>
+        <span class="font-serif font-semibold tracking-tight text-ink" style="font-size:1.9rem;">
+            Book<span class="text-amber">Store</span>
+        </span>
+    </a>
+
+    <!-- Card -->
+    <div class="relative z-10 w-full max-w-[440px] bg-white rounded-3xl border border-sand overflow-hidden"
+         style="box-shadow:0 24px 64px rgba(107,76,42,0.13), 0 2px 12px rgba(107,76,42,0.06);">
+
+        <!-- Accent line -->
+        <div class="h-1 w-full" style="background:linear-gradient(90deg,#6B4C2A,#D4860B,#F5A623);"></div>
+
+        <div class="px-8 pt-7 pb-8">
+
+            <!-- Heading -->
+            <div class="mb-5 anim-2">
+                <h2 class="font-serif font-semibold text-ink mb-1" style="font-size:1.85rem;letter-spacing:-.3px;">
+                    Tạo tài khoản mới
+                </h2>
+                <p class="text-muted text-sm leading-relaxed">
+                    Đăng ký miễn phí — nhận ngay ưu đãi <span class="text-amber font-semibold">20%</span> đơn đầu tiên.
+                </p>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex bg-[#F4F0EA] rounded-xl p-1 mb-5 border border-sand anim-3">
+                <a href="/login"
+                   class="tab-pill flex-1 text-center py-2 rounded-[10px] text-sm font-semibold text-muted no-underline hover:text-brown transition-colors">
+                    Đăng nhập
+                </a>
+                <span class="tab-pill on flex-1 text-center py-2 rounded-[10px] text-sm font-semibold cursor-default">
+                    Đăng ký
+                </span>
+            </div>
+
+            <!-- Alerts -->
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="flex items-start gap-2.5 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm anim-3">
+                    <i class="bi bi-exclamation-circle-fill mt-0.5 flex-shrink-0"></i>
+                    <span>@errorMessage</span>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <div class="flex items-start gap-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl px-4 py-3 mb-4 text-sm anim-3">
+                    <i class="bi bi-check-circle-fill mt-0.5 flex-shrink-0"></i>
+                    <span>@successMessage</span>
+                </div>
+            }
+
+            <!-- Form -->
+            <EditForm Model="@registerModel" OnValidSubmit="@HandleRegister" FormName="RegisterForm">
+                <DataAnnotationsValidator />
+
+                <!-- Full name -->
+                <div class="mb-3.5 anim-4">
+                    <label class="block text-[.82rem] font-semibold text-ink mb-1.5">Họ và tên</label>
+                    <div class="field-wrap relative">
+                        <i class="bi bi-person absolute left-3.5 top-1/2 -translate-y-1/2 text-pale text-sm pointer-events-none"></i>
+                        <InputText @bind-Value="registerModel.FullName" placeholder="Nguyễn Văn A" class="w-full" />
+                    </div>
+                    <ValidationMessage For="@(() => registerModel.FullName)" class="block text-[.73rem] text-red-500 mt-1" />
+                </div>
+
+                <!-- Email -->
+                <div class="mb-3.5 anim-4">
+                    <label class="block text-[.82rem] font-semibold text-ink mb-1.5">Email</label>
+                    <div class="field-wrap relative">
+                        <i class="bi bi-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-pale text-sm pointer-events-none"></i>
+                        <InputText @bind-Value="registerModel.Email" placeholder="name@example.com" class="w-full" />
+                    </div>
+                    <ValidationMessage For="@(() => registerModel.Email)" class="block text-[.73rem] text-red-500 mt-1" />
+                </div>
+
+                <!-- Phone -->
+                <div class="mb-3.5 anim-5">
+                    <label class="block text-[.82rem] font-semibold text-ink mb-1.5">Số điện thoại</label>
+                    <div class="field-wrap relative">
+                        <i class="bi bi-telephone absolute left-3.5 top-1/2 -translate-y-1/2 text-pale text-sm pointer-events-none"></i>
+                        <InputText @bind-Value="registerModel.PhoneNumber" placeholder="0912 345 678" class="w-full" />
+                    </div>
+                    <ValidationMessage For="@(() => registerModel.PhoneNumber)" class="block text-[.73rem] text-red-500 mt-1" />
+                </div>
+
+                <!-- Password row (2 cols) -->
+                <div class="grid grid-cols-2 gap-3 mb-3.5 anim-5">
+                    <div>
+                        <label class="block text-[.82rem] font-semibold text-ink mb-1.5">Mật khẩu</label>
+                        <div class="field-wrap relative">
+                            <i class="bi bi-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-pale text-sm pointer-events-none"></i>
+                            <InputText type="@(showRegPassword ? "text" : "password")"
+                                       @bind-Value="registerModel.Password"
+                                       placeholder="Tối thiểu 6 ký tự"
+                                       class="w-full has-toggle" />
+                            <button type="button"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-pale hover:text-brown transition-colors bg-transparent border-0 cursor-pointer p-1 leading-none"
+                                    @onclick="@(() => showRegPassword = !showRegPassword)">
+                                <i class="bi @(showRegPassword ? "bi-eye-slash" : "bi-eye") text-sm"></i>
+                            </button>
+                        </div>
+                        <ValidationMessage For="@(() => registerModel.Password)" class="block text-[.7rem] text-red-500 mt-1" />
+                    </div>
+                    <div>
+                        <label class="block text-[.82rem] font-semibold text-ink mb-1.5">Xác nhận</label>
+                        <div class="field-wrap relative">
+                            <i class="bi bi-lock-fill absolute left-3.5 top-1/2 -translate-y-1/2 text-pale text-sm pointer-events-none"></i>
+                            <InputText type="password"
+                                       @bind-Value="registerModel.ConfirmPassword"
+                                       placeholder="••••••••"
+                                       class="w-full" />
+                        </div>
+                        <ValidationMessage For="@(() => registerModel.ConfirmPassword)" class="block text-[.7rem] text-red-500 mt-1" />
+                    </div>
+                </div>
+
+                <!-- Terms -->
+                <div class="flex items-start gap-2.5 mb-5 anim-6">
+                    <InputCheckbox @bind-Value="registerModel.AgreeToTerms" class="w-4 h-4 mt-0.5 rounded cursor-pointer flex-shrink-0" />
+                    <span class="text-sm text-muted leading-snug select-none">
+                        Tôi đồng ý với
+                        <a href="/terms" class="text-amber font-semibold no-underline hover:text-amber-lt transition-colors">điều khoản dịch vụ</a>
+                        và
+                        <a href="/privacy" class="text-amber font-semibold no-underline hover:text-amber-lt transition-colors">chính sách bảo mật</a>
+                    </span>
+                </div>
+                <div class="anim-6">
+                    <ValidationMessage For="@(() => registerModel.AgreeToTerms)" class="block text-[.73rem] text-red-500 -mt-3 mb-3" />
+                </div>
+
+                <!-- Submit -->
+                <button type="submit"
+                        disabled="@isLoading"
+                        class="anim-6 w-full flex items-center justify-center gap-2 text-white font-semibold rounded-xl py-3.5 text-sm border-0 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0"
+                        style="background:linear-gradient(135deg,#6B4C2A,#8B6040);box-shadow:0 4px 18px rgba(107,76,42,.3);">
+                    @if (isLoading)
+                    {
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full spin-anim"></span>
+                        <span>Đang xử lý...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-person-plus-fill text-sm"></i>
+                        <span>Tạo tài khoản</span>
+                    }
+                </button>
+            </EditForm>
+
+            <!-- Divider -->
+            <div class="flex items-center gap-3 my-4 anim-7">
+                <div class="flex-1 h-px bg-sand"></div>
+                <span class="text-pale text-[.68rem] font-semibold tracking-[.14em] uppercase whitespace-nowrap">Hoặc tiếp tục với</span>
+                <div class="flex-1 h-px bg-sand"></div>
+            </div>
+
+            <!-- Social -->
+            <div class="grid grid-cols-2 gap-3 mb-4 anim-7">
+                <button type="button"
+                        class="flex items-center justify-center gap-2 py-2.5 px-4 border border-sand rounded-xl bg-white text-ink text-sm font-semibold cursor-pointer hover:border-amber hover:bg-cream transition-all">
+                    <svg width="16" height="16" viewBox="0 0 24 24">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                    </svg>
+                    Google
+                </button>
+                <button type="button"
+                        class="flex items-center justify-center gap-2 py-2.5 px-4 border border-sand rounded-xl bg-white text-ink text-sm font-semibold cursor-pointer hover:border-amber hover:bg-cream transition-all">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#1877F2">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                    </svg>
+                    Facebook
+                </button>
+            </div>
+
+            <!-- Switch to login -->
+            <p class="text-center text-muted text-sm anim-7">
+                Đã có tài khoản?
+                <a href="/login" class="text-amber font-bold no-underline hover:text-amber-lt transition-colors">
+                    Đăng nhập ngay →
+                </a>
+            </p>
+
+        </div>
+
+        <!-- Trust strip -->
+        <div class="border-t border-sand bg-[#FDFBF8] px-8 py-3.5 flex items-center justify-center gap-6 flex-wrap">
+            @foreach (var (ic, lbl) in new[] {
+            ("shield-check-fill", "SSL bảo mật"),
+            ("truck",             "Toàn quốc"),
+            ("award-fill",        "Uy tín #1"),
+            })
+            {
+                <div class="flex items-center gap-1.5 text-[.68rem] font-semibold tracking-[.08em] uppercase text-pale">
+                    <i class="bi bi-@ic text-amber/60 text-[.72rem]"></i>@lbl
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <p class="relative z-10 mt-6 text-pale text-xs text-center anim-7">
+        © @DateTime.Now.Year BookStore ·
+        <a href="/terms" class="hover:text-muted transition-colors no-underline">Điều khoản</a> ·
+        <a href="/privacy" class="hover:text-muted transition-colors no-underline">Bảo mật</a>
+    </p>
+</div>
+
+@code {
+    private RegisterModel registerModel = new();
+    private bool showRegPassword = false;
+    private bool isLoading = false;
+    private string errorMessage = "";
+    private string successMessage = "";
+
+    private async Task HandleRegister()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = "";
+            successMessage = "";
+
+            var response = await Http.PostAsJsonAsync("api/auth/register", new
+            {
+                fullName = registerModel.FullName,
+                email = registerModel.Email,
+                phoneNumber = registerModel.PhoneNumber,
+                password = registerModel.Password
+            });
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse>();
+                successMessage = result?.Message ?? "✓ Đăng ký thành công! Đang chuyển đến trang đăng nhập...";
+                registerModel = new();
+                await Task.Delay(1800);
+                Navigation.NavigateTo("/login");
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                var err = await response.Content.ReadFromJsonAsync<ApiResponse>();
+                errorMessage = err?.Message ?? "Thông tin đăng ký không hợp lệ.";
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
+            {
+                var err = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+                errorMessage = err?.Message ?? "Lỗi server. Vui lòng thử lại sau.";
+            }
+            else
+            {
+                errorMessage = "Đã xảy ra lỗi không xác định. Vui lòng thử lại.";
+            }
+        }
+        catch (HttpRequestException)
+        {
+            errorMessage = "Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.";
+        }
+        catch
+        {
+            errorMessage = "Đã xảy ra lỗi. Vui lòng thử lại.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    public class RegisterModel
+    {
+        [Required(ErrorMessage = "Họ và tên là bắt buộc")]
+        [StringLength(100, ErrorMessage = "Họ tên tối đa 100 ký tự")]
+        public string FullName { get; set; } = "";
+
+        [Required(ErrorMessage = "Email là bắt buộc")]
+        [EmailAddress(ErrorMessage = "Email không hợp lệ")]
+        [StringLength(100, ErrorMessage = "Email tối đa 100 ký tự")]
+        public string Email { get; set; } = "";
+
+        [Required(ErrorMessage = "Số điện thoại là bắt buộc")]
+        [RegularExpression(@"^0\d{9}$", ErrorMessage = "Số điện thoại phải 10 số, bắt đầu bằng 0")]
+        public string PhoneNumber { get; set; } = "";
+
+        [Required(ErrorMessage = "Mật khẩu là bắt buộc")]
+        [StringLength(100, MinimumLength = 6, ErrorMessage = "Mật khẩu phải 6–100 ký tự")]
+        public string Password { get; set; } = "";
+
+        [Required(ErrorMessage = "Xác nhận mật khẩu là bắt buộc")]
+        [Compare(nameof(Password), ErrorMessage = "Mật khẩu xác nhận không khớp")]
+        public string ConfirmPassword { get; set; } = "";
+
+        [Range(typeof(bool), "true", "true", ErrorMessage = "Bạn phải đồng ý với điều khoản")]
+        public bool AgreeToTerms { get; set; }
+    }
+
+    public class ApiResponse { public string Message { get; set; } = ""; }
+    public class ApiErrorResponse { public string Message { get; set; } = ""; public string Error { get; set; } = ""; }
+}

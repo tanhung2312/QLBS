@@ -1,0 +1,1325 @@
+﻿@page "/admin"
+@page "/admin/dashboard"
+
+<PageTitle>Dashboard - BookStore Admin</PageTitle>
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    :root {
+        --bg: #F4F2EE;
+        --surface: #FFFFFF;
+        --surface2: #FAFAF8;
+        --brown: #6B4C2A;
+        --amber: #D4860B;
+        --amber-lt: #F5A623;
+        --amber-dim: rgba(212,134,11,0.10);
+        --ink: #1A1208;
+        --text-pri: #1A1208;
+        --text-sec: #6B5A46;
+        --text-muted: #A8947A;
+        --border: #E8E2D9;
+        --border2: #DDD7CE;
+        --sidebar-w: 252px;
+        --green: #2E7D52;
+        --green-dim: rgba(46,125,82,0.09);
+        --red: #C0392B;
+        --red-dim: rgba(192,57,43,0.09);
+        --blue: #2563A8;
+        --blue-dim: rgba(37,99,168,0.09);
+        --shadow-sm: 0 1px 3px rgba(26,18,8,0.06), 0 1px 8px rgba(26,18,8,0.04);
+        --shadow: 0 2px 12px rgba(26,18,8,0.08);
+        --shadow-md: 0 6px 24px rgba(26,18,8,0.10);
+        --radius: 14px;
+    }
+
+    body {
+        background: var(--bg);
+        color: var(--text-pri);
+        font-family: 'DM Sans', sans-serif;
+    }
+
+    .adm-shell {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    /* ══ SIDEBAR ══ */
+    .adm-sidebar {
+        width: var(--sidebar-w);
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 100;
+    }
+
+    .adm-logo {
+        padding: 22px 20px 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .adm-logo-icon {
+        width: 38px;
+        height: 38px;
+        background: var(--brown);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        color: #fff;
+        flex-shrink: 0;
+        box-shadow: 0 3px 10px rgba(107,76,42,0.22);
+    }
+
+    .adm-logo-text {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.22rem;
+        font-weight: 800;
+        color: var(--ink);
+    }
+
+        .adm-logo-text span {
+            color: var(--amber);
+        }
+
+    .adm-logo-badge {
+        margin-left: auto;
+        font-size: .58rem;
+        font-weight: 800;
+        letter-spacing: .1em;
+        background: var(--amber-dim);
+        color: var(--amber);
+        border: 1px solid rgba(212,134,11,0.25);
+        border-radius: 5px;
+        padding: 2px 7px;
+    }
+
+    .adm-nav {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px 12px;
+        scrollbar-width: none;
+    }
+
+        .adm-nav::-webkit-scrollbar {
+            width: 0;
+        }
+
+    .adm-nav-section {
+        margin-bottom: 22px;
+    }
+
+    .adm-nav-label {
+        font-size: .67rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        color: var(--text-muted);
+        padding: 0 10px 6px;
+        text-transform: uppercase;
+    }
+
+    .adm-nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 10px;
+        border-radius: 9px;
+        cursor: pointer;
+        color: var(--text-sec);
+        font-size: .875rem;
+        font-weight: 500;
+        margin-bottom: 1px;
+        text-decoration: none;
+        transition: all .15s;
+    }
+
+        .adm-nav-item:hover {
+            background: var(--bg);
+            color: var(--text-pri);
+        }
+
+        .adm-nav-item.active {
+            background: var(--amber-dim);
+            color: var(--brown);
+            font-weight: 600;
+        }
+
+    .adm-nav-icon {
+        width: 18px;
+        text-align: center;
+        font-size: .92rem;
+        flex-shrink: 0;
+    }
+
+    .adm-nav-badge {
+        margin-left: auto;
+        background: var(--amber);
+        color: #fff;
+        font-size: .63rem;
+        font-weight: 800;
+        border-radius: 20px;
+        padding: 1px 7px;
+    }
+
+    .adm-sidebar-footer {
+        padding: 12px;
+        border-top: 1px solid var(--border);
+    }
+
+    .adm-user-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: 9px;
+        cursor: pointer;
+        transition: background .15s;
+    }
+
+        .adm-user-row:hover {
+            background: var(--bg);
+        }
+
+    .adm-avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--brown), var(--amber));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .75rem;
+        font-weight: 800;
+        color: #fff;
+        flex-shrink: 0;
+    }
+
+    .adm-user-name {
+        font-size: .84rem;
+        font-weight: 600;
+        color: var(--text-pri);
+    }
+
+    .adm-user-role {
+        font-size: .71rem;
+        color: var(--text-muted);
+        margin-top: 1px;
+    }
+
+    .adm-user-opts {
+        margin-left: auto;
+        color: var(--text-muted);
+    }
+
+    /* ══ MAIN ══ */
+    .adm-main {
+        margin-left: var(--sidebar-w);
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    .adm-topbar {
+        height: 60px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        padding: 0 28px;
+        gap: 14px;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .adm-topbar-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.12rem;
+        font-weight: 700;
+        color: var(--ink);
+    }
+
+    .adm-breadcrumb {
+        font-size: .77rem;
+        color: var(--text-muted);
+        margin-left: 2px;
+    }
+
+        .adm-breadcrumb span {
+            color: var(--amber);
+        }
+
+    .adm-search {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--bg);
+        border: 1px solid var(--border2);
+        border-radius: 9px;
+        padding: 7px 14px;
+        transition: all .18s;
+    }
+
+        .adm-search:focus-within {
+            border-color: var(--amber);
+            box-shadow: 0 0 0 3px var(--amber-dim);
+            background: var(--surface);
+        }
+
+        .adm-search i {
+            color: var(--text-muted);
+            font-size: .85rem;
+        }
+
+        .adm-search input {
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text-pri);
+            font-family: 'DM Sans', sans-serif;
+            font-size: .85rem;
+            width: 210px;
+        }
+
+            .adm-search input::placeholder {
+                color: var(--text-muted);
+            }
+
+    .adm-topbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .adm-icon-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--text-sec);
+        font-size: .88rem;
+        transition: all .15s;
+        position: relative;
+    }
+
+        .adm-icon-btn:hover {
+            border-color: var(--amber);
+            color: var(--amber);
+            background: var(--amber-dim);
+        }
+
+    .adm-notif-dot {
+        position: absolute;
+        top: 7px;
+        right: 7px;
+        width: 6px;
+        height: 6px;
+        background: var(--amber);
+        border-radius: 50%;
+        border: 1.5px solid var(--surface);
+    }
+
+    /* ══ BODY ══ */
+    .adm-body {
+        padding: 24px 28px;
+        flex: 1;
+    }
+
+    /* Welcome */
+    .adm-welcome {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 22px;
+        animation: fadeUp .3s ease both;
+    }
+
+        .adm-welcome h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: var(--ink);
+            margin-bottom: 3px;
+        }
+
+        .adm-welcome p {
+            font-size: .84rem;
+            color: var(--text-muted);
+        }
+
+    .adm-date-chip {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        padding: 8px 14px;
+        font-size: .79rem;
+        color: var(--text-sec);
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        box-shadow: var(--shadow-sm);
+    }
+
+        .adm-date-chip i {
+            color: var(--amber);
+        }
+
+    /* ══ STATS ══ */
+    .adm-stats {
+        display: grid;
+        grid-template-columns: repeat(4,1fr);
+        gap: 14px;
+        margin-bottom: 20px;
+    }
+
+    .stat-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px 22px;
+        box-shadow: var(--shadow-sm);
+        position: relative;
+        overflow: hidden;
+        transition: box-shadow .2s, transform .2s;
+        animation: fadeUp .3s ease both;
+    }
+
+        .stat-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+
+        .stat-card.s-amber::after {
+            background: var(--amber);
+        }
+
+        .stat-card.s-green::after {
+            background: var(--green);
+        }
+
+        .stat-card.s-blue::after {
+            background: var(--blue);
+        }
+
+        .stat-card.s-red::after {
+            background: var(--red);
+        }
+
+        .stat-card:nth-child(1) {
+            animation-delay: .04s;
+        }
+
+        .stat-card:nth-child(2) {
+            animation-delay: .08s;
+        }
+
+        .stat-card:nth-child(3) {
+            animation-delay: .12s;
+        }
+
+        .stat-card:nth-child(4) {
+            animation-delay: .16s;
+        }
+
+    .stat-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 14px;
+    }
+
+    .stat-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.05rem;
+    }
+
+    .s-amber .stat-icon {
+        background: var(--amber-dim);
+        color: var(--amber);
+    }
+
+    .s-green .stat-icon {
+        background: var(--green-dim);
+        color: var(--green);
+    }
+
+    .s-blue .stat-icon {
+        background: var(--blue-dim);
+        color: var(--blue);
+    }
+
+    .s-red .stat-icon {
+        background: var(--red-dim);
+        color: var(--red);
+    }
+
+    .stat-badge {
+        font-size: .72rem;
+        font-weight: 700;
+        border-radius: 6px;
+        padding: 3px 8px;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+    }
+
+        .stat-badge.up {
+            background: var(--green-dim);
+            color: var(--green);
+        }
+
+        .stat-badge.down {
+            background: var(--red-dim);
+            color: var(--red);
+        }
+
+    .stat-value {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.9rem;
+        font-weight: 800;
+        color: var(--ink);
+        line-height: 1;
+        margin-bottom: 4px;
+    }
+
+    .stat-label {
+        font-size: .8rem;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    .stat-sub {
+        font-size: .73rem;
+        color: var(--text-muted);
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border);
+    }
+
+        .stat-sub b {
+            color: var(--text-sec);
+            font-weight: 600;
+        }
+
+    /* ══ MID ROW ══ */
+    .adm-mid {
+        display: grid;
+        grid-template-columns: 1fr 310px;
+        gap: 14px;
+        margin-bottom: 18px;
+    }
+
+    .adm-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        animation: fadeUp .3s ease both;
+    }
+
+    .adm-card-body {
+        padding: 22px 22px;
+    }
+
+    .card-hd {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+    .card-title {
+        font-family: 'Playfair Display', serif;
+        font-size: .98rem;
+        font-weight: 700;
+        color: var(--ink);
+    }
+
+    .card-sub {
+        font-size: .75rem;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+
+    .tab-row {
+        display: flex;
+        gap: 3px;
+    }
+
+    .tab-btn {
+        padding: 4px 11px;
+        border-radius: 7px;
+        font-size: .75rem;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--text-muted);
+        background: transparent;
+        border: 1px solid transparent;
+        font-family: 'DM Sans', sans-serif;
+        transition: all .15s;
+    }
+
+        .tab-btn.on {
+            background: var(--amber-dim);
+            color: var(--amber);
+            border-color: rgba(212,134,11,0.2);
+        }
+
+        .tab-btn:hover:not(.on) {
+            background: var(--bg);
+            color: var(--text-sec);
+        }
+
+    /* Bar chart */
+    .bar-chart {
+        display: flex;
+        align-items: flex-end;
+        gap: 7px;
+        height: 148px;
+        padding-bottom: 26px;
+        position: relative;
+    }
+
+        .bar-chart::before {
+            content: '';
+            position: absolute;
+            bottom: 26px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--border);
+        }
+
+    .bar-col {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        height: 100%;
+        justify-content: flex-end;
+    }
+
+    .bar {
+        width: 100%;
+        border-radius: 5px 5px 0 0;
+        min-height: 3px;
+        transition: opacity .15s;
+        cursor: pointer;
+    }
+
+        .bar.hi {
+            background: linear-gradient(180deg, var(--amber-lt), var(--amber));
+        }
+
+        .bar.lo {
+            background: var(--border2);
+        }
+
+        .bar:hover {
+            opacity: .75;
+        }
+
+    .bar-lbl {
+        font-size: .67rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+    }
+
+    .chart-leg {
+        display: flex;
+        gap: 16px;
+        margin-top: 14px;
+    }
+
+    .leg-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: .75rem;
+        color: var(--text-sec);
+    }
+
+    .leg-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+    }
+
+    /* Top books */
+    .top-item {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 9px 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+        .top-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+    .top-rank {
+        width: 22px;
+        height: 22px;
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .68rem;
+        font-weight: 800;
+        flex-shrink: 0;
+    }
+
+    .rk1 {
+        background: rgba(212,134,11,0.14);
+        color: var(--amber);
+    }
+
+    .rk2 {
+        background: rgba(150,150,150,0.11);
+        color: #888;
+    }
+
+    .rk3 {
+        background: rgba(180,100,50,0.11);
+        color: #b46032;
+    }
+
+    .rkn {
+        background: var(--bg);
+        color: var(--text-muted);
+    }
+
+    .top-cover {
+        width: 34px;
+        height: 46px;
+        border-radius: 5px;
+        flex-shrink: 0;
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        background: var(--surface2);
+    }
+
+    .top-name {
+        font-size: .82rem;
+        font-weight: 600;
+        color: var(--text-pri);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .top-cat {
+        font-size: .7rem;
+        color: var(--text-muted);
+        margin-top: 1px;
+    }
+
+    .top-sold {
+        font-size: .8rem;
+        font-weight: 700;
+        color: var(--amber);
+        white-space: nowrap;
+    }
+
+    /* ══ BOTTOM ROW ══ */
+    .adm-bottom {
+        display: grid;
+        grid-template-columns: 1fr 288px;
+        gap: 14px;
+    }
+
+    .adm-tbl-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+        animation: fadeUp .3s .32s ease both;
+    }
+
+    .tbl-hd {
+        padding: 18px 22px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .adm-tbl {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .adm-tbl th {
+            padding: 9px 16px;
+            text-align: left;
+            font-size: .69rem;
+            font-weight: 700;
+            letter-spacing: .06em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            background: var(--surface2);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .adm-tbl td {
+            padding: 11px 16px;
+            font-size: .82rem;
+            color: var(--text-sec);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .adm-tbl tr:last-child td {
+            border-bottom: none;
+        }
+
+        .adm-tbl tbody tr:hover td {
+            background: var(--surface2);
+        }
+
+    .tbl-id {
+        font-weight: 700;
+        color: var(--text-pri);
+    }
+
+    .tbl-cust {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .mini-av {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .65rem;
+        font-weight: 800;
+        color: #fff;
+    }
+
+    .tbl-amt {
+        font-weight: 700;
+        color: var(--ink);
+    }
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 9px;
+        border-radius: 20px;
+        font-size: .7rem;
+        font-weight: 700;
+    }
+
+        .badge::before {
+            content: '●';
+            font-size: .42rem;
+        }
+
+    .bg-ok {
+        background: var(--green-dim);
+        color: var(--green);
+    }
+
+    .bg-pnd {
+        background: var(--amber-dim);
+        color: var(--amber);
+    }
+
+    .bg-x {
+        background: var(--red-dim);
+        color: var(--red);
+    }
+
+    .bg-shp {
+        background: var(--blue-dim);
+        color: var(--blue);
+    }
+
+    /* Activity */
+    .adm-act-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        padding: 22px 20px;
+        animation: fadeUp .3s .38s ease both;
+    }
+
+    .act-item {
+        display: flex;
+        gap: 11px;
+        padding: 9px 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+        .act-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+    .act-dot {
+        width: 30px;
+        height: 30px;
+        border-radius: 9px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .82rem;
+    }
+
+    .act-order {
+        background: var(--amber-dim);
+    }
+
+    .act-user {
+        background: var(--green-dim);
+    }
+
+    .act-review {
+        background: var(--blue-dim);
+    }
+
+    .act-stock {
+        background: var(--red-dim);
+    }
+
+    .act-text {
+        font-size: .8rem;
+        color: var(--text-sec);
+        line-height: 1.4;
+    }
+
+        .act-text b {
+            color: var(--text-pri);
+            font-weight: 600;
+        }
+
+    .act-time {
+        font-size: .7rem;
+        color: var(--text-muted);
+        margin-top: 3px;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+    }
+
+    /* Buttons */
+    .btn {
+        padding: 6px 13px;
+        border-radius: 7px;
+        font-size: .77rem;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: 'DM Sans', sans-serif;
+        border: 1px solid transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: all .15s;
+    }
+
+    .btn-primary {
+        background: var(--amber);
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(212,134,11,.2);
+    }
+
+        .btn-primary:hover {
+            background: var(--amber-lt);
+        }
+
+    .btn-outline {
+        background: var(--bg);
+        color: var(--text-sec);
+        border-color: var(--border2);
+    }
+
+        .btn-outline:hover {
+            border-color: var(--amber);
+            color: var(--amber);
+        }
+
+    @@keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    ::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--border2);
+        border-radius: 10px;
+    }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+</style>
+
+<div class="adm-shell">
+
+    <!-- ══ SIDEBAR ══ -->
+    <aside class="adm-sidebar">
+        <div class="adm-logo">
+            <div class="adm-logo-icon"><i class="bi bi-book-half"></i></div>
+            <span class="adm-logo-text">Book<span>Store</span></span>
+            <span class="adm-logo-badge">ADMIN</span>
+        </div>
+        <nav class="adm-nav">
+            <div class="adm-nav-section">
+                <div class="adm-nav-label">Tổng quan</div>
+                <a href="/admin" class="adm-nav-item active">
+                    <span class="adm-nav-icon"><i class="bi bi-grid-fill"></i></span> Dashboard
+                </a>
+                <a href="/admin/analytics" class="adm-nav-item">
+                    <span class="adm-nav-icon"><i class="bi bi-bar-chart-line-fill"></i></span> Thống kê
+                </a>
+            </div>
+            <div class="adm-nav-section">
+                <div class="adm-nav-label">Quản lý</div>
+                <a href="/admin/orders" class="adm-nav-item">
+                    <span class="adm-nav-icon"><i class="bi bi-bag-fill"></i></span>
+                    Đơn hàng <span class="adm-nav-badge">12</span>
+                </a>
+                <a href="/admin/books" class="adm-nav-item">
+                    <span class="adm-nav-icon"><i class="bi bi-journals"></i></span> Sách
+                </a>
+                <a href="/admin/authors" class="adm-nav-item">
+                    <span class="adm-nav-icon"><i class="bi bi-person-lines-fill"></i></span> Tác giả
+                </a>
+                <a href="/admin/categories" class="adm-nav-item">
+                    <span class="adm-nav-icon"><i class="bi bi-tags-fill"></i></span> Danh mục
+                </a>
+                <a href="/admin/customers" class="adm-nav-item">
+                    <span class="adm-nav-icon"><i class="bi bi-people-fill"></i></span> Khách hàng
+                </a>
+                <a href="/admin/reviews" class="adm-nav-item">
+                    <span class="adm-nav-icon"><i class="bi bi-star-fill"></i></span>
+                    Đánh giá <span class="adm-nav-badge">3</span>
+                </a>
+            </div>
+            <div class="adm-nav-section">
+                <div class="adm-nav-label">Hệ thống</div>
+                <a href="/admin/promotions" class="adm-nav-item">
+                    <span class="adm-nav-icon"><i class="bi bi-gift-fill"></i></span> Khuyến mãi
+                </a>
+                <a href="/admin/settings" class="adm-nav-item">
+                    <span class="adm-nav-icon"><i class="bi bi-gear-fill"></i></span> Cài đặt
+                </a>
+            </div>
+        </nav>
+        <div class="adm-sidebar-footer">
+            <div class="adm-user-row">
+                <div class="adm-avatar">AD</div>
+                <div>
+                    <div class="adm-user-name">Admin</div>
+                    <div class="adm-user-role">Super Admin</div>
+                </div>
+                <div class="adm-user-opts"><i class="bi bi-three-dots-vertical"></i></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ══ MAIN ══ -->
+    <div class="adm-main">
+
+        <header class="adm-topbar">
+            <div>
+                <div class="adm-topbar-title">Dashboard</div>
+                <div class="adm-breadcrumb">Admin / <span>Tổng quan</span></div>
+            </div>
+            <div class="adm-search">
+                <i class="bi bi-search"></i>
+                <input type="text" placeholder="Tìm kiếm sách, đơn hàng..." />
+            </div>
+            <div class="adm-topbar-actions">
+                <div class="adm-icon-btn">
+                    <i class="bi bi-bell"></i><span class="adm-notif-dot"></span>
+                </div>
+                <div class="adm-icon-btn"><i class="bi bi-question-circle"></i></div>
+                <div class="adm-avatar" style="width:34px;height:34px;font-size:.75rem;cursor:pointer;">AD</div>
+            </div>
+        </header>
+
+        <div class="adm-body">
+
+            <!-- Welcome -->
+            <div class="adm-welcome">
+                <div>
+                    <h2>Chào buổi sáng, Admin 👋</h2>
+                    <p>Tổng quan hoạt động của BookStore hôm nay.</p>
+                </div>
+                <div class="adm-date-chip">
+                    <i class="bi bi-calendar3"></i> Thứ Tư, 11 tháng 3, 2026
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="adm-stats">
+                <div class="stat-card s-amber">
+                    <div class="stat-top">
+                        <div class="stat-icon"><i class="bi bi-wallet2"></i></div>
+                        <span class="stat-badge up"><i class="bi bi-arrow-up-short"></i>+18.4%</span>
+                    </div>
+                    <div class="stat-value">142.5tr</div>
+                    <div class="stat-label">Doanh thu tháng này</div>
+                    <div class="stat-sub">So với tháng trước: <b>120.4tr</b></div>
+                </div>
+                <div class="stat-card s-green">
+                    <div class="stat-top">
+                        <div class="stat-icon"><i class="bi bi-bag-check-fill"></i></div>
+                        <span class="stat-badge up"><i class="bi bi-arrow-up-short"></i>+12.1%</span>
+                    </div>
+                    <div class="stat-value">1,284</div>
+                    <div class="stat-label">Đơn hàng tháng này</div>
+                    <div class="stat-sub">Đang xử lý: <b>47 đơn</b></div>
+                </div>
+                <div class="stat-card s-blue">
+                    <div class="stat-top">
+                        <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+                        <span class="stat-badge up"><i class="bi bi-arrow-up-short"></i>+8.6%</span>
+                    </div>
+                    <div class="stat-value">8,941</div>
+                    <div class="stat-label">Khách hàng</div>
+                    <div class="stat-sub">Mới tháng này: <b>+342</b></div>
+                </div>
+                <div class="stat-card s-red">
+                    <div class="stat-top">
+                        <div class="stat-icon"><i class="bi bi-journals"></i></div>
+                        <span class="stat-badge down"><i class="bi bi-arrow-down-short"></i>-5.2%</span>
+                    </div>
+                    <div class="stat-value">3,672</div>
+                    <div class="stat-label">Sách tồn kho</div>
+                    <div class="stat-sub">Sắp hết hàng: <b>14 đầu sách</b></div>
+                </div>
+            </div>
+
+            <!-- Mid -->
+            <div class="adm-mid">
+                <!-- Chart -->
+                <div class="adm-card" style="animation-delay:.20s">
+                    <div class="adm-card-body">
+                        <div class="card-hd">
+                            <div>
+                                <div class="card-title">Doanh thu theo tháng</div>
+                                <div class="card-sub">Năm 2025 — đơn vị: triệu đồng</div>
+                            </div>
+                            <div class="tab-row">
+                                <button class="tab-btn on">Năm</button>
+                                <button class="tab-btn">Quý</button>
+                                <button class="tab-btn">Tháng</button>
+                            </div>
+                        </div>
+                        <div class="bar-chart">
+                            @{
+                                var months = new[] { "T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12" };
+                                var vals = new[] { 68, 82, 74, 95, 88, 110, 102, 120, 108, 130, 118, 143 };
+                                var maxV = vals.Max();
+                            }
+                            @for (int i = 0; i < 12; i++)
+                            {
+                                var pct = (int)((double)vals[i] / maxV * 100);
+                                <div class="bar-col">
+                                    <div class="bar @(i == 11 ? "hi" : "lo")" style="height:@(pct)%" title="@months[i]: @vals[i]tr đ"></div>
+                                    <span class="bar-lbl">@months[i]</span>
+                                </div>
+                            }
+                        </div>
+                        <div class="chart-leg">
+                            <div class="leg-item"><div class="leg-dot" style="background:var(--amber)"></div>Tháng hiện tại</div>
+                            <div class="leg-item"><div class="leg-dot" style="background:var(--border2)"></div>Các tháng trước</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top books -->
+                <div class="adm-card" style="animation-delay:.25s">
+                    <div class="adm-card-body">
+                        <div class="card-hd">
+                            <div>
+                                <div class="card-title">Sách bán chạy</div>
+                                <div class="card-sub">Tháng 3/2026</div>
+                            </div>
+                            <button class="btn btn-outline" style="font-size:.72rem;padding:4px 10px">Tất cả</button>
+                        </div>
+                        @{
+                            var books = new[] {
+                        ("Đắc Nhân Tâm","Kỹ năng sống","482","#D4860B"),
+                        ("Nhà Giả Kim","Văn học","391","#2563A8"),
+                        ("Atomic Habits","Phát triển bản thân","337","#2E7D52"),
+                        ("Sapiens","Lịch sử","284","#7B3F7B"),
+                        ("Tư Duy Nhanh & Chậm","Tâm lý học","241","#C0392B"),
+                        };
+                            var rkCls = new[] { "rk1", "rk2", "rk3", "rkn", "rkn" };
+                        }
+                        @for (int i = 0; i < books.Length; i++)
+                        {
+                            var (bname, bcat, bsold, bcol) = books[i];
+                            <div class="top-item">
+                                <div class="top-rank @rkCls[i]">@(i + 1)</div>
+                                <div class="top-cover" style="background:@(bcol)18;">📖</div>
+                                <div style="flex:1;min-width:0">
+                                    <div class="top-name">@bname</div>
+                                    <div class="top-cat">@bcat</div>
+                                </div>
+                                <div class="top-sold">@bsold</div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom -->
+            <div class="adm-bottom">
+
+                <!-- Table -->
+                <div class="adm-tbl-card">
+                    <div class="tbl-hd">
+                        <div>
+                            <div class="card-title">Đơn hàng gần đây</div>
+                            <div class="card-sub">12 đơn đang chờ xử lý</div>
+                        </div>
+                        <div style="display:flex;gap:7px">
+                            <button class="btn btn-outline"><i class="bi bi-funnel"></i> Lọc</button>
+                            <button class="btn btn-primary"><i class="bi bi-arrow-right"></i> Xem tất cả</button>
+                        </div>
+                    </div>
+                    <table class="adm-tbl">
+                        <thead>
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Khách hàng</th>
+                                <th>Sản phẩm</th>
+                                <th>Tổng tiền</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày đặt</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                var orders = new[] {
+                            ("#DH-8821","Nguyễn Văn A","NA","3 cuốn","680.000đ","ok","Hoàn thành","10/03","#D4860B"),
+                            ("#DH-8820","Trần Thị B",  "TB","1 cuốn","149.000đ","pnd","Chờ xử lý","10/03","#2563A8"),
+                            ("#DH-8819","Lê Minh C",   "LM","5 cuốn","1.250.000đ","shp","Đang giao","09/03","#2E7D52"),
+                            ("#DH-8818","Phạm Thu D",  "PT","2 cuốn","390.000đ","ok","Hoàn thành","09/03","#7B3F7B"),
+                            ("#DH-8817","Hoàng Văn E", "HV","4 cuốn","820.000đ","x","Đã huỷ","08/03","#C0392B"),
+                            ("#DH-8816","Vũ Thị F",    "VT","1 cuốn","220.000đ","pnd","Chờ xử lý","08/03","#D4860B"),
+                            };
+                            }
+                            @foreach (var (oid, oname, oinit, oitem, oamt, ost, ostxt, odate, ocol) in orders)
+                            {
+                                var bc = ost switch { "ok" => "bg-ok", "pnd" => "bg-pnd", "x" => "bg-x", _ => "bg-shp" };
+                                <tr>
+                                    <td><span class="tbl-id">@oid</span></td>
+                                    <td>
+                                        <div class="tbl-cust">
+                                            <div class="mini-av" style="background:@ocol">@oinit</div>
+                                            @oname
+                                        </div>
+                                    </td>
+                                    <td>@oitem</td>
+                                    <td><span class="tbl-amt">@oamt</span></td>
+                                    <td><span class="badge @bc">@ostxt</span></td>
+                                    <td>@odate</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Activity -->
+                <div class="adm-act-card">
+                    <div class="card-hd" style="margin-bottom:16px">
+                        <div>
+                            <div class="card-title">Hoạt động</div>
+                            <div class="card-sub">Cập nhật gần nhất</div>
+                        </div>
+                    </div>
+                    @{
+                        var acts = new[] {
+                    ("act-order","🛍️","Đơn hàng mới","#DH-8821 từ Nguyễn Văn A","2 phút trước"),
+                    ("act-user","👤","Khách hàng mới","Trần Thị B vừa đăng ký","15 phút trước"),
+                    ("act-review","⭐","Đánh giá 5★","Cho cuốn Đắc Nhân Tâm","1 giờ trước"),
+                    ("act-stock","⚠️","Cảnh báo kho","Nhà Giả Kim còn 3 cuốn","2 giờ trước"),
+                    ("act-order","🛍️","Giao thành công","#DH-8815 đã hoàn tất","3 giờ trước"),
+                    ("act-user","💬","Phản hồi mới","Hỏi về chính sách đổi trả","5 giờ trước"),
+                    };
+                    }
+                    @foreach (var (atype, aemo, atitle, adesc, atime) in acts)
+                    {
+                        <div class="act-item">
+                            <div class="act-dot @atype">@aemo</div>
+                            <div>
+                                <div class="act-text"><b>@atitle</b> — @adesc</div>
+                                <div class="act-time"><i class="bi bi-clock"></i> @atime</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@code { }

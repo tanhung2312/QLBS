@@ -1,0 +1,871 @@
+﻿@page "/profile"
+@rendermode InteractiveServer
+@using System.Net.Http.Json
+@using System.Net.Http.Headers
+@using Microsoft.AspNetCore.SignalR.Client
+@implements IAsyncDisposable
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+
+<PageTitle>Hồ Sơ Của Tôi - BookStore</PageTitle>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+    @@keyframes fadeUp {
+    from {
+    opacity: 0;
+    transform: translateY(20px)
+    }
+
+    to {
+    opacity: 1;
+    transform: translateY(0)
+    }
+    }
+
+    @@keyframes shimmer {
+    0% {
+    background-position: -200% 0
+    }
+
+    100% {
+    background-position: 200% 0
+    }
+    }
+
+    @@keyframes spin {
+    to {
+    transform: rotate(360deg)
+    }
+    }
+
+    @@keyframes slideIn {
+    from {
+    opacity: 0;
+    transform: translateX(30px)
+    }
+
+    to {
+    opacity: 1;
+    transform: translateX(0)
+    }
+    }
+
+    @@keyframes pulse {
+    0%, 100% {
+    transform: scale(1)
+    }
+
+    50% {
+    transform: scale(1.05)
+    }
+    }
+
+    .font-cormorant {
+    font-family: 'Cormorant Garamond', serif;
+    }
+
+    .font-jakarta {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .fade-up-1 {
+    animation: fadeUp .5s cubic-bezier(.4,0,.2,1) .05s both;
+    }
+
+    .fade-up-2 {
+    animation: fadeUp .5s cubic-bezier(.4,0,.2,1) .12s both;
+    }
+
+    .fade-up-3 {
+    animation: fadeUp .5s cubic-bezier(.4,0,.2,1) .18s both;
+    }
+
+    .skel {
+    background: linear-gradient(90deg, #EDE8DF 25%, #FFFDF8 50%, #EDE8DF 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 6px;
+    }
+
+    .avatar-ring {
+    background: linear-gradient(135deg, #D4860B, #F5A623);
+    padding: 3px;
+    box-shadow: 0 0 0 4px rgba(212,134,11,.2), 0 20px 60px rgba(107,76,42,.2);
+    }
+
+    .nav-active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: #D4860B;
+    border-radius: 0 3px 3px 0;
+    }
+
+    /* external nav item (opens new page) */
+    .nav-external {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 18px;
+    font-size: .86rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 1px solid #EDE8DF;
+    color: #7A6A5A;
+    text-decoration: none;
+    transition: background .15s, color .15s;
+    }
+
+    .nav-external:last-child {
+    border-bottom: none;
+    }
+
+    .nav-external:hover {
+    background: rgba(212,134,11,.1);
+    color: #6B4C2A;
+    }
+
+    .btn-spin {
+    animation: spin .7s linear infinite;
+    }
+
+    .pf-toast {
+    animation: slideIn .25s ease both;
+    }
+
+    .notif-badge {
+    animation: pulse .6s ease 3;
+    }
+
+    ::-webkit-scrollbar {
+    width: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+    background: #DDD5C8;
+    border-radius: 10px;
+    }
+</style>
+
+<div class="font-jakarta bg-[#FAF7F2] min-h-screen text-[#1A1208]">
+
+    <!-- TOP BAR -->
+    <div style="background:linear-gradient(90deg,#5A3D20,#6B4C2A,#7A5A34);" class="text-white/85 text-[0.78rem] py-[7px]">
+        <div class="max-w-[1100px] mx-auto px-6 flex justify-between items-center flex-wrap gap-2">
+            <div class="flex items-center gap-4">
+                <span class="flex items-center gap-1.5">
+                    <i class="bi bi-telephone-fill text-[#F5A623] text-[0.7rem]"></i>0901 234 567
+                </span>
+                <span class="opacity-40 hidden sm:inline">|</span>
+                <span class="hidden sm:flex items-center gap-1.5">
+                    <i class="bi bi-envelope-fill text-[#F5A623] text-[0.7rem]"></i>bookstore@@gmail.com
+                </span>
+            </div>
+            <a href="#" class="text-[rgba(255,221,167,.75)] no-underline hover:text-[rgba(255,221,167,1)] transition-colors flex items-center gap-1">
+                <i class="bi bi-box-seam text-[0.7rem]"></i> Theo dõi đơn hàng
+            </a>
+        </div>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav class="bg-[#FFFDF8]/95 border-b border-[#EDE8DF] py-3 sticky top-0 z-50"
+    style="backdrop-filter:blur(20px);box-shadow:0 1px 0 rgba(107,76,42,.06),0 4px 24px rgba(107,76,42,.06);">
+        <div class="max-w-[1100px] mx-auto px-6 flex items-center gap-4">
+            <a href="/" class="font-cormorant text-[1.75rem] font-bold text-[#6B4C2A] no-underline flex items-center gap-2.5 mr-auto" style="letter-spacing:-.5px;">
+                <div class="w-9 h-9 rounded-[10px] flex items-center justify-center text-white text-base flex-shrink-0"
+                style="background:linear-gradient(135deg,#D4860B,#F5A623);box-shadow:0 4px 12px rgba(212,134,11,.35);">
+                    <i class="bi bi-book-half"></i>
+                </div>
+                Book<span class="text-[#D4860B]">Store</span>
+            </a>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <a href="/cart" class="relative w-9 h-9 rounded-full bg-[#FAF7F2] border border-[#EDE8DF] flex items-center justify-center text-[#6B4C2A] text-sm no-underline hover:bg-[#D4860B] hover:text-white transition-colors">
+                    <i class="bi bi-bag"></i>
+                </a>
+                @if (!isLoggedIn)
+                {
+                    <a href="/login" class="flex items-center gap-2 bg-[#1A1208] text-white rounded-full px-5 py-[0.45rem] text-[0.84rem] font-semibold no-underline hover:bg-[#D4860B] transition-colors ml-1">
+                        <i class="bi bi-person text-sm"></i><span class="hidden sm:inline">Đăng nhập</span>
+                    </a>
+                }
+                else
+                {
+                    <div class="relative ml-1">
+                        <button @onclick="ToggleDropdown" title="@userFullName"
+                        class="w-9 h-9 rounded-full flex items-center justify-center text-white text-[.78rem] font-bold cursor-pointer border-2 transition-all hover:scale-105"
+                        style="background:linear-gradient(135deg,#D4860B,#F5A623);border-color:rgba(212,134,11,.35);box-shadow:0 2px 10px rgba(212,134,11,.3);">
+                            @GetInitials(userFullName)
+                        </button>
+                        @if (showDropdown)
+                        {
+                            <div class="absolute top-[calc(100%+10px)] right-0 bg-[#FFFDF8] border border-[#EDE8DF] rounded-[14px] min-w-[210px] z-[9999] overflow-hidden"
+                            style="box-shadow:0 8px 32px rgba(107,76,42,.14);">
+                                <div class="px-4 py-3.5 border-b border-[#EDE8DF]" style="background:linear-gradient(135deg,rgba(212,134,11,.06),transparent);">
+                                    <div class="text-[.88rem] font-bold text-[#1A1208] truncate">@userFullName</div>
+                                    <div class="text-[.72rem] text-[#9B8B7A] truncate">@userEmail</div>
+                                </div>
+                                <a href="/profile" class="flex items-center gap-2.5 px-4 py-2.5 text-[.84rem] font-medium text-[#D4860B] bg-[rgba(212,134,11,.06)] no-underline">
+                                    <i class="bi bi-person-circle text-[#D4860B] w-4 text-center"></i> Hồ sơ
+                                </a>
+                                <a href="/orders" class="flex items-center gap-2.5 px-4 py-2.5 text-[.84rem] font-medium text-[#7A6A5A] no-underline hover:bg-[rgba(212,134,11,.08)] hover:text-[#6B4C2A] transition-colors">
+                                    <i class="bi bi-bag-check-fill text-[#D4860B] w-4 text-center"></i> Đơn hàng
+                                </a>
+                                <a href="/wishlist" class="flex items-center gap-2.5 px-4 py-2.5 text-[.84rem] font-medium text-[#7A6A5A] no-underline hover:bg-[rgba(212,134,11,.08)] hover:text-[#6B4C2A] transition-colors">
+                                    <i class="bi bi-heart-fill text-[#E57373] w-4 text-center"></i> Yêu thích
+                                </a>
+                                <div class="h-px bg-[#EDE8DF] my-1"></div>
+                                <button @onclick="Logout" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-[.84rem] font-medium text-[#7A6A5A] hover:bg-[rgba(192,57,43,.07)] hover:text-[#C0392B] transition-colors border-none bg-transparent cursor-pointer" style="font-family:inherit;text-align:left;">
+                                    <i class="bi bi-box-arrow-right text-[#C0392B] w-4 text-center"></i> Đăng xuất
+                                </button>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </nav>
+
+    <!-- PROFILE BANNER -->
+    <div class="relative overflow-hidden pt-14 pb-0"
+    style="background:linear-gradient(140deg,#1A1208 0%,#3D2B1F 45%,#6B4C2A 100%);">
+        <div class="absolute pointer-events-none rounded-full"
+        style="width:500px;height:400px;top:-100px;right:5%;background:rgba(212,134,11,.1);filter:blur(80px);"></div>
+        <div class="relative z-10 max-w-[1100px] mx-auto px-6 fade-up-1">
+            <div class="flex items-end gap-7">
+                <div class="relative flex-shrink-0">
+                    <div class="avatar-ring w-[110px] h-[110px] rounded-full">
+                        <div class="w-full h-full rounded-full overflow-hidden flex items-center justify-center"
+                        style="background:linear-gradient(135deg,#5A3D20,#8B6040);">
+                            @if (!string.IsNullOrEmpty(userProfile.AvatarUrl))
+                            {
+                                <img src="@userProfile.AvatarUrl" class="w-full h-full object-cover" alt="avatar" />
+                            }
+                            else
+                            {
+                                <span class="font-cormorant text-[2.6rem] font-bold text-white" style="letter-spacing:-.5px;">
+                                    @GetInitials(userProfile.FullName)
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="pb-5 flex-1">
+                    @if (isLoadingProfile)
+                    {
+                        <div class="mb-3 rounded-lg" style="width:240px;height:26px;background:rgba(255,255,255,.12);animation:shimmer 1.4s infinite;background-size:200% 100%;"></div>
+                    }
+                    else
+                    {
+                        <div class="font-cormorant text-[2rem] font-bold text-white leading-tight mb-2">
+                            @(string.IsNullOrEmpty(userProfile.FullName) ? "Chưa cập nhật" : userProfile.FullName)
+                        </div>
+                        <div class="flex items-center gap-2.5 flex-wrap">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[.78rem] font-medium text-white/75"
+                            style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);">
+                                <i class="bi bi-envelope-fill text-[#F5A623] text-[.72rem]"></i>@userProfile.Email
+                            </span>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[.78rem] font-medium text-white/75"
+                            style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);">
+                                <i class="bi bi-person-badge-fill text-[#F5A623] text-[.72rem]"></i>@userProfile.RoleName
+                            </span>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[.72rem] font-medium"
+                            style="background:rgba(46,125,82,.2);border:1px solid rgba(46,125,82,.3);color:#4CAF82;">
+                                <span class="w-1.5 h-1.5 rounded-full bg-[#4CAF82] inline-block @(isConnected?"":"opacity-40")"></span>
+                                @(isConnected ? "Nhận thông báo real-time" : "Đang kết nối...")
+                            </span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- STATS BAR -->
+            <div class="flex border-t border-white/10 mt-7">
+                @{
+                    var statsItems = new (string icon, string iconBg, string iconColor, string num, string lbl, string href)[]
+                    {
+                ("bi-bag-check",  "rgba(212,134,11,.15)", "#F5A623", orderCount.ToString(),     "Đơn hàng",  "/orders"),
+                ("bi-heart-fill", "rgba(192,57,43,.15)",  "#E57373", wishlistCount.ToString(),  "Yêu thích", "/wishlist"),
+                ("bi-book-fill",  "rgba(46,125,82,.12)",  "#4CAF82", "47",                      "Đã đọc",    ""),
+                ("bi-star-fill",  "rgba(37,99,168,.12)",  "#64B5F6", "23",                      "Đánh giá",  ""),
+                    };
+                }
+                @foreach (var s in statsItems)
+                {
+                    var href = s.href;
+                    <a href="@(string.IsNullOrEmpty(href) ? "#" : href)"
+                    @onclick:preventDefault="@(string.IsNullOrEmpty(href))"
+                    class="flex-1 flex items-center gap-3 px-5 py-4 border-r border-white/[.08] last:border-r-0 no-underline hover:bg-white/5 transition-colors">
+                        <div class="w-[38px] h-[38px] rounded-[10px] flex items-center justify-center text-[.9rem] flex-shrink-0"
+                        style="background:@s.iconBg;color:@s.iconColor;">
+                            <i class="bi @s.icon"></i>
+                        </div>
+                        <div>
+                            <div class="font-cormorant text-[1.55rem] font-bold text-white leading-none">@s.num</div>
+                            <div class="text-[.71rem] text-white/50 font-medium mt-0.5 whitespace-nowrap">@s.lbl</div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(href))
+                        {
+                            <i class="bi bi-arrow-right text-white/25 text-[.72rem] ml-auto"></i>
+                        }
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN LAYOUT -->
+    <div class="max-w-[1100px] mx-auto px-6 py-8 pb-20"
+    style="display:grid;grid-template-columns:260px 1fr;gap:24px;align-items:start;">
+
+        <!-- SIDEBAR -->
+        <aside class="fade-up-2 flex flex-col gap-3.5" style="position:sticky;top:90px;">
+            <div class="bg-[#FFFDF8] border border-[#EDE8DF] rounded-[18px] overflow-hidden"
+            style="box-shadow:0 2px 12px rgba(107,76,42,.08);">
+
+                <!-- Internal tabs (info, addresses) -->
+                @foreach (var item in navItems)
+                {
+                    bool isAct = activeTab == item.Key;
+                    <div class="relative flex items-center gap-3 px-[18px] py-[11px] text-[.86rem] font-medium cursor-pointer border-b border-[#EDE8DF] last:border-b-0 transition-all @(isAct ? "nav-active bg-[rgba(212,134,11,.18)] text-[#6B4C2A] font-semibold" : "text-[#7A6A5A] hover:bg-[rgba(212,134,11,.1)] hover:text-[#6B4C2A]")"
+                    @onclick="() => SetTab(item.Key)">
+                        <div class="w-8 h-8 rounded-[9px] flex items-center justify-center text-[.82rem] flex-shrink-0 @(isAct ? "bg-[rgba(212,134,11,.15)] text-[#D4860B]" : "bg-[#FAF7F2] text-[#9B8B7A]")">
+                            <i class="bi @item.Icon"></i>
+                        </div>
+                        @item.Label
+                    </div>
+                }
+
+                <!-- Divider -->
+                <div class="h-px bg-[#EDE8DF]"></div>
+
+                <!-- External links (navigate to separate pages) -->
+                <a href="/orders" class="nav-external">
+                    <div class="w-8 h-8 rounded-[9px] bg-[#FAF7F2] flex items-center justify-center text-[.82rem] text-[#9B8B7A] flex-shrink-0">
+                        <i class="bi bi-bag-check-fill"></i>
+                    </div>
+                    <span>Đơn hàng của tôi</span>
+                    <span class="ml-auto flex items-center gap-1">
+                        @if (orderCount > 0)
+                        {
+                            <span class="bg-[rgba(212,134,11,.1)] text-[#D4860B] text-[.62rem] font-extrabold px-2 py-[1px] rounded-full">@orderCount</span>
+                        }
+                        <i class="bi bi-arrow-right text-[.72rem] text-[#C8BEB0]"></i>
+                    </span>
+                </a>
+
+                <!-- NEW: Wishlist external link -->
+                <a href="/wishlist" class="nav-external">
+                    <div class="w-8 h-8 rounded-[9px] bg-[rgba(192,57,43,.08)] flex items-center justify-center text-[.82rem] text-[#E57373] flex-shrink-0">
+                        <i class="bi bi-heart-fill"></i>
+                    </div>
+                    <span>Sách yêu thích</span>
+                    <span class="ml-auto flex items-center gap-1">
+                        @if (wishlistCount > 0)
+                        {
+                            <span class="bg-[rgba(192,57,43,.1)] text-[#C0392B] text-[.62rem] font-extrabold px-2 py-[1px] rounded-full">@wishlistCount</span>
+                        }
+                        <i class="bi bi-arrow-right text-[.72rem] text-[#C8BEB0]"></i>
+                    </span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="fade-up-3 flex flex-col gap-5">
+
+            <!-- ── TAB: THÔNG TIN ── -->
+            @if (activeTab == "info")
+            {
+                <div class="bg-[#FFFDF8] border border-[#EDE8DF] rounded-[18px] overflow-hidden"
+                style="box-shadow:0 2px 12px rgba(107,76,42,.08);">
+                    <div class="flex items-center justify-between px-6 py-[18px] border-b border-[#EDE8DF]">
+                        <div class="font-cormorant text-[1.18rem] font-bold text-[#1A1208] flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-[9px] bg-[rgba(212,134,11,.1)] text-[#D4860B] flex items-center justify-center text-[.84rem]">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            Thông tin cá nhân
+                        </div>
+                        @if (!isEditingProfile)
+                        {
+                            <button class="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[.84rem] font-semibold border border-[#DDD5C8] bg-[#FAF7F2] text-[#7A6A5A] hover:border-[#D4860B] hover:text-[#D4860B] hover:bg-[rgba(212,134,11,.1)] transition-all cursor-pointer"
+                            @onclick="() => isEditingProfile = true">
+                                <i class="bi bi-pencil text-[.8rem]"></i> Chỉnh sửa
+                            </button>
+                        }
+                    </div>
+                    <div class="p-6">
+                        @if (isLoadingProfile)
+                        {
+                            <div class="grid grid-cols-2 gap-4">
+                                @for (int i = 0; i < 6; i++)
+                                {
+                                    <div class="@(i>=4?"col-span-2":"") flex flex-col gap-1.5">
+                                        <div class="skel h-2.5 w-20"></div>
+                                        <div class="skel h-10 w-full rounded-[11px]"></div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="col-span-2 flex flex-col gap-1.5">
+                                    <label class="text-[.75rem] font-bold text-[#7A6A5A] uppercase tracking-wide">Họ và tên</label>
+                                    <input type="text" placeholder="Nguyễn Văn A" @bind="userProfile.FullName" disabled="@(!isEditingProfile)"
+                                    class="w-full bg-[#FAF7F2] border border-[#DDD5C8] rounded-[11px] px-3.5 py-2.5 text-[.87rem] text-[#1A1208] outline-none transition-all focus:border-[#D4860B] focus:bg-[#FFFDF8] disabled:opacity-60 disabled:cursor-not-allowed font-jakarta" />
+                                </div>
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-[.75rem] font-bold text-[#7A6A5A] uppercase tracking-wide">Email</label>
+                                    <input type="email" @bind="userProfile.Email" disabled="true"
+                                    class="w-full bg-[#FAF7F2] border border-[#DDD5C8] rounded-[11px] px-3.5 py-2.5 text-[.87rem] text-[#1A1208] outline-none opacity-60 cursor-not-allowed font-jakarta" />
+                                    <span class="text-[.71rem] text-[#9B8B7A] flex items-center gap-1">
+                                        <i class="bi bi-info-circle"></i>Email đăng nhập không thể thay đổi
+                                    </span>
+                                </div>
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-[.75rem] font-bold text-[#7A6A5A] uppercase tracking-wide">Số điện thoại</label>
+                                    <input type="tel" placeholder="0901234567" @bind="userProfile.PhoneNumber" disabled="@(!isEditingProfile)"
+                                    class="w-full bg-[#FAF7F2] border border-[#DDD5C8] rounded-[11px] px-3.5 py-2.5 text-[.87rem] text-[#1A1208] outline-none transition-all focus:border-[#D4860B] focus:bg-[#FFFDF8] disabled:opacity-60 disabled:cursor-not-allowed font-jakarta" />
+                                </div>
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-[.75rem] font-bold text-[#7A6A5A] uppercase tracking-wide">Ngày sinh</label>
+                                    <input type="date" @bind="userProfile.DateOfBirth" disabled="@(!isEditingProfile)"
+                                    class="w-full bg-[#FAF7F2] border border-[#DDD5C8] rounded-[11px] px-3.5 py-2.5 text-[.87rem] text-[#1A1208] outline-none transition-all focus:border-[#D4860B] focus:bg-[#FFFDF8] disabled:opacity-60 disabled:cursor-not-allowed font-jakarta" />
+                                </div>
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-[.75rem] font-bold text-[#7A6A5A] uppercase tracking-wide">Vai trò</label>
+                                    <input type="text" value="@userProfile.RoleName" disabled="true"
+                                    class="w-full bg-[#FAF7F2] border border-[#DDD5C8] rounded-[11px] px-3.5 py-2.5 text-[.87rem] text-[#1A1208] outline-none opacity-60 cursor-not-allowed font-jakarta" />
+                                </div>
+                                <div class="col-span-2 flex flex-col gap-1.5">
+                                    <label class="text-[.75rem] font-bold text-[#7A6A5A] uppercase tracking-wide">Địa chỉ</label>
+                                    <input type="text" placeholder="123 Nguyễn Huệ, Quận 1..." @bind="userProfile.Address" disabled="@(!isEditingProfile)"
+                                    class="w-full bg-[#FAF7F2] border border-[#DDD5C8] rounded-[11px] px-3.5 py-2.5 text-[.87rem] text-[#1A1208] outline-none transition-all focus:border-[#D4860B] focus:bg-[#FFFDF8] disabled:opacity-60 disabled:cursor-not-allowed font-jakarta" />
+                                </div>
+                            </div>
+                            @if (isEditingProfile)
+                            {
+                                <div class="flex gap-2.5 justify-end mt-5">
+                                    <button @onclick="CancelEditProfile"
+                                    class="px-5 py-2 rounded-[10px] text-[.84rem] font-semibold border border-[#DDD5C8] bg-[#FAF7F2] text-[#7A6A5A] hover:border-[#D4860B] hover:text-[#D4860B] transition-all cursor-pointer">
+                                        Huỷ
+                                    </button>
+                                    <button @onclick="SaveProfile" disabled="@isSaving"
+                                    class="flex items-center gap-1.5 px-5 py-2 rounded-[10px] text-[.84rem] font-semibold text-white transition-all cursor-pointer disabled:opacity-60"
+                                    style="background:linear-gradient(135deg,#6B4C2A,#8B6040);box-shadow:0 4px 14px rgba(107,76,42,.25);">
+                                        @if (isSaving)
+                                        {
+                                            <span class="btn-spin w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full inline-block"></span>
+                                            <span>Đang lưu...</span>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-check-lg"></i>
+                                            <span>Lưu thay đổi</span>
+                                        }
+                                    </button>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- ── TAB: ĐỊA CHỈ ── -->
+            @if (activeTab == "addresses")
+            {
+                <div class="bg-[#FFFDF8] border border-[#EDE8DF] rounded-[18px] overflow-hidden"
+                style="box-shadow:0 2px 12px rgba(107,76,42,.08);">
+                    <div class="flex items-center justify-between px-6 py-[18px] border-b border-[#EDE8DF]">
+                        <div class="font-cormorant text-[1.18rem] font-bold text-[#1A1208] flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-[9px] bg-[rgba(212,134,11,.1)] text-[#D4860B] flex items-center justify-center text-[.84rem]">
+                                <i class="bi bi-geo-alt-fill"></i>
+                            </div>
+                            Địa chỉ của tôi
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-2 gap-3.5">
+                            @foreach (var addr in addresses)
+                            {
+                                <div class="relative rounded-[14px] p-[18px] border-[1.5px] transition-all @(addr.IsDefault ? "border-[#D4860B] bg-[rgba(212,134,11,.04)]" : "border-[#EDE8DF] bg-[#FAF7F2] hover:border-[#D4860B]")">
+                                    @if (addr.IsDefault)
+                                    {
+                                        <div class="absolute -top-px left-4 bg-[#D4860B] text-white text-[.63rem] font-extrabold px-2.5 py-0.5 rounded-b-[8px] tracking-wide uppercase">Mặc định</div>
+                                    }
+                                    <div class="text-[.9rem] font-bold text-[#1A1208] mt-2.5 mb-0.5">@addr.RecipientName</div>
+                                    <div class="text-[.78rem] text-[#9B8B7A] mb-2 flex items-center gap-1">
+                                        <i class="bi bi-telephone text-[.72rem]"></i>@addr.Phone
+                                    </div>
+                                    <div class="text-[.82rem] text-[#7A6A5A] leading-snug flex items-start gap-1">
+                                        <i class="bi bi-geo-alt text-[.72rem] text-[#D4860B] mt-0.5 flex-shrink-0"></i>@addr.FullAddress
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+        </main>
+    </div>
+
+    <!-- TOAST -->
+    <div class="fixed bottom-6 right-6 z-[99999] flex flex-col gap-2 pointer-events-none">
+        @foreach (var t in toasts)
+        {
+            <div class="pf-toast pointer-events-auto flex items-center gap-2.5 px-[18px] py-3 rounded-[12px] text-white text-[.84rem] font-medium min-w-[280px] @(t.Type=="success"?"bg-[#2E7D52]":"bg-[#C0392B]")"
+            style="box-shadow:0 20px 60px rgba(107,76,42,.2);">
+                <i class="bi @(t.Type=="success"?"bi-check-circle-fill":"bi-exclamation-circle-fill")"></i>@t.Message
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    // ── State ──────────────────────────────────────────────────────────────
+    private bool isLoggedIn = false, showDropdown = false, isEditingProfile = false, isSaving = false;
+    private bool isLoadingProfile = true, isConnected = false;
+    private string userFullName = "", userEmail = "", accessToken = "";
+    private string activeTab = "info";
+    private int currentUserId = 0, orderCount = 0, wishlistCount = 0;
+    private List<ToastItem> toasts = new();
+    private HubConnection? hubConnection;
+
+    // ── Nav items (info + addresses only — wishlist is now a separate page) ──
+    private record NavItem(string Key, string Icon, string Label);
+    private List<NavItem> navItems = new()
+    {
+        new("info",      "bi-person-fill",  "Thông tin cá nhân"),
+        new("addresses", "bi-geo-alt-fill", "Địa chỉ của tôi"),
+    };
+
+    // ── Data ───────────────────────────────────────────────────────────────
+    private UserProfileModel userProfile = new(), profileSnapshot = new();
+    private List<AddressModel> addresses = new()
+    {
+        new("Nguyễn Minh Anh", "0901 234 567", "123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh", true),
+        new("Nguyễn Minh Anh", "0901 234 567", "456 Lê Lợi, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh", false),
+    };
+
+    // ── Lifecycle ──────────────────────────────────────────────────────────
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        accessToken = await JS.InvokeAsync<string?>("localStorage.getItem", "accessToken") ?? "";
+        userFullName = await JS.InvokeAsync<string?>("localStorage.getItem", "userFullName") ?? "";
+        userEmail = await JS.InvokeAsync<string?>("localStorage.getItem", "userEmail") ?? "";
+        var userIdStr = await JS.InvokeAsync<string?>("localStorage.getItem", "userId") ?? "";
+
+        if (!string.IsNullOrEmpty(accessToken) && !string.IsNullOrEmpty(userFullName))
+        {
+            isLoggedIn = true;
+            Http.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", accessToken);
+        }
+
+        if (!int.TryParse(userIdStr, out currentUserId))
+            currentUserId = ParseUserIdFromToken();
+
+        await Task.WhenAll(LoadProfile(), LoadOrderCount(), LoadWishlistCount());
+
+        await ConnectSignalRAsync();
+        StateHasChanged();
+    }
+
+    // ── SignalR ────────────────────────────────────────────────────────────
+    private async Task ConnectSignalRAsync()
+    {
+        if (string.IsNullOrEmpty(accessToken)) return;
+        try
+        {
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl("https://localhost:7213/notificationHub", options =>
+                {
+                    options.AccessTokenProvider = () => Task.FromResult<string?>(accessToken);
+                })
+                .WithAutomaticReconnect(new[] { TimeSpan.Zero, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(10) })
+                .Build();
+
+            hubConnection.On<OrderStatusUpdateDto>("ReceiveOrderStatus", async (dto) =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    await ShowToast($"🔔 {dto.Message}", "success");
+                    await LoadOrderCount();
+                    StateHasChanged();
+                });
+            });
+
+            hubConnection.Reconnecting += _ => { isConnected = false; InvokeAsync(StateHasChanged); return Task.CompletedTask; };
+            hubConnection.Reconnected += _ => { isConnected = true; InvokeAsync(StateHasChanged); return Task.CompletedTask; };
+            hubConnection.Closed += _ => { isConnected = false; InvokeAsync(StateHasChanged); return Task.CompletedTask; };
+
+            await hubConnection.StartAsync();
+            isConnected = true;
+
+            var userId = GetUserIdFromToken();
+            if (!string.IsNullOrEmpty(userId))
+                await hubConnection.InvokeAsync("JoinRoom", userId, "User");
+        }
+        catch (Exception ex) { Console.WriteLine($"[SignalR] Lỗi: {ex.Message}"); }
+    }
+
+    // ── Load data ──────────────────────────────────────────────────────────
+    private async Task LoadProfile()
+    {
+        isLoadingProfile = true;
+        try
+        {
+            var req = new HttpRequestMessage(HttpMethod.Get, "api/userprofile/user");
+            req.Headers.Authorization =
+                new AuthenticationHeaderValue("Bearer", accessToken);
+            var resp = await Http.SendAsync(req);
+            if (resp.IsSuccessStatusCode)
+            {
+                var dto = await resp.Content.ReadFromJsonAsync<UserProfileDto>();
+                if (dto != null)
+                {
+                    userProfile = new UserProfileModel
+                        {
+                            FullName = dto.FullName ?? "",
+                            Email = dto.Email ?? "",
+                            PhoneNumber = dto.PhoneNumber ?? "",
+                            Address = dto.Address ?? "",
+                            DateOfBirth = dto.DateOfBirth,
+                            AvatarUrl = dto.AvatarUrl ?? "",
+                            RoleName = dto.RoleName ?? "Thành viên"
+                        };
+                    profileSnapshot = new UserProfileModel
+                        {
+                            FullName = userProfile.FullName,
+                            Email = userProfile.Email,
+                            PhoneNumber = userProfile.PhoneNumber,
+                            Address = userProfile.Address,
+                            DateOfBirth = userProfile.DateOfBirth,
+                            AvatarUrl = userProfile.AvatarUrl,
+                            RoleName = userProfile.RoleName
+                        };
+                }
+            }
+            else
+            {
+                await ShowToast($"Lỗi {(int)resp.StatusCode}: Không thể tải hồ sơ", "error");
+            }
+        }
+        catch { await ShowToast("Không thể tải thông tin hồ sơ", "error"); }
+        finally { isLoadingProfile = false; }
+    }
+
+    private async Task LoadOrderCount()
+    {
+        try
+        {
+            var result = await Http.GetFromJsonAsync<List<OrderCountDto>>("api/order/history");
+            orderCount = result?.Count ?? 0;
+        }
+        catch { orderCount = 0; }
+    }
+
+    /// <summary>Fetch only the count so the stats bar and sidebar badge stay accurate.</summary>
+    private async Task LoadWishlistCount()
+    {
+        if (currentUserId <= 0) return;
+        try
+        {
+            var req = new HttpRequestMessage(HttpMethod.Get, $"api/FavoriteBook/{currentUserId}");
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            var resp = await Http.SendAsync(req);
+            if (resp.IsSuccessStatusCode)
+            {
+                var result = await resp.Content.ReadFromJsonAsync<FavoriteBookListDto>();
+                wishlistCount = result?.TotalCount ?? result?.Items?.Count ?? 0;
+            }
+        }
+        catch { wishlistCount = 0; }
+    }
+
+    // ── Profile actions ────────────────────────────────────────────────────
+    private void CancelEditProfile()
+    {
+        userProfile = new UserProfileModel
+            {
+                FullName = profileSnapshot.FullName,
+                Email = profileSnapshot.Email,
+                PhoneNumber = profileSnapshot.PhoneNumber,
+                Address = profileSnapshot.Address,
+                DateOfBirth = profileSnapshot.DateOfBirth,
+                AvatarUrl = profileSnapshot.AvatarUrl,
+                RoleName = profileSnapshot.RoleName
+            };
+        isEditingProfile = false;
+    }
+
+    private async Task SaveProfile()
+    {
+        isSaving = true; StateHasChanged();
+        try
+        {
+            var resp = await Http.PutAsJsonAsync("api/userprofile/user-profile", new UpdateProfileDto
+                {
+                    FullName = userProfile.FullName,
+                    PhoneNumber = userProfile.PhoneNumber,
+                    Address = userProfile.Address,
+                    DateOfBirth = userProfile.DateOfBirth,
+                    AvatarUrl = userProfile.AvatarUrl
+                });
+            if (resp.IsSuccessStatusCode)
+            {
+                profileSnapshot = new UserProfileModel
+                    {
+                        FullName = userProfile.FullName,
+                        Email = userProfile.Email,
+                        PhoneNumber = userProfile.PhoneNumber,
+                        Address = userProfile.Address,
+                        DateOfBirth = userProfile.DateOfBirth,
+                        AvatarUrl = userProfile.AvatarUrl,
+                        RoleName = userProfile.RoleName
+                    };
+                isEditingProfile = false;
+                await ShowToast("Cập nhật thành công!");
+            }
+            else { await ShowToast($"Lỗi ({(int)resp.StatusCode})", "error"); }
+        }
+        catch (Exception ex) { await ShowToast($"Lỗi: {ex.Message}", "error"); }
+        finally { isSaving = false; }
+    }
+
+    // ── Helpers ────────────────────────────────────────────────────────────
+    private void SetTab(string tab) => activeTab = tab;
+    private void ToggleDropdown() => showDropdown = !showDropdown;
+
+    private async Task ShowToast(string message, string type = "success")
+    {
+        var t = new ToastItem { Message = message, Type = type };
+        toasts.Add(t); StateHasChanged();
+        await Task.Delay(3500);
+        toasts.Remove(t); StateHasChanged();
+    }
+
+    private async Task Logout()
+    {
+        if (hubConnection != null) await hubConnection.DisposeAsync();
+        foreach (var k in new[] { "accessToken", "refreshToken", "userEmail", "userFullName", "userId" })
+            await JS.InvokeVoidAsync("localStorage.removeItem", k);
+        Navigation.NavigateTo("/", forceLoad: true);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection != null) await hubConnection.DisposeAsync();
+    }
+
+    private string GetUserIdFromToken()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(accessToken)) return "";
+            var parts = TokenParts(accessToken);
+            if (parts == null) return "";
+            var doc = System.Text.Json.JsonDocument.Parse(parts);
+            foreach (var claim in new[] { "sub", "nameid", "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier" })
+                if (doc.RootElement.TryGetProperty(claim, out var v)) return v.GetString() ?? "";
+            return "";
+        }
+        catch { return ""; }
+    }
+
+    private int ParseUserIdFromToken()
+        => int.TryParse(GetUserIdFromToken(), out var id) ? id : 0;
+
+    private static string? TokenParts(string token)
+    {
+        try
+        {
+            var parts = token.Split('.');
+            if (parts.Length < 2) return null;
+            var p = parts[1];
+            switch (p.Length % 4) { case 2: p += "=="; break; case 3: p += "="; break; }
+            p = p.Replace('-', '+').Replace('_', '/');
+            return System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(p));
+        }
+        catch { return null; }
+    }
+
+    private static string GetInitials(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return "?";
+        var p = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return p.Length == 1 ? p[0][..1].ToUpper() : $"{p[0][..1]}{p[^1][..1]}".ToUpper();
+    }
+
+    // ── Models & DTOs ──────────────────────────────────────────────────────
+    public class UserProfileModel
+    {
+        public string FullName { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string PhoneNumber { get; set; } = "";
+        public string Address { get; set; } = "";
+        public DateTime? DateOfBirth { get; set; }
+        public string AvatarUrl { get; set; } = "";
+        public string RoleName { get; set; } = "Thành viên";
+    }
+
+    private class UserProfileDto
+    {
+        public string? Email { get; set; }
+        public string? FullName { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string? Address { get; set; }
+        public DateTime? DateOfBirth { get; set; }
+        public string? AvatarUrl { get; set; }
+        public string? RoleName { get; set; }
+    }
+
+    private class UpdateProfileDto
+    {
+        public string? FullName { get; set; }
+        public DateTime? DateOfBirth { get; set; }
+        public string? Address { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string? AvatarUrl { get; set; }
+    }
+
+    private class OrderCountDto { public int OrderId { get; set; } }
+
+    private class OrderStatusUpdateDto
+    {
+        public int OrderId { get; set; }
+        public string NewStatus { get; set; } = "";
+        public string Message { get; set; } = "";
+    }
+
+    private class FavoriteBookListDto
+    {
+        public int TotalCount { get; set; }
+        public List<FavoriteBookItemDto>? Items { get; set; }
+    }
+
+    private class FavoriteBookItemDto
+    {
+        public int BookId { get; set; }
+        public string? BookTitle { get; set; }
+        public string? AuthorName { get; set; }
+        public string? CategoryName { get; set; }
+        public decimal Price { get; set; }
+        public string? CoverImageUrl { get; set; }
+        public DateTime MarkedDate { get; set; }
+    }
+
+    public record AddressModel(string RecipientName, string Phone, string FullAddress, bool IsDefault);
+    public class ToastItem { public string Message { get; set; } = ""; public string Type { get; set; } = "success"; }
+}

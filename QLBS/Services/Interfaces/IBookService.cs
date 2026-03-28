@@ -9,5 +9,6 @@ namespace QLBS.Services.Interfaces
         Task<BookResponseDto?> CreateBookAsync(CreateBookDto createDto);
         Task<bool> UpdateBookAsync(int id, UpdateBookDto updateDto);
         Task<bool> DeleteBookAsync(int id);
+        Task<IEnumerable<BookResponseDto>> GetTopSellingBooksAsync(int top = 8);
     }
 }

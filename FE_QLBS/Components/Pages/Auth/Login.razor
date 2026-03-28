@@ -1,0 +1,521 @@
+﻿@page "/login"
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Đăng nhập - BookStore</PageTitle>
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    cream: '#FAF7F2',
+                    ink:   '#1A1208',
+                    brown: '#6B4C2A',
+                    amber: '#D4860B',
+                    'amber-lt': '#F5A623',
+                    sand:  '#EDE8DF',
+                    muted: '#9B8B7A',
+                    pale:  '#C4B8A8',
+                },
+                fontFamily: {
+                    serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+                    sans:  ['"Plus Jakarta Sans"', 'sans-serif'],
+                },
+            }
+        }
+    }
+</script>
+
+<style>
+    body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        margin: 0;
+    }
+
+    @@keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(14px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @@keyframes pulse-ring {
+        0% {
+            transform: scale(1);
+            opacity: .6;
+        }
+
+        100% {
+            transform: scale(1.5);
+            opacity: 0;
+        }
+    }
+
+    .anim-1 {
+        animation: fadeUp .4s ease both;
+    }
+
+    .anim-2 {
+        animation: fadeUp .4s ease .06s both;
+    }
+
+    .anim-3 {
+        animation: fadeUp .4s ease .12s both;
+    }
+
+    .anim-4 {
+        animation: fadeUp .4s ease .18s both;
+    }
+
+    .anim-5 {
+        animation: fadeUp .4s ease .24s both;
+    }
+
+    .anim-6 {
+        animation: fadeUp .4s ease .30s both;
+    }
+
+    .spin-anim {
+        animation: spin .7s linear infinite;
+    }
+
+    .field-wrap input {
+        width: 100%;
+        padding: .68rem 1rem .68rem 2.6rem;
+        border: 1.5px solid #EDE8DF;
+        border-radius: 10px;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: .875rem;
+        color: #1A1208;
+        background: #fff;
+        outline: none;
+        transition: border-color .18s, box-shadow .18s;
+        box-sizing: border-box;
+    }
+
+        .field-wrap input::placeholder {
+            color: #C4B8A8;
+        }
+
+        .field-wrap input:focus {
+            border-color: #D4860B;
+            box-shadow: 0 0 0 3px rgba(212,134,11,.11);
+        }
+
+    .field-wrap.has-toggle input {
+        padding-right: 2.6rem;
+    }
+
+    input[type="checkbox"] {
+        accent-color: #D4860B;
+    }
+
+    .tab-pill {
+        transition: all .22s ease;
+    }
+
+        .tab-pill.on {
+            background: #6B4C2A;
+            color: #fff;
+            box-shadow: 0 2px 12px rgba(107,76,42,.28);
+        }
+
+    .blob {
+        position: fixed;
+        border-radius: 50%;
+        filter: blur(80px);
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .google-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        padding: .72rem 1rem;
+        border: 1.5px solid #EDE8DF;
+        border-radius: 12px;
+        background: #fff;
+        color: #1A1208;
+        font-size: .875rem;
+        font-weight: 600;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        cursor: pointer;
+        transition: all .2s;
+        text-decoration: none;
+    }
+
+        .google-btn:hover {
+            border-color: #D4860B;
+            background: #FAF7F2;
+            box-shadow: 0 4px 16px rgba(212,134,11,.12);
+            transform: translateY(-1px);
+        }
+
+        .google-btn:active {
+            transform: translateY(0);
+        }
+</style>
+
+<!-- Background blobs -->
+<div class="blob w-96 h-96 bg-amber/10" style="top:-100px;right:-80px;"></div>
+<div class="blob w-80 h-80" style="bottom:-80px;left:-60px;background:rgba(107,76,42,0.07);"></div>
+<div class="blob w-64 h-64 bg-amber/5" style="top:50%;left:50%;transform:translate(-50%,-50%);"></div>
+
+<div class="min-h-screen bg-cream flex flex-col items-center justify-center px-4 py-12 relative"
+     style="font-family:'Plus Jakarta Sans',sans-serif;">
+
+    <!-- Logo -->
+    <a href="/" class="relative z-10 inline-flex items-center gap-3 no-underline mb-8 anim-1">
+        <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-white text-lg flex-shrink-0 relative"
+             style="background:linear-gradient(135deg,#D4860B,#F5A623);box-shadow:0 4px 20px rgba(212,134,11,.4);">
+            <i class="bi bi-book-half"></i>
+            <span class="absolute inset-0 rounded-2xl border-2 border-amber/50"
+                  style="animation:pulse-ring 2.2s ease-out infinite;"></span>
+        </div>
+        <span class="font-serif font-semibold tracking-tight text-ink" style="font-size:1.9rem;">
+            Book<span class="text-amber">Store</span>
+        </span>
+    </a>
+
+    <!-- Card -->
+    <div class="relative z-10 w-full max-w-[420px] bg-white rounded-3xl border border-sand overflow-hidden"
+         style="box-shadow:0 24px 64px rgba(107,76,42,0.13), 0 2px 12px rgba(107,76,42,0.06);">
+
+        <div class="h-1 w-full" style="background:linear-gradient(90deg,#6B4C2A,#D4860B,#F5A623);"></div>
+
+        <div class="px-8 pt-8 pb-9">
+
+            <!-- Heading -->
+            <div class="mb-6 anim-2">
+                <h2 class="font-serif font-semibold text-ink mb-1" style="font-size:1.9rem;letter-spacing:-.3px;">
+                    Chào mừng trở lại
+                </h2>
+                <p class="text-muted text-sm leading-relaxed">
+                    Đăng nhập để tiếp tục hành trình đọc sách của bạn.
+                </p>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex bg-[#F4F0EA] rounded-xl p-1 mb-6 border border-sand anim-3">
+                <span class="tab-pill on flex-1 text-center py-2 rounded-[10px] text-sm font-semibold cursor-default">
+                    Đăng nhập
+                </span>
+                <a href="/register"
+                   class="tab-pill flex-1 text-center py-2 rounded-[10px] text-sm font-semibold text-muted no-underline hover:text-brown transition-colors">
+                    Đăng ký
+                </a>
+            </div>
+
+            <!-- Alerts -->
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="flex items-start gap-2.5 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-5 text-sm anim-3">
+                    <i class="bi bi-exclamation-circle-fill mt-0.5 flex-shrink-0 text-sm"></i>
+                    <span>@errorMessage</span>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <div class="flex items-start gap-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl px-4 py-3 mb-5 text-sm anim-3">
+                    <i class="bi bi-check-circle-fill mt-0.5 flex-shrink-0 text-sm"></i>
+                    <span>@successMessage</span>
+                </div>
+            }
+
+            <!-- Form -->
+            <EditForm Model="@loginModel" OnValidSubmit="@HandleLogin" FormName="LoginForm">
+                <DataAnnotationsValidator />
+
+                <!-- Email -->
+                <div class="mb-4 anim-4">
+                    <label class="block text-[.82rem] font-semibold text-ink mb-1.5">Email</label>
+                    <div class="field-wrap relative">
+                        <i class="bi bi-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-pale text-sm pointer-events-none"></i>
+                        <InputText @bind-Value="loginModel.Email"
+                                   placeholder="name@example.com"
+                                   class="w-full" />
+                    </div>
+                    <ValidationMessage For="@(() => loginModel.Email)"
+                                       class="block text-[.73rem] text-red-500 mt-1.5" />
+                </div>
+
+                <!-- Password -->
+                <div class="mb-4 anim-4">
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label class="text-[.82rem] font-semibold text-ink">Mật khẩu</label>
+                        <a href="/forgot-password"
+                           class="text-[.78rem] text-amber no-underline hover:text-amber-lt font-semibold transition-colors">
+                            Quên mật khẩu?
+                        </a>
+                    </div>
+                    <div class="field-wrap has-toggle relative">
+                        <i class="bi bi-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-pale text-sm pointer-events-none"></i>
+                        <InputText type="@(showPassword ? "text" : "password")"
+                                   @bind-Value="loginModel.Password"
+                                   placeholder="••••••••"
+                                   class="w-full" />
+                        <button type="button"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-pale hover:text-brown transition-colors bg-transparent border-0 cursor-pointer p-1 leading-none"
+                                @onclick="@(() => showPassword = !showPassword)">
+                            <i class="bi @(showPassword ? "bi-eye-slash" : "bi-eye") text-sm"></i>
+                        </button>
+                    </div>
+                    <ValidationMessage For="@(() => loginModel.Password)"
+                                       class="block text-[.73rem] text-red-500 mt-1.5" />
+                </div>
+
+                <!-- Remember me -->
+                <div class="flex items-center gap-2.5 mb-5 anim-5">
+                    <InputCheckbox @bind-Value="loginModel.RememberMe" class="w-4 h-4 rounded cursor-pointer" />
+                    <span class="text-sm text-muted select-none">Ghi nhớ đăng nhập trong 30 ngày</span>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit"
+                        disabled="@isLoading"
+                        class="anim-5 w-full flex items-center justify-center gap-2 text-white font-semibold rounded-xl py-3.5 text-sm border-0 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0"
+                        style="background:linear-gradient(135deg,#6B4C2A,#8B6040);box-shadow:0 4px 18px rgba(107,76,42,.3);">
+                    @if (isLoading)
+                    {
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full spin-anim"></span>
+                        <span>Đang xử lý...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-box-arrow-in-right text-sm"></i>
+                        <span>Đăng nhập ngay</span>
+                    }
+                </button>
+            </EditForm>
+
+            <!-- Divider -->
+            <div class="flex items-center gap-3 my-5 anim-6">
+                <div class="flex-1 h-px bg-sand"></div>
+                <span class="text-pale text-[.68rem] font-semibold tracking-[.14em] uppercase whitespace-nowrap">
+                    Hoặc tiếp tục với
+                </span>
+                <div class="flex-1 h-px bg-sand"></div>
+            </div>
+
+            <!-- Google button -->
+            <div class="mb-5 anim-6">
+                <a href="https://localhost:7213/api/Auth/google-login" class="google-btn">
+                    @if (isGoogleLoading)
+                    {
+                        <span class="w-4 h-4 border-2 border-[#EDE8DF] border-t-[#D4860B] rounded-full spin-anim"></span>
+                        <span>Đang chuyển đến Google...</span>
+                    }
+                    else
+                    {
+                        <svg width="18" height="18" viewBox="0 0 24 24">
+                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                        </svg>
+                        <span>Tiếp tục với Google</span>
+                    }
+                </a>
+            </div>
+
+            <!-- Switch -->
+            <p class="text-center text-muted text-sm anim-6">
+                Chưa có tài khoản?
+                <a href="/register" class="text-amber font-bold no-underline hover:text-amber-lt transition-colors">
+                    Đăng ký miễn phí →
+                </a>
+            </p>
+
+        </div>
+
+        <!-- Trust badges -->
+        <div class="border-t border-sand bg-[#FDFBF8] px-8 py-3.5 flex items-center justify-center gap-6 flex-wrap">
+            @foreach (var (ic, lbl) in new[] {
+            ("shield-check-fill", "SSL bảo mật"),
+            ("truck",             "Toàn quốc"),
+            ("award-fill",        "Uy tín #1"),
+            })
+            {
+                <div class="flex items-center gap-1.5 text-[.68rem] font-semibold tracking-[.08em] uppercase text-pale">
+                    <i class="bi bi-@ic text-amber/60 text-[.72rem]"></i>
+                    @lbl
+                </div>
+            }
+        </div>
+    </div>
+
+    <p class="relative z-10 mt-6 text-pale text-xs text-center anim-6">
+        © @DateTime.Now.Year BookStore ·
+        <a href="/terms" class="hover:text-muted transition-colors no-underline">Điều khoản</a> ·
+        <a href="/privacy" class="hover:text-muted transition-colors no-underline">Bảo mật</a>
+    </p>
+</div>
+
+@code {
+    private LoginModel loginModel = new();
+    private bool showPassword = false;
+    private bool isLoading = false;
+    private bool isGoogleLoading = false;
+    private string errorMessage = "";
+    private string successMessage = "";
+
+    // ── Đọc token từ URL sau khi Google callback redirect về ──────────────
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        var uri = new Uri(Navigation.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+        var error = query["error"];
+        var accessToken = query["accessToken"];
+        var refreshToken = query["refreshToken"];
+        var userId = query["userId"];
+        var email = query["email"];
+        var fullName = query["fullName"];
+        var role = query["role"];
+
+        if (!string.IsNullOrEmpty(error))
+        {
+            errorMessage = error;
+            StateHasChanged();
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(accessToken))
+        {
+            // Lưu token vào localStorage
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "accessToken", accessToken);
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "refreshToken", refreshToken ?? "");
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "userId", userId ?? "");
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "userEmail", email ?? "");
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "userFullName", fullName ?? "");
+
+            successMessage = $"✓ Chào mừng {fullName}! Đang chuyển trang...";
+            StateHasChanged();
+
+            await Task.Delay(900);
+
+            if (role == "Admin")
+                Navigation.NavigateTo("/admin", forceLoad: true);
+            else
+                Navigation.NavigateTo("/", forceLoad: true);
+        }
+    }
+
+    // ── Đăng nhập thường ─────────────────────────────────────────────────
+    private async Task HandleLogin()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = "";
+            successMessage = "";
+
+            var response = await Http.PostAsJsonAsync("api/auth/login", new
+            {
+                email = loginModel.Email,
+                password = loginModel.Password
+            });
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<AuthResponseDto>();
+                if (result != null)
+                {
+                    await JSRuntime.InvokeVoidAsync("localStorage.setItem", "accessToken", result.AccessToken);
+                    await JSRuntime.InvokeVoidAsync("localStorage.setItem", "refreshToken", result.RefreshToken);
+                    await JSRuntime.InvokeVoidAsync("localStorage.setItem", "userEmail", result.Email);
+                    await JSRuntime.InvokeVoidAsync("localStorage.setItem", "userFullName", result.FullName);
+                    await JSRuntime.InvokeVoidAsync("localStorage.setItem", "userId", result.UserId.ToString());
+
+                    successMessage = $"✓ Chào mừng {result.FullName}! Đang chuyển trang...";
+                    await Task.Delay(900);
+
+                    if (result.Role == "Admin")
+                        Navigation.NavigateTo("/admin");
+                    else
+                        Navigation.NavigateTo("/");
+                }
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                var err = await response.Content.ReadFromJsonAsync<ApiResponse>();
+                errorMessage = err?.Message ?? "Email hoặc mật khẩu không chính xác.";
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                var err = await response.Content.ReadFromJsonAsync<ApiResponse>();
+                errorMessage = err?.Message ?? "Thông tin đăng nhập không hợp lệ.";
+            }
+            else
+            {
+                errorMessage = "Lỗi server. Vui lòng thử lại sau.";
+            }
+        }
+        catch (HttpRequestException)
+        {
+            errorMessage = "Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.";
+        }
+        catch
+        {
+            errorMessage = "Đã xảy ra lỗi. Vui lòng thử lại.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    // ── Models ────────────────────────────────────────────────────────────
+    public class LoginModel
+    {
+        [Required(ErrorMessage = "Email là bắt buộc")]
+        [EmailAddress(ErrorMessage = "Email không hợp lệ")]
+        public string Email { get; set; } = "";
+
+        [Required(ErrorMessage = "Mật khẩu là bắt buộc")]
+        [MinLength(6, ErrorMessage = "Mật khẩu phải có ít nhất 6 ký tự")]
+        public string Password { get; set; } = "";
+
+        public bool RememberMe { get; set; }
+    }
+
+    public class AuthResponseDto
+    {
+        public int UserId { get; set; }
+        public string AccessToken { get; set; } = "";
+        public string RefreshToken { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string FullName { get; set; } = "";
+        public string Role { get; set; } = "";
+    }
+
+    public class ApiResponse
+    {
+        public string Message { get; set; } = "";
+    }
+}

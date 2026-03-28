@@ -1,4 +1,5 @@
-﻿using QLBS.Models;
+﻿using QLBS.Dtos.Book;
+using QLBS.Models;
 
 namespace QLBS.Repository.Interfaces
 {
@@ -13,5 +14,8 @@ namespace QLBS.Repository.Interfaces
         Task AddBookImageAsync(BookImage bookImage);
         Task<BookImage?> GetCoverImageAsync(int bookId);
         Task RemoveBookImageAsync(BookImage bookImage);
+        Task<IEnumerable<Book>> GetTopSellingBooksAsync(int top = 8);
+        Task<IEnumerable<Book>> GetByCategoryIdAsync(int categoryId);
+        Task<int> CountByCategoryIdAsync(int categoryId);
     }
 }

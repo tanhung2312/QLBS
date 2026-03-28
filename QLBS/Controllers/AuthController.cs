@@ -2,6 +2,10 @@
 using Microsoft.AspNetCore.Mvc;
 using QLBS.Services.Interfaces;
 using QLBS.Dtos;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authentication;
+using System.Security.Claims;
 
 namespace QLBS.Controllers
 {
@@ -67,6 +71,65 @@ namespace QLBS.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Lỗi server nội bộ", error = ex.Message });
+            }
+        }
+
+        [HttpGet("google-login")]
+        [AllowAnonymous]
+        public IActionResult GoogleLogin([FromQuery] string? returnUrl = null)
+        {
+            var redirectUrl = Url.Action(nameof(GoogleCallback), "Auth",
+                new { returnUrl }, Request.Scheme);
+
+            var properties = new AuthenticationProperties
+            {
+                RedirectUri = redirectUrl
+            };
+
+            return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+        }
+
+        [HttpGet("google-callback")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GoogleCallback()
+        {
+            var authenticateResult = await HttpContext
+                .AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
+
+            if (!authenticateResult.Succeeded)
+                return Redirect($"https://localhost:7241/login?error=Google+đăng+nhập+thất+bại");
+
+            var claims = authenticateResult.Principal?.Claims;
+            var email = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+            var fullName = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+            var avatarUrl = claims?.FirstOrDefault(c => c.Type == "urn:google:picture")?.Value;
+
+            if (string.IsNullOrEmpty(email))
+                return Redirect($"https://localhost:7241/login?error=Không+lấy+được+email");
+
+            try
+            {
+                var result = await _authService.GoogleLoginAsync(email, fullName, avatarUrl);
+                if (result == null)
+                    return Redirect($"https://localhost:7241/login?error=Không+thể+xử+lý+đăng+nhập");
+
+                // Redirect về FE kèm token trên query string
+                return Redirect(
+                    $"https://localhost:7241/login" +
+                    $"?accessToken={Uri.EscapeDataString(result.AccessToken)}" +
+                    $"&refreshToken={Uri.EscapeDataString(result.RefreshToken)}" +
+                    $"&userId={result.UserId}" +
+                    $"&email={Uri.EscapeDataString(result.Email)}" +
+                    $"&fullName={Uri.EscapeDataString(result.FullName ?? "")}" +
+                    $"&role={Uri.EscapeDataString(result.Role ?? "")}");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Redirect($"https://localhost:7241/login?error={Uri.EscapeDataString(ex.Message)}");
+            }
+            catch (Exception ex)
+            {
+                return Redirect($"https://localhost:7241/login?error={Uri.EscapeDataString(ex.Message)}");
             }
         }
 

@@ -1,0 +1,1071 @@
+﻿@page "/categories"
+@rendermode InteractiveServer
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<PageTitle>Danh mục sách - BookStore</PageTitle>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+    :root {
+        --ink: #1A1208;
+        --brown: #6B4C2A;
+        --amber: #D4860B;
+        --amber-lt: #F5A623;
+        --sand: #EDE8DF;
+        --surface: #FAF7F2;
+        --warm-white: #FFFDF8;
+        --card: #FFFFFF;
+        --muted: #9B8B7A;
+        --pale: #C4B8A8;
+        --fog: rgba(255,253,248,0.96);
+    }
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background: var(--surface);
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+    }
+
+    ::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--surface);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--sand);
+        border-radius: 10px;
+    }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--amber);
+        }
+
+    @@keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(18px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0)
+        }
+    }
+
+    @@keyframes shimmer {
+        0% {
+            background-position: -600px 0
+        }
+
+        100% {
+            background-position: 600px 0
+        }
+    }
+
+    @@keyframes scaleIn {
+        from {
+            opacity: 0;
+            transform: scale(.94)
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1)
+        }
+    }
+
+    @@keyframes slideX {
+        from {
+            opacity: 0;
+            transform: translateX(4px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0)
+        }
+    }
+
+    @@keyframes glowRing {
+        0%, 100% {
+            box-shadow: 0 0 0 0 rgba(212,134,11,.3)
+        }
+
+        50% {
+            box-shadow: 0 0 0 8px rgba(212,134,11,0)
+        }
+    }
+
+    @@keyframes float {
+        0%, 100% {
+            transform: translateY(0)
+        }
+
+        50% {
+            transform: translateY(-6px)
+        }
+    }
+
+    @@keyframes pulse-dot {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 1
+        }
+
+        50% {
+            transform: scale(1.5);
+            opacity: .6
+        }
+    }
+
+    .a1 {
+        animation: fadeUp .5s cubic-bezier(.22,1,.36,1) .04s both
+    }
+
+    .a2 {
+        animation: fadeUp .5s cubic-bezier(.22,1,.36,1) .10s both
+    }
+
+    .a3 {
+        animation: fadeUp .5s cubic-bezier(.22,1,.36,1) .16s both
+    }
+
+    .skel {
+        background: linear-gradient(90deg,#EDE8DF 25%,#F5F0EA 50%,#EDE8DF 75%);
+        background-size: 600px 100%;
+        animation: shimmer 1.5s infinite;
+        border-radius: 10px;
+    }
+
+    /* ── Nav ── */
+    .nav-u {
+        position: relative;
+        color: rgba(26,18,8,.6);
+        text-decoration: none;
+        font-size: .88rem;
+        font-weight: 500;
+        padding: 8px 12px;
+        border-radius: 8px;
+        transition: all .15s;
+    }
+
+        .nav-u::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--amber);
+            border-radius: 2px;
+            transform: scaleX(0);
+            transition: transform .2s ease;
+        }
+
+        .nav-u:hover {
+            color: var(--ink);
+        }
+
+            .nav-u:hover::after, .nav-u.active::after {
+                transform: scaleX(1);
+            }
+
+        .nav-u.active {
+            color: var(--amber);
+        }
+
+    /* ── Hero ── */
+    .hero-bg {
+        background: linear-gradient(145deg,#5A3D20 0%,#6B4C2A 50%,#7A5A34 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .hero-bg::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 60% 50% at 80% 50%,rgba(245,166,35,.20) 0%,transparent 70%), radial-gradient(ellipse 40% 60% at 10% 80%,rgba(212,134,11,.12) 0%,transparent 60%);
+            pointer-events: none;
+        }
+
+        .hero-bg::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px), linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);
+            background-size: 48px 48px;
+            pointer-events: none;
+        }
+
+    /* Deco books */
+    .deco-book {
+        position: absolute;
+        border-radius: 6px;
+        opacity: .18;
+        animation: float 6s ease-in-out infinite;
+    }
+
+    /* ── Search ── */
+    .hero-search {
+        background: rgba(255,255,255,.10);
+        border: 1.5px solid rgba(255,255,255,.22);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 18px;
+        backdrop-filter: blur(12px);
+        transition: all .2s;
+        max-width: 500px;
+    }
+
+        .hero-search:focus-within {
+            border-color: rgba(245,166,35,.7);
+            background: rgba(255,255,255,.14);
+            box-shadow: 0 0 0 4px rgba(212,134,11,.18);
+        }
+
+        .hero-search input {
+            background: none;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: .92rem;
+            width: 100%;
+        }
+
+            .hero-search input::placeholder {
+                color: rgba(255,255,255,.45);
+            }
+
+    /* ── Filter bar ── */
+    .filter-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 16px;
+        border-radius: 50px;
+        font-size: .78rem;
+        font-weight: 600;
+        border: 1.5px solid var(--sand);
+        background: var(--card);
+        color: var(--muted);
+        cursor: pointer;
+        transition: all .18s;
+        white-space: nowrap;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+        .filter-pill:hover, .filter-pill.active {
+            border-color: var(--amber);
+            color: var(--brown);
+            background: rgba(212,134,11,.08);
+        }
+
+    .view-tog {
+        display: flex;
+        gap: 3px;
+        background: var(--surface);
+        border: 1.5px solid var(--sand);
+        border-radius: 10px;
+        padding: 3px;
+    }
+
+    .view-btn {
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 7px;
+        cursor: pointer;
+        color: var(--pale);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .85rem;
+        background: transparent;
+        transition: all .15s;
+    }
+
+        .view-btn.on {
+            background: var(--card);
+            color: var(--ink);
+            box-shadow: 0 1px 4px rgba(107,76,42,.1);
+        }
+
+    /* ── Cat card (grid) ── */
+    .cat-card {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        background: #fff;
+        border: 1px solid rgba(237,232,223,.8);
+        border-radius: 22px;
+        overflow: hidden;
+        transition: all .32s cubic-bezier(.22,1,.36,1);
+        box-shadow: 0 2px 8px rgba(107,76,42,.07), 0 8px 24px rgba(107,76,42,.05);
+    }
+
+        .cat-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(212,134,11,.35);
+            box-shadow: 0 12px 40px rgba(107,76,42,.14), 0 0 0 1px rgba(212,134,11,.2);
+        }
+
+    .cat-banner {
+        height: 116px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .cat-banner::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(circle,rgba(255,255,255,.5) 1.5px,transparent 1.5px);
+            background-size: 16px 16px;
+            z-index: 1;
+        }
+
+        .cat-banner::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 55%;
+            height: 100%;
+            background: linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);
+            transform: skewX(-20deg);
+            transition: left .55s ease;
+            z-index: 3;
+        }
+
+    .cat-card:hover .cat-banner::after {
+        left: 140%;
+    }
+
+    .cat-deco-c1 {
+        position: absolute;
+        border-radius: 50%;
+        width: 70px;
+        height: 70px;
+        background: rgba(255,255,255,.35);
+        bottom: -20px;
+        right: -16px;
+        z-index: 1;
+        transition: transform .4s ease;
+    }
+
+    .cat-deco-c2 {
+        position: absolute;
+        border-radius: 50%;
+        width: 46px;
+        height: 46px;
+        background: rgba(255,255,255,.25);
+        top: -12px;
+        left: 12px;
+        z-index: 1;
+        transition: transform .4s ease;
+    }
+
+    .cat-card:hover .cat-deco-c1 {
+        transform: scale(1.3);
+    }
+
+    .cat-card:hover .cat-deco-c2 {
+        transform: scale(1.2) translateX(3px);
+    }
+
+    .cat-emoji {
+        position: relative;
+        z-index: 4;
+        font-size: 3.2rem;
+        line-height: 1;
+        display: block;
+        filter: drop-shadow(0 4px 12px rgba(0,0,0,.12));
+        transition: transform .38s cubic-bezier(.22,1,.36,1);
+    }
+
+    .cat-card:hover .cat-emoji {
+        transform: scale(1.18) translateY(-5px) rotate(-6deg);
+    }
+
+    .cat-divider {
+        height: 1px;
+        background: linear-gradient(90deg,transparent,rgba(237,232,223,.8) 30%,rgba(237,232,223,.8) 70%,transparent);
+    }
+
+    .cat-body {
+        padding: 14px 16px 16px;
+    }
+
+    .cat-name {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.06rem;
+        font-weight: 700;
+        color: var(--ink);
+        margin-bottom: 5px;
+        line-height: 1.22;
+        transition: color .18s;
+    }
+
+    .cat-card:hover .cat-name {
+        color: var(--brown);
+    }
+
+    .cat-desc {
+        font-size: .76rem;
+        color: var(--muted);
+        line-height: 1.6;
+        margin-bottom: 14px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: 32px;
+    }
+
+    .cat-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .cat-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: .66rem;
+        font-weight: 700;
+        letter-spacing: .04em;
+        color: var(--brown);
+        background: rgba(212,134,11,.10);
+        border: 1px solid rgba(212,134,11,.22);
+        padding: 4px 10px;
+        border-radius: 50px;
+        transition: all .18s;
+    }
+
+    .cat-card:hover .cat-badge {
+        background: rgba(212,134,11,.18);
+        border-color: rgba(212,134,11,.4);
+    }
+
+    .cat-arrow {
+        width: 30px;
+        height: 30px;
+        border-radius: 9px;
+        background: var(--ink);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: .78rem;
+        transition: all .25s cubic-bezier(.22,1,.36,1);
+        box-shadow: 0 2px 8px rgba(107,76,42,.2);
+        flex-shrink: 0;
+    }
+
+    .cat-card:hover .cat-arrow {
+        background: linear-gradient(135deg,var(--amber),var(--amber-lt));
+        transform: translateX(3px) scale(1.08);
+        box-shadow: 0 4px 14px rgba(212,134,11,.45);
+    }
+
+    /* ── Cat row (list) ── */
+    .cat-row {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        background: var(--card);
+        border: 1px solid var(--sand);
+        border-radius: 16px;
+        padding: 16px 20px;
+        text-decoration: none;
+        color: inherit;
+        transition: all .22s cubic-bezier(.22,1,.36,1);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .cat-row::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg,var(--amber),var(--amber-lt));
+            border-radius: 0 2px 2px 0;
+            transform: scaleY(0);
+            transition: transform .22s;
+        }
+
+        .cat-row:hover {
+            border-color: rgba(212,134,11,.35);
+            box-shadow: 0 6px 24px rgba(107,76,42,.09);
+            transform: translateX(4px);
+        }
+
+            .cat-row:hover::before {
+                transform: scaleY(1);
+            }
+
+    .cat-row-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+        transition: transform .25s;
+    }
+
+    .cat-row:hover .cat-row-icon {
+        transform: scale(1.1) rotate(-3deg);
+    }
+
+    .cat-row-name {
+        font-family: 'Playfair Display',serif;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--ink);
+        margin-bottom: 3px;
+    }
+
+    .cat-row-desc {
+        font-size: .78rem;
+        color: var(--muted);
+        line-height: 1.45;
+    }
+
+    .cat-row-arrow {
+        margin-left: auto;
+        flex-shrink: 0;
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: var(--surface);
+        border: 1px solid var(--sand);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--pale);
+        font-size: .82rem;
+        transition: all .2s;
+    }
+
+    .cat-row:hover .cat-row-arrow {
+        background: var(--amber);
+        border-color: var(--amber);
+        color: #fff;
+    }
+
+    /* ── Animations ── */
+    .cat-item {
+        animation: scaleIn .4s cubic-bezier(.22,1,.36,1) both;
+    }
+
+    .cat-row-item {
+        animation: slideX .35s cubic-bezier(.22,1,.36,1) both;
+    }
+
+    /* ── Stat card ── */
+    .stat-card {
+        background: rgba(255,255,255,.10);
+        border: 1px solid rgba(255,255,255,.18);
+        border-radius: 14px;
+        padding: 14px 20px;
+        backdrop-filter: blur(10px);
+        text-align: center;
+        transition: all .2s;
+    }
+
+        .stat-card:hover {
+            background: rgba(255,255,255,.16);
+            border-color: rgba(245,166,35,.5);
+        }
+
+    .pdot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--amber-lt);
+        display: inline-block;
+        animation: glowRing 2.5s ease-in-out infinite;
+    }
+
+    .tag-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 12px;
+        border-radius: 50px;
+        background: rgba(212,134,11,.18);
+        border: 1px solid rgba(212,134,11,.35);
+        color: var(--amber-lt);
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    /* ── Footer ── */
+    .ft-a {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: rgba(255,255,255,.35);
+        text-decoration: none;
+        font-size: .82rem;
+        margin-bottom: 9px;
+        transition: color .14s;
+    }
+
+        .ft-a:hover {
+            color: var(--amber-lt);
+        }
+
+        .ft-a i {
+            font-size: .6rem;
+            color: rgba(212,134,11,.5);
+        }
+
+        .ft-a:hover i {
+            color: var(--amber);
+        }
+</style>
+
+<!-- TOP STRIP -->
+<div style="background:linear-gradient(90deg,#5A3D20,#6B4C2A,#7A5A34);" class="py-1.5">
+    <div class="max-w-7xl mx-auto px-5 flex justify-between items-center flex-wrap gap-2"
+         style="color:rgba(255,255,255,.65);font-size:.73rem;">
+        <div class="flex items-center gap-4">
+            <span class="flex items-center gap-1.5">
+                <i class="bi bi-telephone-fill" style="color:var(--amber-lt);font-size:.65rem;"></i>0901 234 567
+            </span>
+            <span class="hidden sm:flex items-center gap-1.5">
+                <i class="bi bi-envelope-fill" style="color:var(--amber-lt);font-size:.65rem;"></i>bookstore@@gmail.com
+            </span>
+        </div>
+        <a href="#" class="no-underline flex items-center gap-1.5" style="color:rgba(255,255,255,.55);">
+            <i class="bi bi-box-seam" style="font-size:.65rem;"></i>Theo dõi đơn hàng
+        </a>
+    </div>
+</div>
+
+<!-- NAVBAR -->
+<nav class="py-3 sticky top-0 z-50"
+     style="background:var(--fog);border-bottom:1px solid var(--sand);backdrop-filter:blur(24px);box-shadow:0 1px 0 rgba(107,76,42,.06),0 4px 24px rgba(107,76,42,.06);">
+    <div class="max-w-7xl mx-auto px-5 flex items-center gap-4">
+        <a href="/" class="no-underline flex items-center gap-2.5 mr-auto lg:mr-0 flex-shrink-0"
+           style="font-family:'Playfair Display',serif;font-size:1.55rem;color:var(--brown);letter-spacing:-.5px;">
+            <div class="w-9 h-9 rounded-[10px] flex items-center justify-center text-white text-sm flex-shrink-0"
+                 style="background:linear-gradient(135deg,var(--amber),var(--amber-lt));box-shadow:0 4px 12px rgba(212,134,11,.35);">
+                <i class="bi bi-book-half"></i>
+            </div>
+            Book<span style="color:var(--amber);">Store</span>
+        </a>
+        <div class="hidden lg:flex items-center gap-0.5 mx-auto">
+            <a href="/" class="nav-u">Trang Chủ</a>
+            <a href="/categories" class="nav-u active">Danh Mục</a>
+            <a href="/books/new" class="nav-u">Sách Mới</a>
+            <a href="/books/bestseller" class="nav-u">Bán Chạy</a>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+            <a href="/cart" class="relative w-9 h-9 rounded-[10px] flex items-center justify-center text-sm no-underline transition-all"
+               style="background:var(--surface);border:1px solid var(--sand);color:var(--brown);">
+                <i class="bi bi-bag"></i>
+            </a>
+            <a href="/login" class="flex items-center gap-2 text-white rounded-full px-5 py-2 text-sm font-semibold no-underline transition-colors"
+               style="background:var(--ink);font-family:'Plus Jakarta Sans',sans-serif;box-shadow:0 2px 10px rgba(26,18,8,.2);">
+                <i class="bi bi-person text-sm"></i><span class="hidden sm:inline">Đăng nhập</span>
+            </a>
+        </div>
+    </div>
+</nav>
+
+<!-- ══ HERO ══ -->
+<section class="hero-bg py-16 sm:py-20">
+    <div class="deco-book" style="width:60px;height:80px;background:var(--amber-lt);top:15%;right:12%;animation-delay:.5s;transform:rotate(12deg);"></div>
+    <div class="deco-book" style="width:44px;height:60px;background:var(--amber);top:55%;right:6%;animation-delay:1.2s;transform:rotate(-8deg);"></div>
+    <div class="deco-book" style="width:36px;height:50px;background:#fff;top:25%;left:5%;animation-delay:.8s;transform:rotate(6deg);"></div>
+
+    <div class="max-w-7xl mx-auto px-5 relative" style="z-index:10;">
+        <div class="max-w-2xl a1">
+            <!-- Tag -->
+            <div class="tag-pill mb-5">
+                <span class="pdot"></span>Danh mục sách
+            </div>
+
+            <!-- Title -->
+            <h1 class="mb-4" style="font-family:'Playfair Display',serif;font-size:clamp(2.2rem,5vw,3.4rem);font-weight:700;color:#fff;line-height:1.12;letter-spacing:-.02em;">
+                Khám phá theo<br />
+                <em class="not-italic" style="background:linear-gradient(135deg,var(--amber-lt),var(--amber));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">chủ đề yêu thích</em>
+            </h1>
+            <p class="mb-8 text-base leading-relaxed" style="color:rgba(255,255,255,.6);max-width:420px;">
+                Duyệt qua @categories.Count danh mục được tuyển chọn kỹ lưỡng — từ tiểu thuyết lãng mạn đến khoa học công nghệ.
+            </p>
+
+            <!-- Search -->
+            <div class="hero-search mb-10">
+                <i class="bi bi-search flex-shrink-0" style="color:rgba(255,255,255,.45);font-size:.88rem;"></i>
+                <input type="text" @bind="searchText" @bind:event="oninput"
+                       placeholder="Tìm danh mục, mô tả..." />
+                @if (!string.IsNullOrEmpty(searchText))
+                {
+                    <button @onclick="@(() => searchText = "")"
+                            style="background:none;border:none;color:rgba(255,255,255,.45);cursor:pointer;font-size:.8rem;flex-shrink:0;">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                }
+            </div>
+
+            <!-- Stats -->
+            <div class="flex gap-3 flex-wrap">
+                @foreach (var (num, lbl) in new[] { ($"{categories.Count}", "Danh mục"), ("50K+", "Đầu sách"), ($"{FilteredCategories.Count()}", "Kết quả") })
+                {
+                    <div class="stat-card">
+                        <div class="font-bold mb-0.5" style="font-family:'Playfair Display',serif;font-size:1.4rem;background:linear-gradient(135deg,var(--amber-lt),var(--amber));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">@num</div>
+                        <div style="color:rgba(255,255,255,.45);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;">@lbl</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══ FILTER BAR ══ -->
+<div class="py-3.5 sticky z-40" style="top:61px;background:var(--fog);border-bottom:1px solid var(--sand);backdrop-filter:blur(20px);">
+    <div class="max-w-7xl mx-auto px-5">
+        <div class="flex items-center gap-3 flex-wrap">
+            <span style="font-size:.84rem;color:var(--muted);flex-shrink:0;">
+                <span style="color:var(--ink);font-weight:700;">@FilteredCategories.Count()</span> danh mục
+            </span>
+            <div class="w-px h-5 flex-shrink-0" style="background:var(--sand);"></div>
+            <div class="flex gap-2 flex-wrap flex-1">
+                <button class="filter-pill @(sortBy=="name-asc"?"active":"")" @onclick='()=>sortBy="name-asc"'>
+                    <i class="bi bi-sort-alpha-down" style="font-size:.72rem;"></i>A → Z
+                </button>
+                <button class="filter-pill @(sortBy=="name-desc"?"active":"")" @onclick='()=>sortBy="name-desc"'>
+                    <i class="bi bi-sort-alpha-up" style="font-size:.72rem;"></i>Z → A
+                </button>
+                <button class="filter-pill @(sortBy=="id-asc"?"active":"")" @onclick='()=>sortBy="id-asc"'>
+                    <i class="bi bi-stars" style="font-size:.72rem;"></i>Mới nhất
+                </button>
+            </div>
+            <div class="view-tog flex-shrink-0">
+                <button class="view-btn @(isGridView?"on":"")" @onclick="@(()=>isGridView=true)" title="Lưới">
+                    <i class="bi bi-grid-3x3-gap-fill"></i>
+                </button>
+                <button class="view-btn @(!isGridView?"on":"")" @onclick="@(()=>isGridView=false)" title="Danh sách">
+                    <i class="bi bi-list-ul"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ MAIN CONTENT ══ -->
+<section class="py-10 pb-16" style="background:var(--surface);">
+    <div class="max-w-7xl mx-auto px-5">
+
+        @if (isLoading)
+        {
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+                @for (int i = 0; i < 8; i++)
+                {
+                    <div style="background:var(--card);border:1px solid var(--sand);border-radius:22px;overflow:hidden;">
+                        <div class="skel" style="height:116px;border-radius:0;"></div>
+                        <div style="padding:14px 16px;">
+                            <div class="skel" style="height:18px;width:65%;margin-bottom:8px;"></div>
+                            <div class="skel" style="height:12px;width:90%;margin-bottom:5px;"></div>
+                            <div class="skel" style="height:12px;width:70%;margin-bottom:14px;"></div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <div class="skel" style="height:22px;width:70px;border-radius:50px;"></div>
+                                <div class="skel" style="height:30px;width:30px;border-radius:9px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else if (!FilteredCategories.Any())
+        {
+            <div class="text-center py-20 a2">
+                <div class="text-5xl mb-5 opacity-25">🏷️</div>
+                <h3 class="mb-2" style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--ink);">
+                    @(string.IsNullOrEmpty(searchText) ? "Chưa có danh mục nào" : "Không tìm thấy kết quả")
+                </h3>
+                <p class="text-sm" style="color:var(--muted);">
+                    @(string.IsNullOrEmpty(searchText)
+                        ? "Hệ thống chưa có danh mục sách."
+                        : $"Không có danh mục nào khớp với \"{searchText}\".")
+                </p>
+                @if (!string.IsNullOrEmpty(searchText))
+                {
+                    <button @onclick="@(()=>searchText="")"
+                            class="mt-5 px-5 py-2.5 rounded-xl text-sm font-semibold border-0 cursor-pointer text-white"
+                            style="background:var(--ink);font-family:'Plus Jakarta Sans',sans-serif;">
+                        Xóa tìm kiếm
+                    </button>
+                }
+            </div>
+        }
+        else if (isGridView)
+        {
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5 a2">
+                @foreach (var (cat, idx) in FilteredCategories.Select((c, i) => (c, i)))
+                {
+                    <a href="/category/@cat.Slug" class="cat-card cat-item"
+                       style="animation-delay:@(Math.Min(idx * 0.05, 0.5))s;">
+                        <div class="cat-banner" style="background:@cat.BgColor;">
+                            <div class="cat-deco-c1"></div>
+                            <div class="cat-deco-c2"></div>
+                            <span class="cat-emoji">@cat.Icon</span>
+                        </div>
+                        <div class="cat-divider"></div>
+                        <div class="cat-body">
+                            <div class="cat-name">@cat.Name</div>
+                            <div class="cat-desc">
+                                @if (!string.IsNullOrEmpty(cat.Description))
+                                {
+                                    @cat.Description
+                                }
+                                else
+                                {
+                                    <span style="font-style:italic;color:var(--pale);">Khám phá các đầu sách trong danh mục này.</span>
+                                }
+                            </div>
+                            <div class="cat-footer">
+                                <span class="cat-badge"><i class="bi bi-bookmark-fill" style="font-size:.58rem;"></i>Khám phá</span>
+                                <div class="cat-arrow"><i class="bi bi-arrow-right"></i></div>
+                            </div>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="flex flex-col gap-3 a2">
+                @foreach (var (cat, idx) in FilteredCategories.Select((c, i) => (c, i)))
+                {
+                    <a href="/category/@cat.Slug" class="cat-row cat-row-item"
+                       style="animation-delay:@(Math.Min(idx * 0.04, 0.4))s;">
+                        <div class="cat-row-icon" style="background:@cat.BgColor;">@cat.Icon</div>
+                        <div class="flex-1 min-w-0">
+                            <div class="cat-row-name">@cat.Name</div>
+                            <div class="cat-row-desc">
+                                @if (!string.IsNullOrEmpty(cat.Description))
+                                {
+                                    @cat.Description
+                                }
+                                else
+                                {
+                                    <span style="font-style:italic;color:var(--pale);">Chưa có mô tả</span>
+                                }
+                            </div>
+                        </div>
+                        <span class="hidden sm:inline-block text-sm font-medium" style="color:var(--pale);margin-right:12px;">#@cat.CategoryId</span>
+                        <div class="cat-row-arrow"><i class="bi bi-chevron-right"></i></div>
+                    </a>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+<!-- ══ FOOTER ══ -->
+<footer class="pt-12" style="background:#1A1208;">
+    <div class="h-px" style="background:linear-gradient(90deg,transparent,rgba(212,134,11,.4),transparent);"></div>
+    <div class="max-w-7xl mx-auto px-5 pt-12">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-10 pb-12">
+            <div>
+                <a href="/" class="flex items-center gap-2.5 no-underline mb-5"
+                   style="font-family:'Playfair Display',serif;font-size:1.45rem;color:#fff;">
+                    <div class="w-9 h-9 rounded-[10px] flex items-center justify-center text-white text-sm"
+                         style="background:linear-gradient(135deg,var(--amber),var(--amber-lt));">
+                        <i class="bi bi-book-half"></i>
+                    </div>BookStore
+                </a>
+                <p class="text-xs leading-loose mb-5" style="color:rgba(255,255,255,.3);">Nơi quy tụ kho tàng tri thức nhân loại.</p>
+                @foreach (var (ico, txt) in new[] {
+                ("geo-alt-fill",   "123 Nguyễn Huệ, Q1, TP.HCM"),
+                ("telephone-fill", "0901 234 567"),
+                ("envelope-fill",  "bookstore@@gmail.com")
+                })
+                {
+                    <div class="flex items-center gap-2 mb-2 text-xs" style="color:rgba(255,255,255,.3);">
+                        <i class="bi bi-@ico" style="color:var(--amber-lt);font-size:.62rem;flex-shrink:0;"></i>@txt
+                    </div>
+                }
+            </div>
+            <div>
+                <div class="text-xs font-bold uppercase tracking-widest mb-5 pb-3" style="color:#fff;border-bottom:1px solid rgba(212,134,11,.3);">Danh mục nổi bật</div>
+                @foreach (var cat in categories.Take(6))
+                {
+                    <a href="/category/@cat.Slug" class="ft-a">
+                        <i class="bi bi-chevron-right"></i>@cat.Name
+                    </a>
+                }
+            </div>
+            <div>
+                <div class="text-xs font-bold uppercase tracking-widest mb-5 pb-3" style="color:#fff;border-bottom:1px solid rgba(212,134,11,.3);">Hỗ trợ</div>
+                @foreach (var l in new[] { "Hướng dẫn mua hàng", "Chính sách đổi trả", "Vận chuyển", "Thanh toán", "Liên hệ chúng tôi" })
+                {
+                    <a href="#" class="ft-a"><i class="bi bi-chevron-right"></i>@l</a>
+                }
+            </div>
+        </div>
+        <div class="flex flex-wrap justify-between items-center py-5 border-t gap-3" style="border-color:rgba(255,255,255,.06);">
+            <p class="text-xs m-0" style="color:rgba(255,255,255,.2);">&copy; @DateTime.Now.Year BookStore. Tất cả quyền được bảo lưu.</p>
+            <div class="flex gap-5">
+                <a href="/terms" class="no-underline text-xs" style="color:rgba(255,255,255,.2);">Điều khoản</a>
+                <a href="/privacy" class="no-underline text-xs" style="color:rgba(255,255,255,.2);">Bảo mật</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+@code {
+    private List<CategoryVm> categories = new();
+    private bool isLoading = true;
+    private string searchText = "";
+    private string sortBy = "name-asc";
+    private bool isGridView = true;
+
+    private static readonly string[] Icons = { "📖", "📈", "💻", "🧠", "🌟", "🏛️", "🎨", "🔬", "⚖️", "🍳", "🏃", "🌍", "💡", "🎭", "🗺️", "❤️" };
+    private static readonly string[] Bgs = {
+        "linear-gradient(135deg,#FFF0E6,#FFD6BB)",
+        "linear-gradient(135deg,#E8F4FF,#C8E4FF)",
+        "linear-gradient(135deg,#E8FFE8,#C8F0C8)",
+        "linear-gradient(135deg,#FFF0FA,#FFD6F0)",
+        "linear-gradient(135deg,#FFFBE6,#FFF0B3)",
+        "linear-gradient(135deg,#F0EDFF,#DDD6FF)",
+        "linear-gradient(135deg,#E6FFF8,#CCFFF0)",
+        "linear-gradient(135deg,#FFF0F0,#FFD6D6)",
+        "linear-gradient(135deg,#EEF6FF,#D6ECFF)",
+        "linear-gradient(135deg,#F5FFE6,#E6FFB3)",
+        "linear-gradient(135deg,#FFF5E6,#FFE6B3)",
+        "linear-gradient(135deg,#E6FFFA,#B3FFF0)",
+        "linear-gradient(135deg,#FFF0FF,#FFD6FF)",
+        "linear-gradient(135deg,#F0FFFF,#CCFFFF)",
+        "linear-gradient(135deg,#FFF8F0,#FFE6CC)",
+        "linear-gradient(135deg,#F0FFF0,#CCFFCC)",
+    };
+
+    protected override async Task OnInitializedAsync() => await LoadCategories();
+
+    private async Task LoadCategories()
+    {
+        isLoading = true;
+        try
+        {
+            var result = await Http.GetFromJsonAsync<List<ApiCategoryDto>>("api/Category");
+            if (result != null)
+            {
+                categories = result.Select((c, i) => new CategoryVm
+                    {
+                        CategoryId = c.CategoryId,
+                        Name = c.CategoryName,
+                        Description = c.Description,
+                        Icon = Icons[i % Icons.Length],
+                        BgColor = Bgs[i % Bgs.Length],
+                        Slug = Slugify(c.CategoryName),
+                    }).ToList();
+            }
+        }
+        catch { }
+        finally { isLoading = false; }
+    }
+
+    private IEnumerable<CategoryVm> FilteredCategories
+    {
+        get
+        {
+            var q = categories.AsEnumerable();
+            if (!string.IsNullOrEmpty(searchText))
+                q = q.Where(c =>
+                    c.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+                    (c.Description ?? "").Contains(searchText, StringComparison.OrdinalIgnoreCase));
+            return sortBy switch
+            {
+                "name-desc" => q.OrderByDescending(c => c.Name),
+                "id-asc" => q.OrderByDescending(c => c.CategoryId),
+                _ => q.OrderBy(c => c.Name),
+            };
+        }
+    }
+
+    private static string Slugify(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return "";
+        var map = new Dictionary<char, string>
+        {
+            {'đ',"d"},{'à',"a"},{'á',"a"},{'ả',"a"},{'ã',"a"},{'ạ',"a"},
+            {'ă',"a"},{'ằ',"a"},{'ắ',"a"},{'ẳ',"a"},{'ẵ',"a"},{'ặ',"a"},
+            {'â',"a"},{'ầ',"a"},{'ấ',"a"},{'ẩ',"a"},{'ẫ',"a"},{'ậ',"a"},
+            {'è',"e"},{'é',"e"},{'ẻ',"e"},{'ẽ',"e"},{'ẹ',"e"},
+            {'ê',"e"},{'ề',"e"},{'ế',"e"},{'ể',"e"},{'ễ',"e"},{'ệ',"e"},
+            {'ì',"i"},{'í',"i"},{'ỉ',"i"},{'ĩ',"i"},{'ị',"i"},
+            {'ò',"o"},{'ó',"o"},{'ỏ',"o"},{'õ',"o"},{'ọ',"o"},
+            {'ô',"o"},{'ồ',"o"},{'ố',"o"},{'ổ',"o"},{'ỗ',"o"},{'ộ',"o"},
+            {'ơ',"o"},{'ờ',"o"},{'ớ',"o"},{'ở',"o"},{'ỡ',"o"},{'ợ',"o"},
+            {'ù',"u"},{'ú',"u"},{'ủ',"u"},{'ũ',"u"},{'ụ',"u"},
+            {'ư',"u"},{'ừ',"u"},{'ứ',"u"},{'ử',"u"},{'ữ',"u"},{'ự',"u"},
+            {'ỳ',"y"},{'ý',"y"},{'ỷ',"y"},{'ỹ',"y"},{'ỵ',"y"},
+        };
+        var sb = new System.Text.StringBuilder();
+        foreach (var ch in name.ToLower())
+        {
+            if (map.TryGetValue(ch, out var r)) sb.Append(r);
+            else if (ch == ' ') sb.Append('-');
+            else if (char.IsLetterOrDigit(ch)) sb.Append(ch);
+        }
+        return sb.ToString().Replace("--", "-").Trim('-');
+    }
+
+    private class CategoryVm
+    {
+        public int CategoryId { get; set; }
+        public string Name { get; set; } = "";
+        public string? Description { get; set; }
+        public string Icon { get; set; } = "📖";
+        public string BgColor { get; set; } = "linear-gradient(135deg,#FFF0E6,#FFD6BB)";
+        public string Slug { get; set; } = "";
+    }
+
+    private class ApiCategoryDto
+    {
+        public int CategoryId { get; set; }
+        public string CategoryName { get; set; } = "";
+        public string? Description { get; set; }
+    }
+}

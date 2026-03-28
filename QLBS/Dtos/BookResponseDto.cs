@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿
+using System.ComponentModel.DataAnnotations;
 
 namespace QLBS.Dtos.Book
 {
@@ -37,4 +38,12 @@ namespace QLBS.Dtos.Book
     }
 
     public class UpdateBookDto : CreateBookDto{}
+
+    public class BookByCategoryResponseDto
+    {
+        public int CategoryId { get; set; }
+        public string CategoryName { get; set; } = string.Empty;
+        public int TotalCount { get; set; }
+        public IEnumerable<BookResponseDto> Books { get; set; } = new List<BookResponseDto>();
+    }
 }

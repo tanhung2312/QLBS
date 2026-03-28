@@ -1,4 +1,5 @@
-﻿using QLBS.Dtos.Category;
+﻿using QLBS.Dtos.Book;
+using QLBS.Dtos.Category;
 
 namespace QLBS.Services.Interfaces
 {
@@ -9,5 +10,6 @@ namespace QLBS.Services.Interfaces
         Task<CategoryResponseDto?> CreateCategoryAsync(CategoryResponseDto createDto);
         Task<bool> UpdateCategoryAsync(int id, UpdateCategoryDto updateDto);
         Task<bool> DeleteCategoryAsync(int id);
+        Task<BookByCategoryResponseDto?> GetBooksByCategoryIdAsync(int categoryId);
     }
 }

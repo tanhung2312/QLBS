@@ -10,5 +10,6 @@ namespace QLBS.Services.Interfaces
         Task<string> ForgotPasswordAsync(string email);
         Task<bool> VerifyOtpAsync(VerifyOtpDto verifyOtpDto);
         Task<string> ResetPasswordAsync(ResetPasswordDto resetPasswordDto);
+        Task<AuthResponseDto?> GoogleLoginAsync(string email, string? fullName, string? avatarUrl);
     }
 }

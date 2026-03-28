@@ -1,0 +1,1689 @@
+﻿@page "/cart"
+@rendermode InteractiveServer
+@using System.Net.Http.Json
+@using System.Net.Http.Headers
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<PageTitle>Giỏ Hàng - BookStore</PageTitle>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    cream:'#FAF7F2','warm-white':'#FFFDF8',ink:'#1A1208',
+                    brown:'#6B4C2A',amber:'#D4860B','amber-lt':'#F5A623',
+                    sand:'#EDE8DF',muted:'#9B8B7A',pale:'#C4B8A8',rust:'#C0392B',
+                },
+                fontFamily: {
+                    serif:['"Playfair Display"','Georgia','serif'],
+                    sans:['"Plus Jakarta Sans"','sans-serif'],
+                },
+            }
+        }
+    }
+</script>
+
+<style>
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background: #FAF7F2;
+        color: #1A1208;
+        margin: 0;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    ::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #D4C5B0;
+        border-radius: 10px;
+    }
+
+    @@keyframes toastSlide {
+        from {
+            opacity: 0;
+            transform: translateY(14px)
+        }
+
+        to {
+            opacity: 1;
+            transform: none
+        }
+    }
+
+    @@keyframes spin {
+        from {
+            transform: rotate(0deg)
+        }
+
+        to {
+            transform: rotate(360deg)
+        }
+    }
+
+    @@keyframes dropIn {
+        from {
+            opacity: 0;
+            transform: translateY(-8px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0)
+        }
+    }
+
+    @@keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0)
+        }
+    }
+
+    @@keyframes panelExpand {
+        from {
+            max-height: 0;
+            opacity: 0;
+        }
+
+        to {
+            max-height: 800px;
+            opacity: 1;
+        }
+    }
+
+    .toast-wrap {
+        position: fixed;
+        bottom: 28px;
+        right: 28px;
+        background: #1A1208;
+        color: #fff;
+        padding: 13px 22px;
+        border-radius: 14px;
+        font-size: .875rem;
+        font-weight: 500;
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 8px 32px rgba(26,18,8,.28);
+        animation: toastSlide .28s ease;
+    }
+
+    .qty-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #FAF7F2;
+        border: 1.5px solid #EDE8DF;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: #6B4C2A;
+        font-size: .8rem;
+        transition: all .18s;
+        flex-shrink: 0;
+        outline: none;
+    }
+
+        .qty-btn:hover:not(:disabled) {
+            background: #D4860B;
+            border-color: #D4860B;
+            color: #fff;
+        }
+
+        .qty-btn:disabled {
+            opacity: .35;
+            cursor: not-allowed;
+        }
+
+    .cart-row {
+        transition: background .15s;
+    }
+
+        .cart-row:hover {
+            background: #FFFDF8;
+        }
+
+        .cart-row.sel {
+            background: rgba(212,134,11,.05);
+        }
+
+    input[type="checkbox"] {
+        accent-color: #D4860B;
+        cursor: pointer;
+    }
+
+    /* ── BOTTOM CHECKOUT PANEL ───────────────────────────────── */
+    .checkout-panel {
+        background: #FFFDF8;
+        border: 2px solid #EDE8DF;
+        border-radius: 20px;
+        box-shadow: 0 8px 40px rgba(107,76,42,.10);
+        margin-top: 16px;
+        overflow: hidden;
+    }
+
+    .panel-summary-bar {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        padding: 0 24px;
+        height: 64px;
+        cursor: pointer;
+        user-select: none;
+        transition: background .2s;
+    }
+
+        .panel-summary-bar:hover {
+            background: rgba(212,134,11,.03);
+        }
+
+    .panel-expanded-content {
+        overflow: hidden;
+        animation: panelExpand .3s ease;
+        border-top: 1px solid #EDE8DF;
+    }
+
+    .panel-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr auto;
+        gap: 0;
+    }
+
+    .panel-section {
+        padding: 20px 24px;
+        border-right: 1px solid #EDE8DF;
+    }
+
+        .panel-section:last-child {
+            border-right: none;
+        }
+
+    .panel-section-title {
+        font-size: .68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: #9B8B7A;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .addr-select {
+        width: 100%;
+        border: 1.5px solid #EDE8DF;
+        border-radius: 8px;
+        padding: 7px 28px 7px 10px;
+        font-size: .82rem;
+        outline: none;
+        background: #FAF7F2;
+        color: #1A1208;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        cursor: pointer;
+        transition: border-color .2s, box-shadow .2s;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239B8B7A' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        margin-bottom: 6px;
+    }
+
+        .addr-select:focus {
+            border-color: #D4860B;
+            box-shadow: 0 0 0 3px rgba(212,134,11,.12);
+            background-color: #fff;
+        }
+
+        .addr-select:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+    .form-input {
+        width: 100%;
+        border: 1.5px solid #EDE8DF;
+        border-radius: 8px;
+        padding: 7px 12px;
+        font-size: .82rem;
+        outline: none;
+        background: #FAF7F2;
+        color: #1A1208;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        transition: border-color .2s, box-shadow .2s;
+        margin-bottom: 6px;
+    }
+
+        .form-input:focus {
+            border-color: #D4860B;
+            box-shadow: 0 0 0 3px rgba(212,134,11,.12);
+            background: #fff;
+        }
+
+        .form-input.error {
+            border-color: #C0392B;
+        }
+
+    .pay-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border: 1.5px solid #EDE8DF;
+        border-radius: 8px;
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: border-color .2s, background .2s;
+        font-size: .82rem;
+        color: #1A1208;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        margin-bottom: 6px;
+    }
+
+        .pay-option.active {
+            border-color: #D4860B;
+            background: rgba(212,134,11,.06);
+        }
+
+        .pay-option input[type="radio"] {
+            accent-color: #D4860B;
+        }
+
+    .coupon-row {
+        display: flex;
+    }
+
+    .coupon-input {
+        flex: 1;
+        border: 1.5px solid #EDE8DF;
+        border-right: none;
+        border-radius: 8px 0 0 8px;
+        padding: 7px 12px;
+        font-size: .82rem;
+        outline: none;
+        background: #FAF7F2;
+        color: #1A1208;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        transition: border-color .2s;
+    }
+
+        .coupon-input:focus {
+            border-color: #D4860B;
+        }
+
+    .coupon-btn {
+        border: 1.5px solid #6B4C2A;
+        border-radius: 0 8px 8px 0;
+        background: #6B4C2A;
+        color: #fff;
+        padding: 7px 14px;
+        font-size: .82rem;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        transition: background .2s;
+    }
+
+        .coupon-btn:hover {
+            background: #5A3D20;
+        }
+
+    .checkout-btn-main {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg,#6B4C2A,#D4860B);
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        padding: 14px 28px;
+        font-size: .95rem;
+        font-weight: 700;
+        cursor: pointer;
+        width: 100%;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        box-shadow: 0 4px 20px rgba(107,76,42,.3);
+        transition: opacity .2s, transform .15s;
+    }
+
+        .checkout-btn-main:hover {
+            opacity: .92;
+            transform: translateY(-1px);
+        }
+
+        .checkout-btn-main:disabled {
+            opacity: .65;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .checkout-btn-main::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 55%;
+            height: 100%;
+            background: linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);
+            transition: left .5s;
+        }
+
+        .checkout-btn-main:hover::after {
+            left: 150%;
+        }
+
+    .spin-icon {
+        animation: spin 1s linear infinite;
+        display: inline-block;
+    }
+
+    /* page bottom padding so content isn't hidden behind panel */
+    .page-bottom-pad {
+        padding-bottom: 80px;
+    }
+
+    .page-bottom-pad-expanded {
+        padding-bottom: 440px;
+    }
+
+    /* Cart items table */
+    .cart-table-header {
+        display: grid;
+        grid-template-columns: 40px 80px 1fr 120px 100px 80px 40px;
+        gap: 12px;
+        align-items: center;
+        padding: 10px 20px;
+        font-size: .72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: #9B8B7A;
+        border-bottom: 1px solid #EDE8DF;
+    }
+
+    .cart-table-row {
+        display: grid;
+        grid-template-columns: 40px 80px 1fr 120px 100px 80px 40px;
+        gap: 12px;
+        align-items: center;
+        padding: 16px 20px;
+        transition: background .15s;
+        border-bottom: 1px solid #F5F1EC;
+    }
+
+        .cart-table-row:hover {
+            background: #FFFDF8;
+        }
+
+        .cart-table-row.sel {
+            background: rgba(212,134,11,.04);
+        }
+
+        .cart-table-row:last-child {
+            border-bottom: none;
+        }
+
+    .toggle-chevron {
+        transition: transform .3s;
+    }
+
+        .toggle-chevron.open {
+            transform: rotate(180deg);
+        }
+
+    /* Book cards */
+    .bk-card {
+        transition: transform .22s, box-shadow .22s;
+    }
+
+        .bk-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 18px 44px rgba(107,76,42,.16) !important;
+        }
+
+    .bk-cover-wrap {
+        position: relative;
+        overflow: hidden;
+        border-radius: 14px 14px 0 0;
+    }
+
+        .bk-cover-wrap img {
+            width: 100%;
+            aspect-ratio: 3/4;
+            object-fit: cover;
+            display: block;
+            transition: transform .34s;
+        }
+
+    .bk-card:hover .bk-cover-wrap img {
+        transform: scale(1.05);
+    }
+
+    .bk-overlay {
+        position: absolute;
+        bottom: -52px;
+        left: 0;
+        right: 0;
+        padding: 12px;
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        background: linear-gradient(0deg,rgba(26,18,8,.7) 0%,transparent 100%);
+        transition: bottom .22s;
+    }
+
+    .bk-card:hover .bk-overlay {
+        bottom: 0;
+    }
+
+    .bk-act {
+        width: 32px;
+        height: 32px;
+        background: rgba(255,255,255,.9);
+        border: none;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: #1A1208;
+        font-size: .8rem;
+        text-decoration: none;
+        transition: background .15s;
+    }
+
+        .bk-act:hover {
+            background: #D4860B;
+            color: #fff;
+        }
+
+    .footer-lnk {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: rgba(255,255,255,.4);
+        text-decoration: none;
+        font-size: .84rem;
+        margin-bottom: 9px;
+        transition: color .15s;
+    }
+
+        .footer-lnk:hover {
+            color: #F5A623;
+        }
+
+    @@media(max-width:900px) {
+        .panel-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .panel-section {
+            border-bottom: 1px solid #EDE8DF;
+        }
+
+        .cart-table-header, .cart-table-row {
+            grid-template-columns: 32px 60px 1fr 90px 80px 60px 32px;
+            gap: 8px;
+            padding: 12px 12px;
+        }
+    }
+
+    @@media(max-width:640px) {
+        .cart-table-header {
+            display: none;
+        }
+
+        .cart-table-row {
+            grid-template-columns: 32px 60px 1fr auto;
+            gap: 8px;
+        }
+
+            .cart-table-row .col-price-each, .cart-table-row .col-subtotal {
+                display: none;
+            }
+
+        .panel-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<!-- TOP BAR -->
+<div style="background:linear-gradient(90deg,#5A3D20,#6B4C2A,#7A5A34);" class="text-white/75 text-[0.78rem] py-1.5">
+    <div class="max-w-7xl mx-auto px-5 flex justify-between items-center flex-wrap gap-2">
+        <div class="flex items-center gap-4">
+            <span class="flex items-center gap-1.5"><i class="bi bi-telephone-fill text-[#F5A623] text-[0.7rem]"></i>0901 234 567</span>
+            <span class="hidden sm:inline opacity-50">|</span>
+            <span class="hidden sm:flex items-center gap-1.5"><i class="bi bi-envelope-fill text-[#F5A623] text-[0.7rem]"></i>bookstore@gmail.com</span>
+        </div>
+        <div class="flex items-center gap-5">
+            <a href="#" class="text-white/70 no-underline hover:text-[#F5A623] transition-colors flex items-center gap-1"><i class="bi bi-box-seam text-[0.7rem]"></i> Theo dõi đơn hàng</a>
+        </div>
+    </div>
+</div>
+
+<!-- NAVBAR -->
+<nav class="bg-[#FFFDF8]/95 border-b border-[#EDE8DF] py-3 sticky top-0 z-50"
+     style="backdrop-filter:blur(20px);box-shadow:0 1px 0 rgba(107,76,42,.06),0 4px 24px rgba(107,76,42,.06);">
+    <div class="max-w-7xl mx-auto px-5 flex items-center gap-4">
+        <a href="/" class="font-serif font-bold text-[#6B4C2A] no-underline flex items-center gap-2.5 mr-auto lg:mr-0 flex-shrink-0"
+           style="font-family:'Playfair Display',serif;font-size:1.55rem;letter-spacing:-.5px;">
+            <div class="w-9 h-9 rounded-[10px] flex items-center justify-center text-white text-[1rem] flex-shrink-0"
+                 style="background:linear-gradient(135deg,#D4860B,#F5A623);box-shadow:0 4px 12px rgba(212,134,11,.35);">
+                <i class="bi bi-book-half"></i>
+            </div>
+            Book<span style="color:#D4860B;">Store</span>
+        </a>
+        <div class="hidden lg:flex items-center gap-0.5 mx-auto">
+            @foreach (var (href, label) in new[] { ("/", "Trang Chủ"), ("/categories", "Danh Mục"), ("/books/new", "Sách Mới"), ("/books/bestseller", "Bán Chạy"), ("#contact", "Liên Hệ") })
+            {
+                <a href="@href" class="text-[#1A1208]/70 hover:text-[#1A1208] font-medium text-[0.88rem] px-4 py-2 rounded-lg no-underline transition-colors duration-200">@label</a>
+            }
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+            <a href="/wishlist" class="w-9 h-9 rounded-full bg-[#FAF7F2] border border-[#EDE8DF] flex items-center justify-center text-[#6B4C2A] text-sm no-underline hover:bg-[#D4860B] hover:border-[#D4860B] hover:text-white transition-colors duration-200">
+                <i class="bi bi-heart"></i>
+            </a>
+            <a href="/cart" class="relative w-9 h-9 rounded-full bg-[#FAF7F2] border border-[#EDE8DF] flex items-center justify-center text-[#6B4C2A] text-sm no-underline hover:bg-[#D4860B] hover:border-[#D4860B] hover:text-white transition-colors duration-200">
+                <i class="bi bi-bag"></i>
+                @if (cartItems.Count > 0)
+                {
+                    <span class="absolute -top-1 -right-1 bg-[#C0392B] text-white text-[0.58rem] w-4 h-4 rounded-full flex items-center justify-center font-bold leading-none">@cartItems.Count</span>
+                }
+            </a>
+            @if (!isLoggedIn)
+            {
+                <a href="/login" class="flex items-center gap-2 bg-[#1A1208] text-white rounded-full px-5 py-[0.45rem] text-[0.84rem] font-semibold no-underline hover:bg-[#D4860B] transition-colors duration-200 ml-1"
+                   style="box-shadow:0 2px 10px rgba(26,18,8,.2);">
+                    <i class="bi bi-person text-sm"></i><span class="hidden sm:inline">Đăng nhập</span>
+                </a>
+            }
+            else
+            {
+                <div class="relative">
+                    <button class="w-9 h-9 rounded-full flex items-center justify-center text-white text-[.78rem] font-bold cursor-pointer border-0 transition-all"
+                            style="background:linear-gradient(135deg,#D4860B,#F5A623);box-shadow:0 2px 10px rgba(212,134,11,.3);"
+                            @onclick="ToggleDropdown">
+                        @GetInitials(userFullName)
+                    </button>
+                    @if (showDropdown)
+                    {
+                        <div class="absolute top-[calc(100%+10px)] right-0 bg-[#FFFDF8] border border-[#EDE8DF] rounded-2xl min-w-[210px] z-[9999] overflow-hidden"
+                             style="box-shadow:0 8px 32px rgba(107,76,42,.14);animation:dropIn .18s ease both;">
+                            <div class="px-4 py-3.5 border-b border-[#EDE8DF]" style="background:linear-gradient(135deg,rgba(212,134,11,.06),transparent);">
+                                <div class="text-[.88rem] font-bold text-[#1A1208] truncate max-w-[170px]">@userFullName</div>
+                                <div class="text-[.72rem] text-[#9B8B7A] truncate max-w-[170px]">@userEmail</div>
+                            </div>
+                            <a href="/profile" class="flex items-center gap-2.5 px-4 py-2.5 text-[.84rem] font-medium text-[#9B8B7A] no-underline hover:bg-[#D4860B]/10 hover:text-[#6B4C2A] transition-colors">
+                                <i class="bi bi-person-circle text-[#D4860B]"></i> Hồ sơ của tôi
+                            </a>
+                            <a href="/profile?tab=orders" class="flex items-center gap-2.5 px-4 py-2.5 text-[.84rem] font-medium text-[#9B8B7A] no-underline hover:bg-[#D4860B]/10 hover:text-[#6B4C2A] transition-colors">
+                                <i class="bi bi-bag-check text-[#D4860B]"></i> Đơn hàng
+                            </a>
+                            <div class="h-px bg-[#EDE8DF] my-1"></div>
+                            <button class="flex items-center gap-2.5 px-4 py-2.5 w-full text-left text-[.84rem] font-medium text-[#9B8B7A] bg-transparent border-0 cursor-pointer hover:bg-red-50 hover:text-[#C0392B] transition-colors"
+                                    @onclick="Logout">
+                                <i class="bi bi-box-arrow-right text-[#C0392B]"></i> Đăng xuất
+                            </button>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</nav>
+
+<!-- BREADCRUMB -->
+<div style="background:#FFFDF8;border-bottom:1px solid #EDE8DF;" class="py-2.5">
+    <div class="max-w-7xl mx-auto px-5">
+        <div class="flex items-center gap-2" style="font-size:.82rem;color:#9B8B7A;">
+            <a href="/" class="no-underline font-medium" style="color:#D4860B;">Trang chủ</a>
+            <i class="bi bi-chevron-right" style="font-size:.6rem;"></i>
+            <span style="color:#1A1208;font-weight:600;">Giỏ hàng</span>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<section style="background:#FAF7F2;min-height:70vh;" class="py-10 pb-20">
+    <div class="max-w-7xl mx-auto px-5">
+
+        <div class="flex items-center flex-wrap gap-3 mb-6">
+            <h1 class="m-0 flex items-center gap-2 text-3xl font-black"
+                style="font-family:'Playfair Display',serif;color:#1A1208;">
+                <i class="bi bi-bag" style="color:#D4860B;"></i>Giỏ hàng của bạn
+            </h1>
+            <span class="rounded-full text-white font-bold px-4 py-1"
+                  style="background:#D4860B;font-size:.75rem;">
+                @cartItems.Count sản phẩm
+            </span>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="flex items-center justify-center py-24">
+                <div class="flex flex-col items-center gap-4">
+                    <div class="w-12 h-12 rounded-full border-4 border-[#EDE8DF] border-t-[#D4860B]"
+                         style="animation:spin 1s linear infinite;"></div>
+                    <p style="color:#9B8B7A;font-size:.9rem;">Đang tải giỏ hàng...</p>
+                </div>
+            </div>
+        }
+        else if (cartItems.Count == 0)
+        {
+            <div class="text-center py-24 rounded-2xl border-2 border-dashed"
+                 style="background:#fff;border-color:#EDE8DF;">
+                <div class="text-6xl mb-5">🛒</div>
+                <h3 class="text-2xl font-black mb-3" style="font-family:'Playfair Display',serif;color:#1A1208;">Giỏ hàng trống</h3>
+                <p class="text-sm leading-loose mb-7" style="color:#9B8B7A;">
+                    Bạn chưa có sản phẩm nào trong giỏ hàng.<br />Khám phá kho sách của chúng tôi nhé!
+                </p>
+                <a href="/" class="inline-flex items-center gap-2 no-underline rounded-full px-7 py-3 font-semibold text-sm text-white" style="background:#6B4C2A;">
+                    <i class="bi bi-arrow-left"></i>Tiếp tục mua sắm
+                </a>
+            </div>
+        }
+        else
+        {
+            <!-- CART TABLE -->
+            <div class="rounded-2xl border overflow-hidden mb-4" style="background:#fff;border-color:#EDE8DF;box-shadow:0 2px 16px rgba(107,76,42,.07);">
+
+                <!-- Table header -->
+                <div class="cart-table-header">
+                    <div>
+                        <input type="checkbox" class="w-4 h-4" @bind="selectAll" @bind:after="ToggleSelectAll" />
+                    </div>
+                    <div></div>
+                    <div>Sản phẩm</div>
+                    <div class="col-price-each text-center">Đơn giá</div>
+                    <div class="text-center">Số lượng</div>
+                    <div class="col-subtotal text-right">Thành tiền</div>
+                    <div></div>
+                </div>
+
+                @foreach (var item in cartItems)
+                {
+                    <div class="cart-table-row @(selectedItems.Contains(item.CartItemId)?"sel":"")">
+                        <!-- Checkbox -->
+                        <div>
+                            <input type="checkbox" class="w-4 h-4"
+                                   checked="@selectedItems.Contains(item.CartItemId)"
+                                   @onchange="(e) => ToggleItem(item.CartItemId,(bool)(e.Value??false))" />
+                        </div>
+                        <!-- Image -->
+                        <div>
+                            <div class="relative">
+                                <img src="@item.ImageUrl" alt="@item.BookTitle"
+                                     class="rounded-xl object-cover"
+                                     style="width:60px;height:80px;box-shadow:0 3px 12px rgba(107,76,42,.15);" />
+                                @if (item.IsBestSeller)
+                                {
+                                    <span class="absolute -top-1.5 -right-1.5 text-sm">🏆</span>
+                                }
+                            </div>
+                        </div>
+                        <!-- Info -->
+                        <div class="min-w-0">
+                            <div class="font-bold uppercase tracking-wider mb-0.5" style="font-size:.65rem;color:#D4860B;">@item.CategoryName</div>
+                            <a href="/book/@item.BookId" class="no-underline block font-bold leading-snug mb-0.5"
+                               style="font-family:'Playfair Display',serif;font-size:.92rem;color:#1A1208;">@item.BookTitle</a>
+                            <div class="text-xs flex items-center gap-1" style="color:#9B8B7A;">
+                                <i class="bi bi-person"></i>@item.AuthorName
+                            </div>
+                            <div class="flex gap-2 mt-1 flex-wrap">
+                                <span class="text-xs flex items-center gap-1" style="color:#9B8B7A;"><i class="bi bi-book"></i>Bìa mềm</span>
+                                <span class="text-xs flex items-center gap-1 font-semibold" style="color:#2E7D32;"><i class="bi bi-check-circle-fill"></i>Còn hàng</span>
+                            </div>
+                        </div>
+                        <!-- Unit price -->
+                        <div class="col-price-each text-center">
+                            @if (item.OriginalPrice > item.Price)
+                            {
+                                <div class="text-xs line-through" style="color:#B0A090;">@item.OriginalPrice.ToString("#,##0")đ</div>
+                            }
+                            <div class="font-bold text-sm" style="color:#D4860B;">@item.Price.ToString("#,##0")đ</div>
+                        </div>
+                        <!-- Qty -->
+                        <div class="flex items-center justify-center gap-1.5 rounded-full border px-1 py-0.5" style="background:#FAF7F2;border-color:#EDE8DF;">
+                            <button class="qty-btn" @onclick="()=>DecreaseQty(item)" disabled="@(item.Quantity<=1)"><i class="bi bi-dash"></i></button>
+                            <span class="font-bold text-sm" style="min-width:22px;text-align:center;color:#1A1208;">@item.Quantity</span>
+                            <button class="qty-btn" @onclick="()=>IncreaseQty(item)"><i class="bi bi-plus"></i></button>
+                        </div>
+                        <!-- Subtotal -->
+                        <div class="col-subtotal text-right">
+                            <div class="font-black" style="font-family:'Playfair Display',serif;font-size:1rem;color:#1A1208;">
+                                @((item.Price * item.Quantity).ToString("#,##0"))đ
+                            </div>
+                        </div>
+                        <!-- Remove -->
+                        <div class="flex justify-center">
+                            <button @onclick="()=>RemoveItem(item.CartItemId)"
+                                    class="border-none p-1.5 cursor-pointer flex items-center rounded-lg"
+                                    style="background:none;color:#C4B8A8;font-size:.9rem;transition:color .15s;"
+                                    onmouseover="this.style.color='#C0392B'" onmouseout="this.style.color='#C4B8A8'">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Actions row -->
+            <div class="flex justify-between items-center flex-wrap gap-3">
+                <div class="flex items-center gap-3">
+                    <a href="/" class="inline-flex items-center gap-2 no-underline rounded-full border-2 px-5 py-2.5 text-sm font-semibold"
+                       style="color:#6B4C2A;border-color:#EDE8DF;background:#fff;">
+                        <i class="bi bi-arrow-left"></i>Tiếp tục mua sắm
+                    </a>
+                    @if (selectedItems.Count > 0)
+                    {
+                        <button @onclick="DeleteSelected"
+                                class="inline-flex items-center gap-1.5 rounded-full px-4 py-2.5 border cursor-pointer text-xs font-semibold"
+                                style="background:none;border-color:#FFCDD2;color:#C0392B;font-family:'Plus Jakarta Sans',sans-serif;">
+                            <i class="bi bi-trash"></i>Xóa đã chọn (@selectedItems.Count)
+                        </button>
+                    }
+                </div>
+                <button @onclick="UpdateCart"
+                        class="inline-flex items-center gap-2 rounded-full border-2 px-5 py-2.5 text-sm font-semibold cursor-pointer"
+                        style="background:#FAF7F2;color:#6B4C2A;border-color:#EDE8DF;font-family:'Plus Jakarta Sans',sans-serif;">
+                    <i class="bi bi-arrow-clockwise"></i>Cập nhật giỏ hàng
+                </button>
+            </div>
+
+            <!-- CHECKOUT PANEL -->
+            <div class="checkout-panel">
+
+                <!-- SUMMARY BAR (luôn hiện, click để mở/đóng panel) -->
+                <div class="panel-summary-bar" @onclick="TogglePanel">
+                    <!-- Tổng tiền -->
+                    <div class="flex items-center gap-3 mr-auto">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-semibold" style="color:#9B8B7A;">Tạm tính</span>
+                            <span class="font-black text-lg" style="font-family:'Playfair Display',serif;color:#D4860B;">@SubTotal.ToString("#,##0")đ</span>
+                        </div>
+                        @if (DiscountAmount > 0)
+                        {
+                            <div class="hidden sm:flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold" style="background:#E8F5E9;color:#2E7D32;">
+                                <i class="bi bi-tag-fill"></i>-@DiscountAmount.ToString("#,##0")đ
+                            </div>
+                        }
+                        @if (shippingFeeFromApi.HasValue)
+                        {
+                            <div class="hidden sm:flex items-center gap-1.5 text-xs" style="color:#7A6A5A;">
+                                <i class="bi bi-truck"></i>@ShippingFee.ToString("#,##0")đ
+                            </div>
+                        }
+                        <div class="h-8 w-px mx-2" style="background:#EDE8DF;"></div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-bold" style="color:#1A1208;">Tổng cộng</span>
+                            <span class="font-black text-xl" style="font-family:'Playfair Display',serif;color:#1A1208;">@Total.ToString("#,##0")đ</span>
+                            @if (!shippingFeeFromApi.HasValue)
+                            {
+                                <span class="text-xs" style="color:#9B8B7A;font-style:italic;">(*chưa gồm ship)</span>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Trust mini -->
+                    <div class="hidden md:flex items-center gap-4 mr-6">
+                        <div class="flex items-center gap-1.5 text-xs" style="color:#9B8B7A;">
+                            <i class="bi bi-shield-check" style="color:#D4860B;"></i>Bảo mật SSL
+                        </div>
+                        <div class="flex items-center gap-1.5 text-xs" style="color:#9B8B7A;">
+                            <i class="bi bi-arrow-repeat" style="color:#D4860B;"></i>Đổi trả 7 ngày
+                        </div>
+                    </div>
+
+                    <!-- Toggle arrow -->
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-semibold hidden sm:inline" style="color:#6B4C2A;">
+                            @(isPanelOpen ? "Thu gọn" : "Thanh toán")
+                        </span>
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center" style="background:rgba(212,134,11,.12);">
+                            <i class="bi bi-chevron-up toggle-chevron @(isPanelOpen ? "open" : "")" style="color:#D4860B;font-size:.75rem;"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EXPANDED PANEL -->
+                @if (isPanelOpen)
+                {
+                    <div class="panel-expanded-content">
+                        <div class="panel-grid max-w-7xl mx-auto">
+
+                            <!-- Col 1: Địa chỉ -->
+                            <div class="panel-section">
+                                <div class="panel-section-title">
+                                    <i class="bi bi-geo-alt-fill" style="color:#D4860B;"></i>Địa chỉ giao hàng
+                                </div>
+                                <select class="addr-select" @onchange="OnProvinceChanged">
+                                    <option value="">@ProvinceLabel</option>
+                                    @foreach (var p in provinces)
+                                    {
+                                        <option value="@p.ProvinceId">@p.ProvinceName</option>
+                                    }
+                                </select>
+                                <select class="addr-select" @onchange="OnDistrictChanged"
+                                        disabled="@(!districts.Any() && !isLoadingDistricts)">
+                                    <option value="">@DistrictLabel</option>
+                                    @foreach (var d in districts)
+                                    {
+                                        <option value="@d.DistrictId">@d.DistrictName</option>
+                                    }
+                                </select>
+                                <select class="addr-select" @onchange="OnWardChanged"
+                                        disabled="@(!wards.Any() && !isLoadingWards)">
+                                    <option value="">@WardLabel</option>
+                                    @foreach (var w in wards)
+                                    {
+                                        <option value="@w.WardCode">@w.WardName</option>
+                                    }
+                                </select>
+                                <input type="text" class="form-input @(formErrors.ContainsKey("address")?"error":"")"
+                                       placeholder="Số nhà, tên đường..."
+                                       @bind="receiverAddress" @bind:event="oninput" />
+                            </div>
+
+                            <!-- Col 2: Người nhận + Coupon -->
+                            <div class="panel-section">
+                                <div class="panel-section-title">
+                                    <i class="bi bi-person-fill" style="color:#D4860B;"></i>Thông tin người nhận
+                                </div>
+                                <input type="text" class="form-input @(formErrors.ContainsKey("name")?"error":"")"
+                                       placeholder="Họ tên người nhận"
+                                       @bind="receiverName" @bind:event="oninput" />
+                                <input type="tel" class="form-input @(formErrors.ContainsKey("phone")?"error":"")"
+                                       placeholder="Số điện thoại"
+                                       @bind="receiverPhone" @bind:event="oninput" />
+
+                                <div class="panel-section-title mt-3">
+                                    <i class="bi bi-tag-fill" style="color:#D4860B;"></i>Mã giảm giá
+                                </div>
+                                <div class="coupon-row">
+                                    <input type="text" @bind="couponCode" placeholder="Nhập mã coupon..." class="coupon-input" />
+                                    <button @onclick="ApplyCoupon" class="coupon-btn">Áp dụng</button>
+                                </div>
+                                @if (!string.IsNullOrEmpty(couponMessage))
+                                {
+                                    <div class="mt-1.5 text-xs font-semibold rounded-lg px-3 py-1.5 flex items-center gap-1.5"
+                                         style="background:@(couponApplied?"#E8F5E9":"#FCE8E6");color:@(couponApplied?"#2E7D32":"#B71C1C");">
+                                        <i class="bi @(couponApplied?"bi-check-circle":"bi-x-circle")"></i>@couponMessage
+                                    </div>
+                                }
+                                <p class="mt-1 text-xs" style="color:#9B8B7A;">Thử: <strong>BOOK20</strong> (−20%) · <strong>NEWBOOK</strong> (−10%)</p>
+                            </div>
+
+                            <!-- Col 3: Thanh toán + Chi tiết giá -->
+                            <div class="panel-section">
+                                <div class="panel-section-title">
+                                    <i class="bi bi-credit-card" style="color:#D4860B;"></i>Phương thức thanh toán
+                                </div>
+                                <label class="pay-option @(selectedPaymentMethod==1?"active":"")">
+                                    <input type="radio" name="payment" value="1"
+                                           checked="@(selectedPaymentMethod==1)"
+                                           @onchange="()=>selectedPaymentMethod=1" />
+                                    <i class="bi bi-credit-card-2-front" style="color:#1a73e8;font-size:1rem;"></i>
+                                    <div>
+                                        <div class="font-semibold" style="font-size:.82rem;">VNPay</div>
+                                        <div class="text-xs" style="color:#9B8B7A;">Thanh toán qua cổng VNPay</div>
+                                    </div>
+                                </label>
+                                <label class="pay-option @(selectedPaymentMethod==2?"active":"")">
+                                    <input type="radio" name="payment" value="2"
+                                           checked="@(selectedPaymentMethod==2)"
+                                           @onchange="()=>selectedPaymentMethod=2" />
+                                    <i class="bi bi-cash-coin" style="color:#2E7D32;font-size:1rem;"></i>
+                                    <div>
+                                        <div class="font-semibold" style="font-size:.82rem;">Thanh toán khi nhận (COD)</div>
+                                        <div class="text-xs" style="color:#9B8B7A;">Trả tiền mặt khi nhận hàng</div>
+                                    </div>
+                                </label>
+
+                                <!-- Price breakdown mini -->
+                                <div class="mt-3 pt-3" style="border-top:1px dashed #EDE8DF;">
+                                    <div class="flex justify-between text-xs mb-1" style="color:#7A6A5A;">
+                                        <span>Tạm tính</span><span>@SubTotal.ToString("#,##0")đ</span>
+                                    </div>
+                                    @if (DiscountAmount > 0)
+                                    {
+                                        <div class="flex justify-between text-xs mb-1 font-semibold" style="color:#2E7D32;">
+                                            <span>Giảm giá</span><span>-@DiscountAmount.ToString("#,##0")đ</span>
+                                        </div>
+                                    }
+                                    <div class="flex justify-between text-xs mb-1" style="color:#7A6A5A;">
+                                        <span>Phí vận chuyển</span>
+                                        <span>
+                                            @if (isCalculatingFee)
+                                            {
+                                                <span class="flex items-center gap-1" style="color:#D4860B;"><i class="bi bi-arrow-repeat spin-icon"></i>Đang tính...</span>
+                                            }
+                                            else if (shippingFeeFromApi.HasValue)
+                                            {
+                                                <span>@ShippingFee.ToString("#,##0")đ</span>
+                                            }
+                                            else
+                                            {
+                                                <span style="font-style:italic;">Chọn địa chỉ</span>
+                                            }
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Col 4: Tổng + Nút checkout -->
+                            <div class="panel-section" style="min-width:220px;display:flex;flex-direction:column;justify-content:center;gap:12px;">
+                                <div class="text-center">
+                                    <div class="text-xs font-semibold mb-1" style="color:#9B8B7A;">Tổng thanh toán</div>
+                                    <div class="font-black" style="font-family:'Playfair Display',serif;font-size:2rem;color:#D4860B;line-height:1.1;">
+                                        @Total.ToString("#,##0")đ
+                                    </div>
+                                    @if (!shippingFeeFromApi.HasValue)
+                                    {
+                                        <div class="text-xs mt-1" style="color:#9B8B7A;font-style:italic;">*Chưa bao gồm phí ship</div>
+                                    }
+                                </div>
+
+                                @if (!string.IsNullOrEmpty(checkoutError))
+                                {
+                                    <div class="text-xs rounded-xl px-3 py-2 flex items-start gap-2"
+                                         style="background:#FCE8E6;color:#B71C1C;border:1px solid #FFCDD2;">
+                                        <i class="bi bi-exclamation-circle-fill flex-shrink-0 mt-0.5"></i>
+                                        <span>@checkoutError</span>
+                                    </div>
+                                }
+
+                                @if (isProcessingCheckout)
+                                {
+                                    <button disabled class="checkout-btn-main" style="opacity:.65;">
+                                        <i class="bi bi-arrow-repeat spin-icon"></i>
+                                        @(selectedPaymentMethod == 1 ? "Đang chuyển VNPay..." : "Đang xử lý...")
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="checkout-btn-main" @onclick="ProceedToCheckout">
+                                        @if (selectedPaymentMethod == 1)
+                                        {
+                                            <i class="bi bi-credit-card-2-front"></i>
+                                            <span>Thanh toán VNPay</span>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-cash-coin"></i>
+                                            <span>Đặt hàng (COD)</span>
+                                        }
+                                        <i class="bi bi-arrow-right"></i>
+                                    </button>
+                                }
+
+                                @if (!isLoggedIn)
+                                {
+                                    <p class="text-center text-xs" style="color:#9B8B7A;">
+                                        <a href="/login" style="color:#D4860B;" class="no-underline font-semibold">Đăng nhập</a> để thanh toán
+                                    </p>
+                                }
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(shippingError))
+                        {
+                            <div class="max-w-7xl mx-auto px-6 pb-3">
+                                <div class="text-xs rounded-xl px-3 py-2 flex items-center gap-2"
+                                     style="background:#FFF3E0;color:#E65100;border:1px solid #FFE0B2;">
+                                    <i class="bi bi-exclamation-triangle flex-shrink-0"></i>@shippingError
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- SUGGESTED BOOKS -->
+        @if (cartItems.Count > 0)
+        {
+            <div class="border-t-2 mt-16 pt-10" style="border-color:#EDE8DF;">
+                <div class="flex items-end justify-between mb-8 flex-wrap gap-3">
+                    <div>
+                        <div class="inline-block text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full mb-2"
+                             style="background:rgba(212,134,11,.12);border:1px solid rgba(212,134,11,.3);color:#D4860B;">
+                            Có thể bạn thích
+                        </div>
+                        <h2 class="text-2xl font-black m-0" style="font-family:'Playfair Display',serif;color:#1A1208;">Sách gợi ý cho bạn</h2>
+                        <div style="width:48px;height:3px;background:linear-gradient(90deg,#D4860B,#F5A623);border-radius:2px;margin-top:8px;"></div>
+                    </div>
+                    <a href="/" class="flex items-center gap-2 no-underline rounded-full border-2 px-5 py-2 text-sm font-semibold"
+                       style="color:#6B4C2A;border-color:#EDE8DF;background:#fff;">
+                        Xem tất cả <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+                    @foreach (var book in suggestedBooks)
+                    {
+                        <div class="bk-card flex flex-col rounded-2xl border overflow-hidden"
+                             style="background:#fff;border-color:#EDE8DF;box-shadow:0 4px 20px rgba(107,76,42,.07);">
+                            <div class="bk-cover-wrap">
+                                <img src="@book.ImageUrl" alt="@book.Title" loading="lazy" />
+                                <div class="bk-overlay">
+                                    <button @onclick="()=>AddSuggestedToCart(book.BookId)" class="bk-act"><i class="bi bi-bag-plus"></i></button>
+                                    <a href="/book/@book.BookId" class="bk-act"><i class="bi bi-eye"></i></a>
+                                </div>
+                            </div>
+                            <div class="p-4 flex flex-col flex-1">
+                                <div class="font-bold uppercase tracking-wider mb-1" style="font-size:.68rem;color:#D4860B;">@book.Category</div>
+                                <div class="font-bold leading-snug mb-1 flex-1" style="font-family:'Playfair Display',serif;font-size:.92rem;color:#1A1208;">@book.Title</div>
+                                <div class="text-xs flex items-center gap-1 mb-2" style="color:#9B8B7A;"><i class="bi bi-person"></i>@book.Author</div>
+                                <div class="font-black" style="font-family:'Playfair Display',serif;font-size:1.05rem;color:#D4860B;">@book.Price.ToString("#,##0")đ</div>
+                            </div>
+                            <div class="px-4 pb-4 flex gap-2">
+                                <button @onclick="()=>AddSuggestedToCart(book.BookId)"
+                                        class="flex-1 flex items-center justify-center gap-1.5 rounded-full py-2 text-xs font-semibold border-none cursor-pointer"
+                                        style="background:#6B4C2A;color:#fff;font-family:'Plus Jakarta Sans',sans-serif;">
+                                    <i class="bi bi-bag-plus"></i>Thêm vào giỏ
+                                </button>
+                                <a href="/book/@book.BookId" class="flex items-center justify-center rounded-full no-underline flex-shrink-0"
+                                   style="width:34px;height:34px;background:#FAF7F2;border:1.5px solid #EDE8DF;color:#6B4C2A;font-size:.85rem;">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer style="background:#1A1208;" class="pt-14 @(cartItems.Count > 0 ? "mb-0" : "")">
+    <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+            <div>
+                <a href="/" class="flex items-center gap-2.5 no-underline mb-4">
+                    <div style="width:38px;height:38px;background:#D4860B;border-radius:10px;"
+                         class="flex items-center justify-center text-white text-lg flex-shrink-0">
+                        <i class="bi bi-book-half"></i>
+                    </div>
+                    <span style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:800;color:#fff;">BookStore</span>
+                </a>
+                <p class="text-xs leading-loose mb-4" style="color:rgba(255,255,255,.45);">Nơi quy tụ kho tàng tri thức nhân loại.</p>
+                @foreach (var (ico, txt) in new[] { ("bi-geo-alt-fill", "123 Nguyễn Huệ, Quận 1, TP.HCM"), ("bi-telephone-fill", "0901 234 567"), ("bi-envelope-fill", "bookstore@gmail.com") })
+                {
+                    <div class="flex items-start gap-2.5 mb-2 text-xs" style="color:rgba(255,255,255,.45);">
+                        <i class="bi @ico flex-shrink-0 mt-0.5" style="color:#D4860B;"></i>@txt
+                    </div>
+                }
+            </div>
+            <div>
+                <div class="text-xs font-bold uppercase tracking-widest mb-4" style="color:rgba(255,255,255,.35);">Danh mục sách</div>
+                @foreach (var c in new[] { "Tiểu Thuyết", "Kinh Tế", "Công Nghệ", "Tâm Lý Học", "Thiếu Nhi", "Lịch Sử" })
+                {
+                    <a href="#" class="footer-lnk"><i class="bi bi-chevron-right" style="font-size:.6rem;"></i>@c</a>
+                }
+            </div>
+            <div>
+                <div class="text-xs font-bold uppercase tracking-widest mb-4" style="color:rgba(255,255,255,.35);">Hỗ trợ khách hàng</div>
+                @foreach (var l in new[] { "Hướng dẫn mua hàng", "Chính sách đổi trả", "Vận chuyển", "Thanh toán", "Câu hỏi thường gặp", "Liên hệ chúng tôi" })
+                {
+                    <a href="#" class="footer-lnk"><i class="bi bi-chevron-right" style="font-size:.6rem;"></i>@l</a>
+                }
+            </div>
+            <div>
+                <div class="text-xs font-bold uppercase tracking-widest mb-4" style="color:rgba(255,255,255,.35);">Kết nối với chúng tôi</div>
+                <div class="flex gap-2.5 mb-7">
+                    @foreach (var (ico, clr) in new[] { ("bi-facebook", "#1877F2"), ("bi-instagram", "#E4405F"), ("bi-youtube", "#FF0000"), ("bi-tiktok", "#fff") })
+                    {
+                        <a href="#" class="flex items-center justify-center rounded-xl no-underline text-base"
+                           style="width:38px;height:38px;background:rgba(255,255,255,.07);color:@clr;">
+                            <i class="bi @ico"></i>
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="flex flex-wrap justify-between items-center py-5 mt-10 border-t gap-3"
+             style="border-color:rgba(255,255,255,.07);">
+            <p class="text-xs m-0" style="color:rgba(255,255,255,.28);">&copy; @DateTime.Now.Year BookStore. Tất cả quyền được bảo lưu.</p>
+        </div>
+    </div>
+</footer>
+
+
+<!-- TOAST -->
+@if (showToast)
+{
+    <div class="toast-wrap">
+        <i class="bi bi-check-circle-fill flex-shrink-0" style="color:#96CEB4;"></i>
+        @toastMessage
+    </div>
+}
+
+@code {
+    // ── Auth ──────────────────────────────────────────────────────────────────
+    private bool isLoggedIn = false;
+    private string accessToken = "";
+    private string userFullName = "";
+    private string userEmail = "";
+    private bool showDropdown = false;
+
+    // ── UI State ──────────────────────────────────────────────────────────────
+    private bool isLoading = false;
+    private bool isProcessingCheckout = false;
+    private bool isPanelOpen = false;   // ← NEW: toggle panel
+    private string toastMessage = "";
+    private bool showToast = false;
+    private bool selectAll = false;
+    private string couponCode = "";
+    private string couponMessage = "";
+    private bool couponApplied = false;
+    private decimal discountPercent = 0;
+    private HashSet<int> selectedItems = new();
+    private string checkoutError = "";
+
+    // ── Receiver form ─────────────────────────────────────────────────────────
+    private string receiverName = "";
+    private string receiverPhone = "";
+    private string receiverAddress = "";
+    private int selectedProvinceId = 0;
+    private Dictionary<string, string> formErrors = new();
+
+    // ── Payment method ────────────────────────────────────────────────────────
+    private int selectedPaymentMethod = 1;
+
+    // ── Shipping (GHN) ────────────────────────────────────────────────────────
+    private List<ProvinceDto> provinces = new();
+    private List<DistrictDto> districts = new();
+    private List<WardDto> wards = new();
+    private int selectedDistrictId = 0;
+    private string selectedWardCode = "";
+    private decimal? shippingFeeFromApi = null;
+    private bool isLoadingProvinces = false;
+    private bool isLoadingDistricts = false;
+    private bool isLoadingWards = false;
+    private bool isCalculatingFee = false;
+    private string shippingError = "";
+
+    private string ProvinceLabel => isLoadingProvinces ? "Đang tải..." : !provinces.Any() ? "Không tải được dữ liệu" : "-- Chọn Tỉnh/Thành --";
+    private string DistrictLabel => isLoadingDistricts ? "Đang tải..." : !districts.Any() ? "-- Chọn Tỉnh trước --" : "-- Chọn Quận/Huyện --";
+    private string WardLabel => isLoadingWards ? "Đang tải..." : !wards.Any() ? "-- Chọn Quận trước --" : "-- Chọn Phường/Xã --";
+
+    // ── Models ────────────────────────────────────────────────────────────────
+    private record CartItem(int CartItemId, int BookId, string BookTitle, string AuthorName,
+        string CategoryName, decimal Price, decimal OriginalPrice,
+        string ImageUrl, bool IsBestSeller, int Quantity, int StockQuantity)
+    {
+        public int Quantity { get; set; } = Quantity;
+    }
+    private record SuggestedBook(int BookId, string Title, string Author, string Category, decimal Price, string ImageUrl);
+
+    private List<CartItem> cartItems = new();
+    private List<SuggestedBook> suggestedBooks = new()
+    {
+        new(4,"Atomic Habits","James Clear","Tâm lý học",119000m,"https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=300&h=400&fit=crop"),
+        new(5,"Nhà Giả Kim","Paulo Coelho","Tiểu thuyết",79000m,"https://images.unsplash.com/photo-1512820790803-83ca734da794?w=300&h=400&fit=crop"),
+        new(6,"Người Đua Diều","Khaled Hosseini","Tiểu thuyết",110000m,"https://images.unsplash.com/photo-1519681393784-d120267933ba?w=300&h=400&fit=crop"),
+        new(7,"1984","George Orwell","Tiểu thuyết",99000m,"https://images.unsplash.com/photo-1592496431122-2349e0fbc666?w=300&h=400&fit=crop"),
+    };
+
+    // ── Computed ──────────────────────────────────────────────────────────────
+    private decimal SubTotal => cartItems.Sum(x => x.Price * x.Quantity);
+    private decimal DiscountAmount => couponApplied ? Math.Round(SubTotal * discountPercent) : 0;
+    private decimal ShippingFee => shippingFeeFromApi ?? 0;
+    private decimal Total => SubTotal - DiscountAmount + ShippingFee;
+
+    // ── Panel toggle ──────────────────────────────────────────────────────────
+    private void TogglePanel() => isPanelOpen = !isPanelOpen;
+
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProvinces();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        accessToken = await JS.InvokeAsync<string?>("localStorage.getItem", "accessToken") ?? "";
+        userFullName = await JS.InvokeAsync<string?>("localStorage.getItem", "userFullName") ?? "";
+        userEmail = await JS.InvokeAsync<string?>("localStorage.getItem", "userEmail") ?? "";
+        if (!string.IsNullOrEmpty(accessToken) && !string.IsNullOrEmpty(userFullName))
+        {
+            isLoggedIn = true;
+            await LoadCartFromApi();
+        }
+        StateHasChanged();
+    }
+
+    private HttpRequestMessage BuildRequest(HttpMethod method, string url)
+    {
+        var req = new HttpRequestMessage(method, url);
+        if (!string.IsNullOrEmpty(accessToken))
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        return req;
+    }
+
+    private async Task LoadCartFromApi()
+    {
+        isLoading = true; StateHasChanged();
+        try
+        {
+            var resp = await Http.SendAsync(BuildRequest(HttpMethod.Get, "api/cart"));
+            if (resp.StatusCode == System.Net.HttpStatusCode.Unauthorized) { await HandleUnauthorized(); return; }
+            if (resp.IsSuccessStatusCode)
+            {
+                var dto = await resp.Content.ReadFromJsonAsync<CartResponseDto>();
+                if (dto?.Items != null)
+                {
+                    cartItems = dto.Items.Select(i => new CartItem(
+                        i.BookId, i.BookId, i.BookTitle, "", "",
+                        i.UnitPrice, i.UnitPrice,
+                        SafeImageUrl(i.BookImageUrl, "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300&h=400&fit=crop"),
+                        false, i.Quantity, i.StockQuantity
+                    )).ToList();
+                }
+            }
+        }
+        catch { }
+        finally { isLoading = false; StateHasChanged(); }
+    }
+
+    private async Task LoadProvinces()
+    {
+        isLoadingProvinces = true;
+        try
+        {
+            var result = await Http.GetFromJsonAsync<List<ProvinceDto>>("api/ghn/provinces");
+            if (result != null) provinces = result;
+        }
+        catch { shippingError = "Không thể tải danh sách tỉnh/thành."; }
+        finally { isLoadingProvinces = false; StateHasChanged(); }
+    }
+
+    private async Task OnProvinceChanged(ChangeEventArgs e)
+    {
+        districts.Clear(); wards.Clear();
+        selectedDistrictId = 0; selectedProvinceId = 0; selectedWardCode = "";
+        shippingFeeFromApi = null; shippingError = "";
+        if (!int.TryParse(e.Value?.ToString(), out var pid) || pid <= 0) { StateHasChanged(); return; }
+        selectedProvinceId = pid;
+        isLoadingDistricts = true; StateHasChanged();
+        try
+        {
+            var result = await Http.GetFromJsonAsync<List<DistrictDto>>($"api/ghn/districts/{pid}");
+            if (result != null) districts = result;
+        }
+        catch { shippingError = "Không thể tải danh sách quận/huyện."; }
+        finally { isLoadingDistricts = false; StateHasChanged(); }
+    }
+
+    private async Task OnDistrictChanged(ChangeEventArgs e)
+    {
+        wards.Clear(); selectedWardCode = "";
+        shippingFeeFromApi = null; shippingError = "";
+        if (!int.TryParse(e.Value?.ToString(), out var did) || did <= 0) { selectedDistrictId = 0; StateHasChanged(); return; }
+        selectedDistrictId = did;
+        isLoadingWards = true; StateHasChanged();
+        try
+        {
+            var result = await Http.GetFromJsonAsync<List<WardDto>>($"api/ghn/wards/{did}");
+            if (result != null) wards = result;
+        }
+        catch { shippingError = "Không thể tải danh sách phường/xã."; }
+        finally { isLoadingWards = false; StateHasChanged(); }
+    }
+
+    private async Task OnWardChanged(ChangeEventArgs e)
+    {
+        selectedWardCode = e.Value?.ToString() ?? "";
+        shippingFeeFromApi = null; shippingError = "";
+        if (!string.IsNullOrEmpty(selectedWardCode) && selectedDistrictId > 0)
+            await CalculateShippingFee();
+        else
+            StateHasChanged();
+    }
+
+    private async Task CalculateShippingFee()
+    {
+        if (selectedDistrictId <= 0 || string.IsNullOrEmpty(selectedWardCode)) return;
+        isCalculatingFee = true; shippingError = ""; StateHasChanged();
+        try
+        {
+            int weight = Math.Max(200, cartItems.Sum(x => x.Quantity) * 200);
+            var url = $"api/ghn/calculate-fee?districtId={selectedDistrictId}&wardCode={Uri.EscapeDataString(selectedWardCode)}&totalWeight={weight}";
+            var resp = await Http.GetAsync(url);
+            if (resp.IsSuccessStatusCode)
+            {
+                var result = await resp.Content.ReadFromJsonAsync<ShippingFeeResponseDto>();
+                shippingFeeFromApi = result?.ShippingFee;
+            }
+            else
+            {
+                var raw = await resp.Content.ReadAsStringAsync();
+                try
+                {
+                    var err = System.Text.Json.JsonSerializer.Deserialize<ApiErrorDto>(raw,
+                        new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    shippingError = err?.Message ?? "Không thể tính phí vận chuyển.";
+                }
+                catch { shippingError = "Không thể tính phí vận chuyển."; }
+            }
+        }
+        catch { shippingError = "Lỗi kết nối GHN. Vui lòng thử lại."; }
+        finally { isCalculatingFee = false; StateHasChanged(); }
+    }
+
+    private bool ValidateForm()
+    {
+        formErrors.Clear(); checkoutError = "";
+        if (!isLoggedIn) { checkoutError = "Vui lòng đăng nhập để thanh toán."; return false; }
+        if (string.IsNullOrWhiteSpace(receiverName)) formErrors["name"] = "Vui lòng nhập họ tên người nhận.";
+        if (string.IsNullOrWhiteSpace(receiverPhone)) formErrors["phone"] = "Vui lòng nhập số điện thoại.";
+        if (string.IsNullOrWhiteSpace(receiverAddress)) formErrors["address"] = "Vui lòng nhập địa chỉ chi tiết.";
+        if (selectedProvinceId <= 0 || selectedDistrictId <= 0 || string.IsNullOrEmpty(selectedWardCode))
+            checkoutError = "Vui lòng chọn đầy đủ Tỉnh/Thành, Quận/Huyện, Phường/Xã.";
+        if (formErrors.Any() && string.IsNullOrEmpty(checkoutError))
+            checkoutError = "Vui lòng điền đầy đủ thông tin giao hàng.";
+        return !formErrors.Any() && string.IsNullOrEmpty(checkoutError);
+    }
+
+    private async Task ProceedToCheckout()
+    {
+        checkoutError = "";
+        if (!ValidateForm()) { StateHasChanged(); return; }
+        isProcessingCheckout = true; StateHasChanged();
+        try
+        {
+            var payload = new
+            {
+                receiverName = receiverName.Trim(),
+                receiverPhone = receiverPhone.Trim(),
+                shippingAddress = receiverAddress.Trim(),
+                toProvinceId = selectedProvinceId,
+                toDistrictId = selectedDistrictId,
+                toWardCode = selectedWardCode,
+                paymentMethodId = selectedPaymentMethod,
+                discountCode = couponApplied ? couponCode.Trim() : (string?)null
+            };
+
+            var orderReq = BuildRequest(HttpMethod.Post, "api/order/checkout");
+            orderReq.Content = JsonContent.Create(payload);
+            var orderResp = await Http.SendAsync(orderReq);
+
+            if (orderResp.StatusCode == System.Net.HttpStatusCode.Unauthorized) { await HandleUnauthorized(); return; }
+            if (!orderResp.IsSuccessStatusCode)
+            {
+                var raw = await orderResp.Content.ReadAsStringAsync();
+                try
+                {
+                    var err = System.Text.Json.JsonSerializer.Deserialize<ApiErrorDto>(raw, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    checkoutError = err?.Message ?? "Tạo đơn hàng thất bại. Vui lòng thử lại.";
+                }
+                catch { checkoutError = "Tạo đơn hàng thất bại. Vui lòng thử lại."; }
+                return;
+            }
+
+            var orderResult = await orderResp.Content.ReadFromJsonAsync<OrderResultResponseDto>();
+            if (orderResult == null) { checkoutError = "Lỗi xử lý đơn hàng."; return; }
+
+            if (selectedPaymentMethod == 1)
+            {
+                if (!string.IsNullOrEmpty(orderResult.PaymentUrl))
+                {
+                    await JS.InvokeVoidAsync("window.open", orderResult.PaymentUrl, "_self");
+                    return;
+                }
+                var vnpayReq = BuildRequest(HttpMethod.Post, "api/vnpay/create-payment");
+                vnpayReq.Content = JsonContent.Create(new { orderId = orderResult.OrderId, amount = orderResult.TotalAmount });
+                var vnpayResp = await Http.SendAsync(vnpayReq);
+                if (!vnpayResp.IsSuccessStatusCode) { checkoutError = "Không thể tạo liên kết VNPay. Vui lòng thử lại."; return; }
+                var vnpayResult = await vnpayResp.Content.ReadFromJsonAsync<VnPayUrlDto>();
+                if (string.IsNullOrEmpty(vnpayResult?.PaymentUrl)) { checkoutError = "Liên kết VNPay không hợp lệ."; return; }
+                await JS.InvokeVoidAsync("window.open", vnpayResult.PaymentUrl, "_self");
+            }
+            else
+            {
+                await ShowToast($"Đặt hàng thành công! Mã đơn: #{orderResult.OrderId}");
+                await Task.Delay(1500);
+                Navigation.NavigateTo($"/payment-result?success=true&orderId={orderResult.OrderId}");
+            }
+        }
+        catch (Exception ex) { checkoutError = $"Đã xảy ra lỗi: {ex.Message}"; }
+        finally { isProcessingCheckout = false; StateHasChanged(); }
+    }
+
+    private async Task IncreaseQty(CartItem item)
+    {
+        if (item.Quantity >= item.StockQuantity) { await ShowToast("Đã đạt giới hạn tồn kho!"); return; }
+        if (isLoggedIn)
+        {
+            var req = BuildRequest(HttpMethod.Put, $"api/cart/update/{item.BookId}");
+            req.Content = JsonContent.Create(new { quantity = item.Quantity + 1 });
+            var resp = await Http.SendAsync(req);
+            if (resp.StatusCode == System.Net.HttpStatusCode.Unauthorized) { await HandleUnauthorized(); return; }
+            if (resp.IsSuccessStatusCode) item.Quantity++;
+            else { await ShowToast("Cập nhật thất bại."); return; }
+        }
+        else item.Quantity++;
+        StateHasChanged();
+        if (!string.IsNullOrEmpty(selectedWardCode)) await CalculateShippingFee();
+    }
+
+    private async Task DecreaseQty(CartItem item)
+    {
+        if (item.Quantity <= 1) return;
+        if (isLoggedIn)
+        {
+            var req = BuildRequest(HttpMethod.Put, $"api/cart/update/{item.BookId}");
+            req.Content = JsonContent.Create(new { quantity = item.Quantity - 1 });
+            var resp = await Http.SendAsync(req);
+            if (resp.StatusCode == System.Net.HttpStatusCode.Unauthorized) { await HandleUnauthorized(); return; }
+            if (resp.IsSuccessStatusCode) item.Quantity--;
+            else { await ShowToast("Cập nhật thất bại."); return; }
+        }
+        else item.Quantity--;
+        StateHasChanged();
+        if (!string.IsNullOrEmpty(selectedWardCode)) await CalculateShippingFee();
+    }
+
+    private async Task RemoveItem(int cartItemId)
+    {
+        var item = cartItems.FirstOrDefault(x => x.CartItemId == cartItemId);
+        if (item == null) return;
+        if (isLoggedIn)
+        {
+            var resp = await Http.SendAsync(BuildRequest(HttpMethod.Delete, $"api/cart/remove/{item.BookId}"));
+            if (resp.StatusCode == System.Net.HttpStatusCode.Unauthorized) { await HandleUnauthorized(); return; }
+            if (resp.IsSuccessStatusCode)
+            {
+                cartItems.Remove(item); selectedItems.Remove(cartItemId);
+                await ShowToast($"Đã xóa '{item.BookTitle}' khỏi giỏ hàng.");
+                if (!string.IsNullOrEmpty(selectedWardCode)) await CalculateShippingFee();
+            }
+            else await ShowToast("Xóa thất bại.");
+            StateHasChanged();
+        }
+        else
+        {
+            cartItems.Remove(item); selectedItems.Remove(cartItemId);
+            await ShowToast($"Đã xóa '{item.BookTitle}' khỏi giỏ hàng.");
+            StateHasChanged();
+        }
+    }
+
+    private void ToggleSelectAll()
+    {
+        selectedItems.Clear();
+        if (selectAll) foreach (var item in cartItems) selectedItems.Add(item.CartItemId);
+    }
+
+    private void ToggleItem(int id, bool isChecked)
+    {
+        if (isChecked) selectedItems.Add(id); else selectedItems.Remove(id);
+        selectAll = selectedItems.Count == cartItems.Count;
+    }
+
+    private async Task DeleteSelected()
+    {
+        foreach (var id in selectedItems.ToList()) await RemoveItem(id);
+        selectedItems.Clear(); selectAll = false;
+    }
+
+    private async Task UpdateCart()
+    {
+        if (isLoggedIn) await LoadCartFromApi();
+        if (!string.IsNullOrEmpty(selectedWardCode)) await CalculateShippingFee();
+        await ShowToast("Đã cập nhật giỏ hàng!");
+    }
+
+    private async Task ApplyCoupon()
+    {
+        if (string.IsNullOrWhiteSpace(couponCode)) { couponMessage = "Vui lòng nhập mã giảm giá."; return; }
+        switch (couponCode.Trim().ToUpper())
+        {
+            case "BOOK20":
+                discountPercent = .20m; couponApplied = true;
+                couponMessage = "Áp dụng thành công! Giảm 20%.";
+                await ShowToast("Mã BOOK20 đã được áp dụng!"); break;
+            case "NEWBOOK":
+                discountPercent = .10m; couponApplied = true;
+                couponMessage = "Áp dụng thành công! Giảm 10%.";
+                await ShowToast("Mã NEWBOOK đã được áp dụng!"); break;
+            default:
+                couponApplied = false; discountPercent = 0;
+                couponMessage = "Mã giảm giá không hợp lệ."; break;
+        }
+        if (!string.IsNullOrEmpty(selectedWardCode)) await CalculateShippingFee();
+    }
+
+    private async Task AddSuggestedToCart(int bookId)
+    {
+        var book = suggestedBooks.FirstOrDefault(x => x.BookId == bookId);
+        if (book is null) return;
+        if (isLoggedIn)
+        {
+            var req = BuildRequest(HttpMethod.Post, "api/cart/add");
+            req.Content = JsonContent.Create(new { bookId, quantity = 1 });
+            var resp = await Http.SendAsync(req);
+            if (resp.StatusCode == System.Net.HttpStatusCode.Unauthorized) { await HandleUnauthorized(); return; }
+            if (resp.IsSuccessStatusCode)
+            {
+                await LoadCartFromApi();
+                if (!string.IsNullOrEmpty(selectedWardCode)) await CalculateShippingFee();
+                await ShowToast($"Đã thêm '{book.Title}' vào giỏ hàng!");
+            }
+            else await ShowToast($"Lỗi {(int)resp.StatusCode}");
+        }
+        else
+        {
+            var existing = cartItems.FirstOrDefault(x => x.BookId == bookId);
+            if (existing is not null) existing.Quantity++;
+            else cartItems.Add(new CartItem(bookId, bookId, book.Title, book.Author, book.Category,
+                                            book.Price, book.Price, book.ImageUrl, false, 1, 999));
+            await ShowToast($"Đã thêm '{book.Title}' vào giỏ hàng!");
+            StateHasChanged();
+        }
+    }
+
+    private void ToggleDropdown() => showDropdown = !showDropdown;
+
+    private async Task HandleUnauthorized()
+    {
+        await JS.InvokeVoidAsync("localStorage.removeItem", "accessToken");
+        await JS.InvokeVoidAsync("localStorage.removeItem", "userFullName");
+        await JS.InvokeVoidAsync("localStorage.removeItem", "userEmail");
+        isLoggedIn = false; userFullName = ""; userEmail = ""; accessToken = ""; cartItems.Clear();
+        await ShowToast("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+        await Task.Delay(1500);
+        Navigation.NavigateTo("/login");
+    }
+
+    private async Task Logout()
+    {
+        await JS.InvokeVoidAsync("localStorage.removeItem", "accessToken");
+        await JS.InvokeVoidAsync("localStorage.removeItem", "refreshToken");
+        await JS.InvokeVoidAsync("localStorage.removeItem", "userEmail");
+        await JS.InvokeVoidAsync("localStorage.removeItem", "userFullName");
+        isLoggedIn = false; userFullName = ""; userEmail = ""; showDropdown = false; cartItems.Clear();
+        Navigation.NavigateTo("/login");
+    }
+
+    private static string GetInitials(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return "?";
+        var parts = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length == 1 ? parts[0][..1].ToUpper() : $"{parts[0][..1]}{parts[^1][..1]}".ToUpper();
+    }
+
+    private static string SafeImageUrl(string? url, string fallback)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return fallback;
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)) return fallback;
+        return (uri.Scheme == "http" || uri.Scheme == "https") ? url : fallback;
+    }
+
+    private async Task ShowToast(string message)
+    {
+        toastMessage = message; showToast = true; StateHasChanged();
+        await Task.Delay(3000);
+        showToast = false; StateHasChanged();
+    }
+
+    // ── DTOs ─────────────────────────────────────────────────────────────────
+    private class CartResponseDto
+    {
+        public List<CartItemDto> Items { get; set; } = new();
+        public int TotalItems { get; set; }
+        public decimal GrandTotal { get; set; }
+    }
+    private class CartItemDto
+    {
+        public int BookId { get; set; }
+        public string BookTitle { get; set; } = "";
+        public decimal UnitPrice { get; set; }
+        public int Quantity { get; set; }
+        public int StockQuantity { get; set; }
+        public string? BookImageUrl { get; set; }
+    }
+    private class ProvinceDto { public int ProvinceId { get; set; } public string ProvinceName { get; set; } = ""; }
+    private class DistrictDto { public int DistrictId { get; set; } public string DistrictName { get; set; } = ""; }
+    private class WardDto { public string WardCode { get; set; } = ""; public string WardName { get; set; } = ""; }
+    private class ShippingFeeResponseDto { public decimal ShippingFee { get; set; } }
+    private class ApiErrorDto { public string Message { get; set; } = ""; }
+    private class OrderResultResponseDto
+    {
+        public int OrderId { get; set; }
+        public decimal TotalAmount { get; set; }
+        public string PaymentUrl { get; set; } = "";
+        public string Message { get; set; } = "";
+    }
+    private class VnPayUrlDto { public string PaymentUrl { get; set; } = ""; }
+}

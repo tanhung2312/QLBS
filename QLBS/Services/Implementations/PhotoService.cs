@@ -10,14 +10,9 @@ namespace QLBS.Services.Implementations
     {
         private readonly Cloudinary _cloudinary;
 
-        public PhotoService(IOptions<CloudinarySettings> config)
+        public PhotoService(Cloudinary cloudinary)
         {
-            var acc = new Account(
-                config.Value.CloudName,
-                config.Value.ApiKey,
-                config.Value.ApiSecret
-            );
-            _cloudinary = new Cloudinary(acc);
+            _cloudinary = cloudinary;
         }
 
         public async Task<ImageUploadResult> AddPhotoAsync(IFormFile file)

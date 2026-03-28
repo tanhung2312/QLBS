@@ -76,5 +76,16 @@ namespace QLBS.Controllers
 
             return Ok(new { message = "Xóa thành công." });
         }
+
+        [HttpGet("{id}/books")]
+        public async Task<IActionResult> GetBooksByCategory(int id)
+        {
+            var result = await _categoryService.GetBooksByCategoryIdAsync(id);
+
+            if (result == null)
+                return NotFound(new { message = $"Không tìm thấy danh mục với id = {id}." });
+
+            return Ok(result);
+        }
     }
 }

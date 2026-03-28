@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using QLBS.Constants;
+using QLBS.Dtos;
 using QLBS.Dtos.Order;
 using QLBS.Helpers;
 using QLBS.Models;
@@ -39,13 +40,12 @@ namespace QLBS.Services.Implementations
             _logger = logger;
         }
 
+        // ── Tạo đơn hàng ─────────────────────────────────────────────────────
         public async Task<OrderResultDto?> CreateOrderAsync(int accountId, CreateOrderDto dto, HttpContext context)
         {
             if (dto.PaymentMethodId != PaymentMethodConstants.COD &&
                 dto.PaymentMethodId != PaymentMethodConstants.VNPay)
-            {
                 throw new ArgumentException("Phương thức thanh toán không hợp lệ.");
-            }
 
             var profile = await _userProfileRepository.GetByAccountIdAsync(accountId);
             if (profile == null) throw new Exception("Không tìm thấy thông tin người dùng.");
@@ -97,12 +97,17 @@ namespace QLBS.Services.Implementations
                 if (discount.MaxDiscountAmount.HasValue && discountAmount > discount.MaxDiscountAmount.Value)
                     discountAmount = discount.MaxDiscountAmount.Value;
 
-                finalTotal -= discountAmount;
+                if (discountAmount > itemTotal)
+                    discountAmount = itemTotal;
+
+                finalTotal = (itemTotal - discountAmount) + shippingFee;
                 discountId = discount.DiscountCodeId;
+
+                discount.Quantity -= 1;
+                await _discountRepository.UpdateDiscountAsync(discount);
             }
 
             if (finalTotal < 0) finalTotal = 0;
-
 
             var order = new OrderTable
             {
@@ -131,7 +136,6 @@ namespace QLBS.Services.Implementations
 
             var createdOrder = await _orderRepository.CreateOrderAsync(order, details, profile.UserId, dto.PaymentMethodId);
 
-
             string paymentUrl = "";
             string message = "Đặt hàng thành công.";
 
@@ -144,7 +148,6 @@ namespace QLBS.Services.Implementations
                 else if (dto.PaymentMethodId == PaymentMethodConstants.COD)
                 {
                     var fullOrder = await _orderRepository.GetByIdAsync(createdOrder.OrderId);
-
                     if (fullOrder != null)
                     {
                         var ghnCode = await _ghnService.CreateShippingOrderAsync(
@@ -157,9 +160,7 @@ namespace QLBS.Services.Implementations
                         );
 
                         if (string.IsNullOrEmpty(ghnCode))
-                        {
                             throw new Exception("Lỗi khi tạo vận đơn GHN.");
-                        }
 
                         await _orderRepository.UpdateOrderGhnCodeAsync(createdOrder.OrderId, ghnCode);
                     }
@@ -168,9 +169,7 @@ namespace QLBS.Services.Implementations
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi integration sau khi tạo đơn. OrderId: {OrderId}", createdOrder.OrderId);
-
                 await _orderRepository.CancelOrderAndRestoreStockAsync(createdOrder.OrderId);
-
                 throw new Exception($"Đặt hàng thất bại do lỗi hệ thống vận chuyển: {ex.Message}");
             }
 
@@ -183,41 +182,7 @@ namespace QLBS.Services.Implementations
             };
         }
 
-        public async Task<bool> HandlePaymentCallback(PaymentResponseModel model)
-        {
-            if (!model.Success) return false;
-            int orderId = int.Parse(model.OrderId);
-
-            if (model.VnPayResponseCode == "00") 
-            {
-                await _orderRepository.UpdatePaymentStatusAsync(orderId, PaymentStatusConstants.Success, model.TransactionId);
-                await _orderRepository.UpdateOrderStatusAsync(orderId, OrderStatusConstants.Confirmed);
-
-                var order = await _orderRepository.GetByIdAsync(orderId);
-                if (order != null && string.IsNullOrEmpty(order.GhnOrderCode))
-                {
-                    int totalWeight = order.OrderDetails.Sum(d => d.Quantity) * _ghnSettings.DefaultWeight;
-
-                    var paymentMethodId = order.Payments.FirstOrDefault()?.PaymentMethodId ?? PaymentMethodConstants.VNPay;
-
-                    var ghnCode = await _ghnService.CreateShippingOrderAsync(
-                        order,
-                        order.OrderDetails.ToList(),
-                        order.DistrictID ?? 0,
-                        order.WardCode ?? "",
-                        totalWeight,
-                        paymentMethodId
-                    );
-                }
-                return true;
-            }
-            else
-            {
-                await _orderRepository.UpdatePaymentStatusAsync(orderId, PaymentStatusConstants.Failed, model.TransactionId);
-                return false;
-            }
-        }
-
+        // ── Lịch sử đơn hàng (user) ──────────────────────────────────────────
         public async Task<IEnumerable<OrderHistoryDto>> GetOrderHistoryAsync(int accountId)
         {
             var profile = await _userProfileRepository.GetByAccountIdAsync(accountId);
@@ -238,18 +203,19 @@ namespace QLBS.Services.Implementations
                     OrderStatusName = GetOrderStatusName(o.OrderStatus),
                     GhnOrderCode = o.GhnOrderCode,
                     PaymentMethod = payment != null ? PaymentMethodConstants.GetMethodName(payment.PaymentMethodId) : "N/A",
-                    PaymentStatus = payment != null && payment.PaymentStatus == PaymentStatusConstants.Success ? "Đã thanh toán" : "Chưa thanh toán"
+                    PaymentStatus = payment != null && payment.PaymentStatus == PaymentStatusConstants.Success
+                        ? "Đã thanh toán" : "Chưa thanh toán"
                 };
             });
         }
 
+        // ── Chi tiết đơn hàng (user) ─────────────────────────────────────────
         public async Task<OrderDetailResponseDto?> GetOrderDetailAsync(int accountId, int orderId)
         {
             var profile = await _userProfileRepository.GetByAccountIdAsync(accountId);
             if (profile == null) return null;
 
             var order = await _orderRepository.GetByIdAsync(orderId);
-
             if (order == null || order.UserId != profile.UserId) return null;
 
             var payment = order.Payments.FirstOrDefault();
@@ -266,7 +232,8 @@ namespace QLBS.Services.Implementations
                 GhnOrderCode = order.GhnOrderCode,
                 OrderStatusName = GetOrderStatusName(order.OrderStatus),
                 PaymentMethod = payment != null ? PaymentMethodConstants.GetMethodName(payment.PaymentMethodId) : "N/A",
-                PaymentStatus = payment != null && payment.PaymentStatus == PaymentStatusConstants.Success ? "Đã thanh toán" : "Chưa thanh toán",
+                PaymentStatus = payment != null && payment.PaymentStatus == PaymentStatusConstants.Success
+                    ? "Đã thanh toán" : "Chưa thanh toán",
                 Items = order.OrderDetails.Select(d => new OrderItemDto
                 {
                     BookId = d.BookId,
@@ -279,17 +246,79 @@ namespace QLBS.Services.Implementations
             };
         }
 
-        private string GetOrderStatusName(byte status)
+        // ── Admin: Tất cả đơn hàng ───────────────────────────────────────────
+        public async Task<IEnumerable<AdminOrderSummaryDto>> GetAllOrdersForAdminAsync()
         {
-            return status switch
+            var orders = await _orderRepository.GetAllOrdersAsync();
+
+            return orders.Select(o =>
             {
-                OrderStatusConstants.Pending => "Chờ xử lý",
-                OrderStatusConstants.Processing => "Đang giao hàng",
-                OrderStatusConstants.Confirmed => "Đã xác nhận",
-                OrderStatusConstants.Completed => "Hoàn thành",
-                OrderStatusConstants.Cancelled => "Đã hủy",
-                _ => "Không xác định"
+                var payment = o.Payments.FirstOrDefault();
+                return new AdminOrderSummaryDto
+                {
+                    OrderId = o.OrderId,
+                    OrderDate = o.OrderDate,
+                    TotalAmount = o.TotalAmount,
+                    ShippingFee = o.ShippingFee,
+                    ReceiverName = o.ReceiverName,
+                    ReceiverPhone = o.ReceiverPhone,
+                    GhnOrderCode = o.GhnOrderCode,
+                    OrderStatusName = GetOrderStatusName(o.OrderStatus),
+                    PaymentMethod = payment != null
+                        ? PaymentMethodConstants.GetMethodName(payment.PaymentMethodId)
+                        : "N/A",
+                    PaymentStatus = payment != null && payment.PaymentStatus == PaymentStatusConstants.Success
+                        ? "Đã thanh toán" : "Chưa thanh toán"
+                };
+            });
+        }
+
+        // ── Admin: Chi tiết đơn hàng bất kỳ ─────────────────────────────────
+        public async Task<AdminOrderDetailDto?> GetOrderDetailForAdminAsync(int orderId)
+        {
+            var order = await _orderRepository.GetByIdAsync(orderId);
+            if (order == null) return null;
+
+            var payment = order.Payments.FirstOrDefault();
+
+            return new AdminOrderDetailDto
+            {
+                OrderId = order.OrderId,
+                OrderDate = order.OrderDate,
+                TotalAmount = order.TotalAmount,
+                ShippingFee = order.ShippingFee,
+                ReceiverName = order.ReceiverName,
+                ReceiverPhone = order.ReceiverPhone,
+                ShippingAddress = order.ShippingAddress,
+                GhnOrderCode = order.GhnOrderCode,
+                OrderStatusName = GetOrderStatusName(order.OrderStatus),
+                PaymentMethod = payment != null
+                    ? PaymentMethodConstants.GetMethodName(payment.PaymentMethodId)
+                    : "N/A",
+                PaymentStatus = payment != null && payment.PaymentStatus == PaymentStatusConstants.Success
+                    ? "Đã thanh toán" : "Chưa thanh toán",
+                Items = order.OrderDetails.Select(d => new OrderItemDto
+                {
+                    BookId = d.BookId,
+                    BookTitle = d.Book?.BookTitle ?? "",
+                    Quantity = d.Quantity,
+                    UnitPrice = d.UnitPrice,
+                    BookImageUrl = d.Book?.BookImages?.FirstOrDefault(img => img.IsCover)?.URL
+                                   ?? d.Book?.BookImages?.FirstOrDefault()?.URL
+                }).ToList()
             };
         }
+
+        // ── Helper ────────────────────────────────────────────────────────────
+        private static string GetOrderStatusName(byte status) => status switch
+        {
+            OrderStatusConstants.Pending => "Chờ xử lý",
+            OrderStatusConstants.Processing => "Đang đóng gói",   // byte = 1
+            OrderStatusConstants.Confirmed => "Đã xác nhận",     // byte = 2
+            OrderStatusConstants.Shipping => "Đang giao hàng",  // byte = 3
+            OrderStatusConstants.Completed => "Hoàn thành",      // byte = 4
+            OrderStatusConstants.Cancelled => "Đã hủy",          // byte = 5
+            _ => "Không xác định"
+        };
     }
 }

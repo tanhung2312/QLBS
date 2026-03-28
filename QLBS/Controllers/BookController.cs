@@ -64,5 +64,22 @@ namespace QLBS.Controllers
 
             return Ok(new { message = "Xóa sách thành công" });
         }
+
+
+        [HttpGet("top-selling")]
+        [AllowAnonymous] 
+        public async Task<IActionResult> GetTopSellingBooks([FromQuery] int top = 8)
+        {
+            try
+            {
+                var topBooks = await _bookService.GetTopSellingBooksAsync(top);
+                return Ok(topBooks);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi lấy danh sách sách bán chạy", error = ex.Message });
+            }
+        }
+
     }
 }

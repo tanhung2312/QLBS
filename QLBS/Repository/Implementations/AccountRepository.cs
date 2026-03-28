@@ -17,6 +17,7 @@ namespace QLBS.Repository.Implementations
         {
             return await _context.Accounts
                 .Include(a => a.Role)
+                .Include(a => a.UserProfile)
                 .FirstOrDefaultAsync(a => a.Email == email);
         }
 
@@ -96,5 +97,11 @@ namespace QLBS.Repository.Implementations
                 return false;
             }
         }
+
+        public async Task<Account?> GetByEmailWithProfileAsync(string email)
+            => await _context.Accounts
+                .Include(a => a.Role)
+                .Include(a => a.UserProfile)
+                .FirstOrDefaultAsync(a => a.Email == email);
     }
 }

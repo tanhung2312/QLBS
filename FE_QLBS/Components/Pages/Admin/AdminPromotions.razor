@@ -1,0 +1,1741 @@
+﻿@page "/admin/promotions"
+@rendermode InteractiveServer
+@using System.Net.Http.Json
+@using System.Net.Http.Headers
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<PageTitle>Khuyến mãi - BookStore Admin</PageTitle>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+<style>
+    *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    :root {
+        --bg: #F4F2EE;
+        --surface: #FFFFFF;
+        --surface2: #FAFAF8;
+        --brown: #6B4C2A;
+        --amber: #D4860B;
+        --amber-lt: #F5A623;
+        --amber-dim: rgba(212,134,11,0.10);
+        --ink: #1A1208;
+        --text-pri: #1A1208;
+        --text-sec: #6B5A46;
+        --text-muted: #A8947A;
+        --border: #E8E2D9;
+        --border2: #DDD7CE;
+        --sidebar-w: 252px;
+        --green: #2E7D52;
+        --green-dim: rgba(46,125,82,0.09);
+        --red: #C0392B;
+        --red-dim: rgba(192,57,43,0.09);
+        --blue: #2563A8;
+        --blue-dim: rgba(37,99,168,0.09);
+        --shadow-sm: 0 1px 3px rgba(26,18,8,0.06), 0 1px 8px rgba(26,18,8,0.04);
+        --shadow: 0 2px 12px rgba(26,18,8,0.08);
+        --shadow-md: 0 6px 24px rgba(26,18,8,0.10);
+        --radius: 14px;
+    }
+
+    body {
+        background: var(--bg);
+        color: var(--text-pri);
+        font-family: 'DM Sans', sans-serif;
+    }
+
+    .adm-shell {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    /* ── SIDEBAR ── */
+    .adm-sidebar {
+        width: var(--sidebar-w);
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 100;
+    }
+
+    .adm-logo {
+        padding: 22px 20px 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .adm-logo-icon {
+        width: 38px;
+        height: 38px;
+        background: var(--brown);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        color: #fff;
+        flex-shrink: 0;
+        box-shadow: 0 3px 10px rgba(107,76,42,0.22);
+    }
+
+    .adm-logo-text {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.22rem;
+        font-weight: 800;
+        color: var(--ink);
+    }
+
+        .adm-logo-text span {
+            color: var(--amber);
+        }
+
+    .adm-logo-badge {
+        margin-left: auto;
+        font-size: .58rem;
+        font-weight: 800;
+        letter-spacing: .1em;
+        background: var(--amber-dim);
+        color: var(--amber);
+        border: 1px solid rgba(212,134,11,0.25);
+        border-radius: 5px;
+        padding: 2px 7px;
+    }
+
+    .adm-nav {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px 12px;
+        scrollbar-width: none;
+    }
+
+        .adm-nav::-webkit-scrollbar {
+            width: 0;
+        }
+
+    .adm-nav-section {
+        margin-bottom: 22px;
+    }
+
+    .adm-nav-label {
+        font-size: .67rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        color: var(--text-muted);
+        padding: 0 10px 6px;
+        text-transform: uppercase;
+    }
+
+    .adm-nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 10px;
+        border-radius: 9px;
+        cursor: pointer;
+        color: var(--text-sec);
+        font-size: .875rem;
+        font-weight: 500;
+        margin-bottom: 1px;
+        text-decoration: none;
+        transition: all .15s;
+    }
+
+        .adm-nav-item:hover {
+            background: var(--bg);
+            color: var(--text-pri);
+        }
+
+        .adm-nav-item.active {
+            background: var(--amber-dim);
+            color: var(--brown);
+            font-weight: 600;
+        }
+
+    .adm-nav-icon {
+        width: 18px;
+        text-align: center;
+        font-size: .92rem;
+        flex-shrink: 0;
+    }
+
+    .adm-nav-badge {
+        margin-left: auto;
+        background: var(--amber);
+        color: #fff;
+        font-size: .63rem;
+        font-weight: 800;
+        border-radius: 20px;
+        padding: 1px 7px;
+    }
+
+    .adm-sidebar-footer {
+        padding: 12px;
+        border-top: 1px solid var(--border);
+    }
+
+    .adm-user-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: 9px;
+        cursor: pointer;
+        transition: background .15s;
+    }
+
+        .adm-user-row:hover {
+            background: var(--bg);
+        }
+
+    .adm-avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--brown), var(--amber));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .75rem;
+        font-weight: 800;
+        color: #fff;
+        flex-shrink: 0;
+    }
+
+    .adm-user-name {
+        font-size: .84rem;
+        font-weight: 600;
+        color: var(--text-pri);
+    }
+
+    .adm-user-role {
+        font-size: .71rem;
+        color: var(--text-muted);
+        margin-top: 1px;
+    }
+
+    /* ── MAIN ── */
+    .adm-main {
+        margin-left: var(--sidebar-w);
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    .adm-topbar {
+        height: 60px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        padding: 0 28px;
+        gap: 14px;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .adm-topbar-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.12rem;
+        font-weight: 700;
+        color: var(--ink);
+    }
+
+    .adm-breadcrumb {
+        font-size: .77rem;
+        color: var(--text-muted);
+        margin-left: 2px;
+    }
+
+        .adm-breadcrumb span {
+            color: var(--amber);
+        }
+
+    .adm-search {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--bg);
+        border: 1px solid var(--border2);
+        border-radius: 9px;
+        padding: 7px 14px;
+        transition: all .18s;
+    }
+
+        .adm-search:focus-within {
+            border-color: var(--amber);
+            box-shadow: 0 0 0 3px var(--amber-dim);
+            background: var(--surface);
+        }
+
+        .adm-search i {
+            color: var(--text-muted);
+            font-size: .85rem;
+        }
+
+        .adm-search input {
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text-pri);
+            font-family: 'DM Sans', sans-serif;
+            font-size: .85rem;
+            width: 210px;
+        }
+
+            .adm-search input::placeholder {
+                color: var(--text-muted);
+            }
+
+    .adm-topbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .adm-icon-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--text-sec);
+        font-size: .88rem;
+        transition: all .15s;
+        position: relative;
+    }
+
+        .adm-icon-btn:hover {
+            border-color: var(--amber);
+            color: var(--amber);
+            background: var(--amber-dim);
+        }
+
+    .adm-notif-dot {
+        position: absolute;
+        top: 7px;
+        right: 7px;
+        width: 6px;
+        height: 6px;
+        background: var(--amber);
+        border-radius: 50%;
+        border: 1.5px solid var(--surface);
+    }
+
+    /* ── BODY ── */
+    .adm-body {
+        padding: 24px 28px;
+        flex: 1;
+    }
+
+    /* ── PAGE HEADER ── */
+    .page-hd {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 22px;
+        animation: fadeUp .3s ease both;
+    }
+
+        .page-hd h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: var(--ink);
+            margin-bottom: 3px;
+        }
+
+        .page-hd p {
+            font-size: .84rem;
+            color: var(--text-muted);
+        }
+
+    /* ── STAT STRIP ── */
+    .stat-strip {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: 14px;
+        margin-bottom: 22px;
+    }
+
+    .strip-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px 20px;
+        box-shadow: var(--shadow-sm);
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        animation: fadeUp .3s ease both;
+        transition: box-shadow .2s, transform .2s;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .strip-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .strip-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+
+    .sc-amber::after {
+        background: var(--amber);
+    }
+
+    .sc-green::after {
+        background: var(--green);
+    }
+
+    .sc-red::after {
+        background: var(--red);
+    }
+
+    .sc-ico {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .sc-amber .sc-ico {
+        background: var(--amber-dim);
+        color: var(--amber);
+    }
+
+    .sc-green .sc-ico {
+        background: var(--green-dim);
+        color: var(--green);
+    }
+
+    .sc-red .sc-ico {
+        background: var(--red-dim);
+        color: var(--red);
+    }
+
+    .sc-val {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.7rem;
+        font-weight: 800;
+        color: var(--ink);
+        line-height: 1;
+    }
+
+    .sc-lbl {
+        font-size: .78rem;
+        color: var(--text-muted);
+        margin-top: 3px;
+    }
+
+    /* ── MAIN CARD ── */
+    .main-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+        animation: fadeUp .3s .1s ease both;
+    }
+
+    .main-card-hd {
+        padding: 18px 22px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--surface2);
+    }
+
+    .card-title {
+        font-family: 'Playfair Display', serif;
+        font-size: .98rem;
+        font-weight: 700;
+        color: var(--ink);
+    }
+
+    .card-sub {
+        font-size: .75rem;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+
+    /* Filter bar */
+    .filter-bar {
+        padding: 12px 22px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        background: var(--surface);
+    }
+
+    .filter-input {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        background: var(--bg);
+        border: 1px solid var(--border2);
+        border-radius: 8px;
+        padding: 6px 12px;
+        flex: 1;
+        max-width: 280px;
+        transition: all .15s;
+    }
+
+        .filter-input:focus-within {
+            border-color: var(--amber);
+            box-shadow: 0 0 0 2px var(--amber-dim);
+            background: var(--surface);
+        }
+
+        .filter-input i {
+            color: var(--text-muted);
+            font-size: .82rem;
+        }
+
+        .filter-input input {
+            background: none;
+            border: none;
+            outline: none;
+            font-family: 'DM Sans', sans-serif;
+            font-size: .82rem;
+            color: var(--text-pri);
+            width: 100%;
+        }
+
+            .filter-input input::placeholder {
+                color: var(--text-muted);
+            }
+
+    .seg {
+        display: flex;
+        background: var(--bg);
+        border: 1px solid var(--border2);
+        border-radius: 8px;
+        padding: 3px;
+        gap: 2px;
+    }
+
+    .seg-btn {
+        padding: 5px 12px;
+        border-radius: 6px;
+        font-size: .75rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        color: var(--text-muted);
+        font-family: 'DM Sans', sans-serif;
+        transition: all .15s;
+    }
+
+        .seg-btn.on {
+            background: var(--surface);
+            color: var(--brown);
+            box-shadow: var(--shadow-sm);
+        }
+
+    /* Table */
+    .promo-tbl {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .promo-tbl th {
+            padding: 10px 18px;
+            text-align: left;
+            font-size: .69rem;
+            font-weight: 700;
+            letter-spacing: .06em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            background: var(--surface2);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .promo-tbl td {
+            padding: 12px 18px;
+            font-size: .82rem;
+            color: var(--text-sec);
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .promo-tbl tr:last-child td {
+            border-bottom: none;
+        }
+
+        .promo-tbl tbody tr {
+            transition: background .1s;
+        }
+
+            .promo-tbl tbody tr:hover td {
+                background: #FDFAF6;
+            }
+
+    /* Coupon code chip */
+    .code-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--amber-dim);
+        border: 1.5px dashed rgba(212,134,11,.4);
+        border-radius: 7px;
+        padding: 4px 10px;
+        font-family: 'DM Mono', 'Courier New', monospace;
+        font-size: .82rem;
+        font-weight: 700;
+        color: var(--brown);
+        cursor: pointer;
+        transition: all .15s;
+        letter-spacing: .04em;
+        user-select: all;
+    }
+
+        .code-chip:hover {
+            background: rgba(212,134,11,.18);
+            border-color: var(--amber);
+        }
+
+    /* Discount badge */
+    .disc-badge {
+        display: inline-flex;
+        align-items: center;
+        font-size: .78rem;
+        font-weight: 700;
+        padding: 3px 9px;
+        border-radius: 6px;
+    }
+
+    .disc-pct {
+        background: rgba(37,99,168,.09);
+        color: var(--blue);
+    }
+
+    .disc-fix {
+        background: var(--green-dim);
+        color: var(--green);
+    }
+
+    /* Status badge */
+    .status-dot {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: .72rem;
+        font-weight: 700;
+        padding: 3px 9px;
+        border-radius: 20px;
+    }
+
+        .status-dot::before {
+            content: '●';
+            font-size: .42rem;
+        }
+
+    .s-active {
+        background: var(--green-dim);
+        color: var(--green);
+    }
+
+    .s-expired {
+        background: var(--red-dim);
+        color: var(--red);
+    }
+
+    .s-upcoming {
+        background: var(--blue-dim);
+        color: var(--blue);
+    }
+
+    .s-inactive {
+        background: rgba(168,148,122,.1);
+        color: var(--text-muted);
+    }
+
+    /* Progress bar */
+    .use-bar {
+        height: 5px;
+        background: var(--border);
+        border-radius: 3px;
+        width: 80px;
+        overflow: hidden;
+    }
+
+    .use-fill {
+        height: 100%;
+        border-radius: 3px;
+        background: linear-gradient(90deg, var(--amber), var(--amber-lt));
+    }
+
+    /* Action buttons */
+    .act-row {
+        display: flex;
+        gap: 5px;
+    }
+
+    .act-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 7px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: .78rem;
+        color: var(--text-sec);
+        transition: all .15s;
+    }
+
+        .act-btn:hover {
+            border-color: var(--amber);
+            color: var(--amber);
+            background: var(--amber-dim);
+        }
+
+        .act-btn.del:hover {
+            border-color: var(--red);
+            color: var(--red);
+            background: var(--red-dim);
+        }
+
+    /* ── MODAL ── */
+    .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(26,18,8,.45);
+        backdrop-filter: blur(3px);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn .18s ease;
+    }
+
+    .modal-box {
+        background: var(--surface);
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        width: 520px;
+        max-width: 95vw;
+        box-shadow: 0 24px 64px rgba(26,18,8,.22);
+        animation: modalUp .22s cubic-bezier(.22,1,.36,1) both;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .modal-hd {
+        padding: 22px 24px 18px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .modal-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--ink);
+    }
+
+    .modal-close {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: .82rem;
+        color: var(--text-muted);
+        transition: all .15s;
+    }
+
+        .modal-close:hover {
+            background: var(--red-dim);
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+    .modal-body {
+        padding: 24px;
+    }
+
+    /* Form */
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        margin-bottom: 14px;
+    }
+
+        .form-row.full {
+            grid-template-columns: 1fr;
+        }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .form-label {
+        font-size: .78rem;
+        font-weight: 600;
+        color: var(--text-sec);
+    }
+
+        .form-label span {
+            color: var(--red);
+            margin-left: 2px;
+        }
+
+    .form-input, .form-select {
+        padding: 9px 12px;
+        border: 1px solid var(--border2);
+        border-radius: 8px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: .84rem;
+        color: var(--text-pri);
+        background: var(--bg);
+        outline: none;
+        transition: all .15s;
+    }
+
+        .form-input:focus, .form-select:focus {
+            border-color: var(--amber);
+            box-shadow: 0 0 0 3px var(--amber-dim);
+            background: var(--surface);
+        }
+
+        .form-input.err {
+            border-color: var(--red);
+        }
+
+    .form-hint {
+        font-size: .72rem;
+        color: var(--text-muted);
+    }
+
+    .form-err {
+        font-size: .72rem;
+        color: var(--red);
+    }
+
+    .modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 9px;
+        background: var(--surface2);
+    }
+
+    /* Buttons */
+    .btn {
+        padding: 7px 15px;
+        border-radius: 8px;
+        font-size: .8rem;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: 'DM Sans', sans-serif;
+        border: 1px solid transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all .15s;
+    }
+
+    .btn-primary {
+        background: var(--amber);
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(212,134,11,.2);
+    }
+
+        .btn-primary:hover {
+            background: var(--amber-lt);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:disabled {
+            opacity: .55;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+    .btn-outline {
+        background: var(--bg);
+        color: var(--text-sec);
+        border-color: var(--border2);
+    }
+
+        .btn-outline:hover {
+            border-color: var(--amber);
+            color: var(--amber);
+        }
+
+    .btn-danger {
+        background: var(--red-dim);
+        color: var(--red);
+        border-color: rgba(192,57,43,.2);
+    }
+
+        .btn-danger:hover {
+            background: var(--red);
+            color: #fff;
+        }
+
+    /* Confirm dialog */
+    .confirm-box {
+        background: var(--surface);
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        width: 380px;
+        max-width: 95vw;
+        box-shadow: 0 24px 64px rgba(26,18,8,.22);
+        animation: modalUp .2s cubic-bezier(.22,1,.36,1) both;
+        padding: 28px 28px 22px;
+        text-align: center;
+    }
+
+    .confirm-ico {
+        font-size: 2.4rem;
+        margin-bottom: 14px;
+    }
+
+    .confirm-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--ink);
+        margin-bottom: 8px;
+    }
+
+    .confirm-desc {
+        font-size: .84rem;
+        color: var(--text-muted);
+        margin-bottom: 22px;
+        line-height: 1.6;
+    }
+
+    .confirm-btns {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+    }
+
+    /* Empty */
+    .empty-state {
+        padding: 60px 20px;
+        text-align: center;
+    }
+
+        .empty-state .eico {
+            font-size: 3rem;
+            margin-bottom: 14px;
+            opacity: .3;
+        }
+
+        .empty-state h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            color: var(--text-sec);
+            margin-bottom: 6px;
+        }
+
+        .empty-state p {
+            font-size: .82rem;
+            color: var(--text-muted);
+        }
+
+    /* Toast */
+    .toast-wrap {
+        position: fixed;
+        bottom: 22px;
+        right: 22px;
+        padding: 11px 18px;
+        border-radius: 12px;
+        font-size: .84rem;
+        font-weight: 500;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        box-shadow: 0 8px 28px rgba(26,18,8,.18);
+        animation: toastIn .22s ease both;
+    }
+
+    .toast-ok {
+        background: var(--green);
+        color: #fff;
+    }
+
+    .toast-err {
+        background: var(--red);
+        color: #fff;
+    }
+
+    /* Skel */
+    .skel {
+        background: linear-gradient(90deg,#EDE8DF 25%,#F5F1EC 50%,#EDE8DF 75%);
+        background-size: 300% 100%;
+        animation: shimmer 1.4s infinite;
+        border-radius: 6px;
+    }
+
+    /* Keyframes */
+    @@keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0)
+        }
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0
+        }
+
+        to {
+            opacity: 1
+        }
+    }
+
+    @@keyframes modalUp {
+        from {
+            opacity: 0;
+            transform: translateY(16px) scale(.97)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1)
+        }
+    }
+
+    @@keyframes toastIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0)
+        }
+    }
+
+    @@keyframes shimmer {
+        to {
+            background-position: -200% 0
+        }
+    }
+
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg)
+        }
+    }
+
+    ::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--border2);
+        border-radius: 10px;
+    }
+</style>
+
+<div class="adm-shell">
+
+    <!-- ── SIDEBAR ── -->
+    <aside class="adm-sidebar">
+        <div class="adm-logo">
+            <div class="adm-logo-icon"><i class="bi bi-book-half"></i></div>
+            <span class="adm-logo-text">Book<span>Store</span></span>
+            <span class="adm-logo-badge">ADMIN</span>
+        </div>
+        <nav class="adm-nav">
+            <div class="adm-nav-section">
+                <div class="adm-nav-label">Tổng quan</div>
+                <a href="/admin" class="adm-nav-item">
+                    <span class="adm-nav-icon"><i class="bi bi-grid-fill"></i></span> Dashboard
+                </a>
+                <a href="/admin/analytics" class="adm-nav-item">
+                    <span class="adm-nav-icon"><i class="bi bi-bar-chart-line-fill"></i></span> Thống kê
+                </a>
+            </div>
+            <div class="adm-nav-section">
+                <div class="adm-nav-label">Quản lý</div>
+                <a href="/admin/orders" class="adm-nav-item">
+                    <span class="adm-nav-icon"><i class="bi bi-bag-fill"></i></span>
+                    Đơn hàng <span class="adm-nav-badge">12</span>
+                </a>
+                <a href="/admin/books" class="adm-nav-item">
+                    <span class="adm-nav-icon"><i class="bi bi-journals"></i></span> Sách
+                </a>
+                <a href="/admin/authors" class="adm-nav-item">
+                    <span class="adm-nav-icon"><i class="bi bi-person-lines-fill"></i></span> Tác giả
+                </a>
+                <a href="/admin/categories" class="adm-nav-item">
+                    <span class="adm-nav-icon"><i class="bi bi-tags-fill"></i></span> Danh mục
+                </a>
+                <a href="/admin/customers" class="adm-nav-item">
+                    <span class="adm-nav-icon"><i class="bi bi-people-fill"></i></span> Khách hàng
+                </a>
+                <a href="/admin/reviews" class="adm-nav-item">
+                    <span class="adm-nav-icon"><i class="bi bi-star-fill"></i></span>
+                    Đánh giá <span class="adm-nav-badge">3</span>
+                </a>
+            </div>
+            <div class="adm-nav-section">
+                <div class="adm-nav-label">Hệ thống</div>
+                <a href="/admin/promotions" class="adm-nav-item active">
+                    <span class="adm-nav-icon"><i class="bi bi-gift-fill"></i></span> Khuyến mãi
+                </a>
+                <a href="/admin/settings" class="adm-nav-item">
+                    <span class="adm-nav-icon"><i class="bi bi-gear-fill"></i></span> Cài đặt
+                </a>
+            </div>
+        </nav>
+        <div class="adm-sidebar-footer">
+            <div class="adm-user-row">
+                <div class="adm-avatar">AD</div>
+                <div>
+                    <div class="adm-user-name">Admin</div>
+                    <div class="adm-user-role">Super Admin</div>
+                </div>
+                <div style="margin-left:auto;color:var(--text-muted);"><i class="bi bi-three-dots-vertical"></i></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── MAIN ── -->
+    <div class="adm-main">
+
+        <!-- Topbar -->
+        <header class="adm-topbar">
+            <div>
+                <div class="adm-topbar-title">Khuyến mãi</div>
+                <div class="adm-breadcrumb">Admin / <span>Mã giảm giá</span></div>
+            </div>
+            <div class="adm-search">
+                <i class="bi bi-search"></i>
+                <input type="text" placeholder="Tìm mã giảm giá..." @bind="searchText" @bind:event="oninput" />
+            </div>
+            <div class="adm-topbar-actions">
+                <div class="adm-icon-btn"><i class="bi bi-bell"></i><span class="adm-notif-dot"></span></div>
+                <div class="adm-icon-btn"><i class="bi bi-question-circle"></i></div>
+                <div class="adm-avatar" style="width:34px;height:34px;font-size:.75rem;cursor:pointer;">AD</div>
+            </div>
+        </header>
+
+        <div class="adm-body">
+
+            <!-- Page header -->
+            <div class="page-hd">
+                <div>
+                    <h2>Quản lý mã giảm giá</h2>
+                    <p>Tạo và quản lý các mã khuyến mãi cho khách hàng.</p>
+                </div>
+                <div style="display:flex;gap:9px;align-items:center;">
+                    <button class="btn btn-outline" @onclick="LoadData" disabled="@isLoading">
+                        <i class="bi @(isLoading?"bi-arrow-repeat":"bi-arrow-clockwise")"
+                           style="@(isLoading?"animation:spin 1s linear infinite;display:inline-block;":"")"></i>
+                        Làm mới
+                    </button>
+                    <button class="btn btn-primary" @onclick="OpenCreate">
+                        <i class="bi bi-plus-lg"></i> Tạo mã mới
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stat strip -->
+            <div class="stat-strip">
+                <div class="strip-card sc-amber" style="animation-delay:.04s">
+                    <div class="sc-ico"><i class="bi bi-ticket-perforated-fill"></i></div>
+                    <div>
+                        <div class="sc-val">@discounts.Count</div>
+                        <div class="sc-lbl">Tổng mã giảm giá</div>
+                    </div>
+                </div>
+                <div class="strip-card sc-green" style="animation-delay:.08s">
+                    <div class="sc-ico"><i class="bi bi-check-circle-fill"></i></div>
+                    <div>
+                        <div class="sc-val">@discounts.Count(d => GetStatus(d) == "active")</div>
+                        <div class="sc-lbl">Đang hoạt động</div>
+                    </div>
+                </div>
+                <div class="strip-card sc-red" style="animation-delay:.12s">
+                    <div class="sc-ico"><i class="bi bi-x-circle-fill"></i></div>
+                    <div>
+                        <div class="sc-val">@discounts.Count(d => GetStatus(d) == "expired")</div>
+                        <div class="sc-lbl">Đã hết hạn</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main card -->
+            <div class="main-card">
+                <div class="main-card-hd">
+                    <div>
+                        <div class="card-title">Danh sách mã giảm giá</div>
+                        <div class="card-sub">@Filtered.Count() mã · Cập nhật vừa xong</div>
+                    </div>
+                    <div class="seg">
+                        <button class="seg-btn @(filterStatus==""?"on":"")" @onclick='()=>filterStatus=""'>Tất cả</button>
+                        <button class="seg-btn @(filterStatus=="active"?"on":"")" @onclick='()=>filterStatus="active"'>Đang dùng</button>
+                        <button class="seg-btn @(filterStatus=="upcoming"?"on":"")" @onclick='()=>filterStatus="upcoming"'>Sắp tới</button>
+                        <button class="seg-btn @(filterStatus=="expired"?"on":"")" @onclick='()=>filterStatus="expired"'>Hết hạn</button>
+                    </div>
+                </div>
+
+                <!-- Filter bar -->
+                <div class="filter-bar">
+                    <div class="filter-input">
+                        <i class="bi bi-search"></i>
+                        <input type="text" placeholder="Tìm theo mã, mô tả..." @bind="searchText" @bind:event="oninput" />
+                    </div>
+                    @if (!string.IsNullOrEmpty(searchText))
+                    {
+                        <button class="btn btn-outline" style="padding:5px 10px;font-size:.75rem;" @onclick="ClearSearch">
+                            <i class="bi bi-x"></i> Xóa
+                        </button>
+                    }
+                    <span style="font-size:.78rem;color:var(--text-muted);margin-left:auto;">
+                        Hiển thị <strong style="color:var(--text-pri)">@Filtered.Count()</strong> / @discounts.Count mã
+                    </span>
+                </div>
+
+                @if (isLoading)
+                {
+                    <div style="padding:20px;">
+                        @for (int i = 0; i < 5; i++)
+                        {
+                            <div style="display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);align-items:center;">
+                                <div class="skel" style="width:130px;height:28px;"></div>
+                                <div class="skel" style="width:60px;height:22px;border-radius:6px;"></div>
+                                <div class="skel" style="width:80px;height:16px;margin-left:auto;"></div>
+                                <div class="skel" style="width:70px;height:22px;border-radius:20px;"></div>
+                                <div class="skel" style="width:80px;height:5px;border-radius:3px;"></div>
+                                <div class="skel" style="width:70px;height:28px;border-radius:7px;"></div>
+                            </div>
+                        }
+                    </div>
+                }
+                else if (!Filtered.Any())
+                {
+                    <div class="empty-state">
+                        <div class="eico">🎟️</div>
+                        <h3>@(discounts.Any() ? "Không tìm thấy mã phù hợp" : "Chưa có mã giảm giá nào")</h3>
+                        <p>@(discounts.Any() ? "Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm." : "Bắt đầu bằng cách tạo mã giảm giá đầu tiên.")</p>
+                    </div>
+                }
+                else
+                {
+                    <table class="promo-tbl">
+                        <thead>
+                            <tr>
+                                <th>Mã giảm giá</th>
+                                <th>Giảm</th>
+                                <th>Đơn tối thiểu</th>
+                                <th>Thời hạn</th>
+                                <th>Trạng thái</th>
+                                <th>Đã dùng</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var d in Filtered)
+                            {
+                                var status = GetStatus(d);
+                                var statusCls = status switch { "active" => "s-active", "expired" => "s-expired", "upcoming" => "s-upcoming", _ => "s-inactive" };
+                                var statusLbl = status switch { "active" => "Đang dùng", "expired" => "Hết hạn", "upcoming" => "Sắp tới", _ => "Không rõ" };
+                                var usePct = d.MaxUsage > 0 ? Math.Min((int)((double)d.UsedCount / d.MaxUsage * 100), 100) : 0;
+                                <tr>
+                                    <td>
+                                        <span class="code-chip" title="Click để sao chép" @onclick="()=>CopyCode(d.Code)">
+                                            <i class="bi bi-ticket-perforated" style="font-size:.75rem;"></i>
+                                            @d.Code
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (d.DiscountType == "Percentage")
+                                        {
+                                            <span class="disc-badge disc-pct">
+                                                <i class="bi bi-percent" style="font-size:.7rem;margin-right:2px;"></i>@d.DiscountValue%
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="disc-badge disc-fix">
+                                                <i class="bi bi-cash" style="font-size:.7rem;margin-right:2px;"></i>@d.DiscountValue.ToString("#,##0")đ
+                                            </span>
+                                        }
+                                    </td>
+                                    <td style="color:var(--text-muted);font-size:.78rem;">
+                                        @(d.MinOrderAmount > 0 ? d.MinOrderAmount.ToString("#,##0") + "đ" : "—")
+                                    </td>
+                                    <td style="font-size:.78rem;">
+                                        <div style="color:var(--text-sec);">@d.StartDate.ToString("dd/MM/yy")</div>
+                                        <div style="color:var(--text-muted);">→ @d.EndDate.ToString("dd/MM/yy")</div>
+                                    </td>
+                                    <td><span class="status-dot @statusCls">@statusLbl</span></td>
+                                    <td>
+                                        <div style="display:flex;align-items:center;gap:8px;">
+                                            <div class="use-bar"><div class="use-fill" style="width:@(usePct)%"></div></div>
+                                            <span style="font-size:.72rem;color:var(--text-muted);">@d.UsedCount/@(d.MaxUsage > 0 ? d.MaxUsage.ToString() : "∞")</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="act-row">
+                                            <button class="act-btn" title="Chi tiết" @onclick="()=>OpenDetail(d)">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                            <button class="act-btn del" title="Xóa" @onclick="()=>OpenDelete(d)">
+                                                <i class="bi bi-trash3"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── CREATE MODAL ── -->
+@if (showCreate)
+{
+    <div class="modal-backdrop" @onclick="CloseCreate">
+        <div class="modal-box" @onclick:stopPropagation="true">
+            <div class="modal-hd">
+                <div class="modal-title"><i class="bi bi-plus-circle-fill" style="color:var(--amber);margin-right:8px;"></i>Tạo mã giảm giá mới</div>
+                <button class="modal-close" @onclick="CloseCreate"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="modal-body">
+                @if (!string.IsNullOrEmpty(formError))
+                {
+                    <div style="background:var(--red-dim);border:1px solid rgba(192,57,43,.2);border-radius:9px;padding:10px 14px;margin-bottom:16px;font-size:.82rem;color:var(--red);display:flex;gap:8px;align-items:center;">
+                        <i class="bi bi-exclamation-circle-fill"></i>@formError
+                    </div>
+                }
+
+                <div class="form-row full">
+                    <div class="form-group">
+                        <label class="form-label">Mã giảm giá <span>*</span></label>
+                        <input class="form-input @(fieldErr.Contains("Code")?"err":"")" placeholder="VD: SUMMER2026, GIAM10..." @bind="form.Code" style="text-transform:uppercase;font-family:'DM Mono','Courier New',monospace;letter-spacing:.05em;" />
+                        <span class="form-hint">Mã dùng để nhập khi thanh toán (không phân biệt hoa thường)</span>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Loại giảm <span>*</span></label>
+                        <select class="form-select" @bind="form.DiscountType">
+                            <option value="Percentage">Phần trăm (%)</option>
+                            <option value="Fixed">Số tiền cố định (đ)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Giá trị giảm <span>*</span></label>
+                        <input type="number" class="form-input @(fieldErr.Contains("Value")?"err":"")" min="1"
+                               placeholder="@(form.DiscountType=="Percentage"?"VD: 10 (%)":"VD: 50000 (đ)")"
+                               @bind="form.DiscountValue" />
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Đơn tối thiểu (đ)</label>
+                        <input type="number" class="form-input" min="0" placeholder="0 = không giới hạn" @bind="form.MinOrderAmount" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Giảm tối đa (đ)</label>
+                        <input type="number" class="form-input" min="0" placeholder="Áp dụng khi loại % — 0 = không giới hạn" @bind="form.MaxDiscountAmount" />
+                        <span class="form-hint">Chỉ dùng khi loại giảm là phần trăm</span>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Số lượng mã</label>
+                        <input type="number" class="form-input" min="0" placeholder="0 = không giới hạn" @bind="form.Quantity" />
+                    </div>
+                    <div class="form-group" style="visibility:hidden;"></div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Ngày bắt đầu <span>*</span></label>
+                        <input type="date" class="form-input @(fieldErr.Contains("Start")?"err":"")" @bind="form.StartDate" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Ngày kết thúc <span>*</span></label>
+                        <input type="date" class="form-input @(fieldErr.Contains("End")?"err":"")" @bind="form.EndDate" />
+                        @if (fieldErr.Contains("End"))
+                        {
+                            <span class="form-err">Ngày kết thúc phải sau ngày bắt đầu</span>
+                        }
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" @onclick="CloseCreate">Hủy</button>
+                <button class="btn btn-primary" @onclick="SubmitCreate" disabled="@isSaving">
+                    @if (isSaving)
+                    {
+                        <i class="bi bi-arrow-repeat" style="animation:spin 1s linear infinite;display:inline-block;"></i>
+                        <span>Đang tạo...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-check-lg"></i>
+                        <span>Tạo mã</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- ── DETAIL MODAL ── -->
+@if (showDetail && selectedDiscount != null)
+{
+    <div class="modal-backdrop" @onclick="CloseDetail">
+        <div class="modal-box" @onclick:stopPropagation="true">
+            <div class="modal-hd">
+                <div class="modal-title"><i class="bi bi-ticket-perforated-fill" style="color:var(--amber);margin-right:8px;"></i>Chi tiết mã giảm giá</div>
+                <button class="modal-close" @onclick="CloseDetail"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="background:var(--amber-dim);border:2px dashed rgba(212,134,11,.35);border-radius:12px;padding:20px;text-align:center;margin-bottom:20px;">
+                    <div style="font-size:.72rem;font-weight:700;letter-spacing:.1em;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;">Mã giảm giá</div>
+                    <div style="font-family:'DM Mono','Courier New',monospace;font-size:1.8rem;font-weight:800;color:var(--brown);letter-spacing:.1em;">@selectedDiscount.Code</div>
+                    <div style="margin-top:10px;"><span class="status-dot @DetailStatusCls">@DetailStatusLbl</span></div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:12px 14px;">
+                        <div style="font-size:.7rem;color:var(--text-muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Loại giảm</div>
+                        <div style="font-size:.9rem;font-weight:700;color:var(--text-pri);">@(selectedDiscount.DiscountType == "Percentage" ? $"{selectedDiscount.DiscountValue}%" : $"{selectedDiscount.DiscountValue:#,##0}đ")</div>
+                    </div>
+                    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:12px 14px;">
+                        <div style="font-size:.7rem;color:var(--text-muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Đơn tối thiểu</div>
+                        <div style="font-size:.9rem;font-weight:700;color:var(--text-pri);">@(selectedDiscount.MinOrderAmount > 0 ? $"{selectedDiscount.MinOrderAmount:#,##0}đ" : "Không giới hạn")</div>
+                    </div>
+                    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:12px 14px;">
+                        <div style="font-size:.7rem;color:var(--text-muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Ngày bắt đầu</div>
+                        <div style="font-size:.9rem;font-weight:700;color:var(--text-pri);">@selectedDiscount.StartDate.ToString("dd/MM/yyyy")</div>
+                    </div>
+                    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:12px 14px;">
+                        <div style="font-size:.7rem;color:var(--text-muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Ngày kết thúc</div>
+                        <div style="font-size:.9rem;font-weight:700;color:var(--text-pri);">@selectedDiscount.EndDate.ToString("dd/MM/yyyy")</div>
+                    </div>
+                    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:12px 14px;">
+                        <div style="font-size:.7rem;color:var(--text-muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Số lượng</div>
+                        <div style="font-size:.9rem;font-weight:700;color:var(--text-pri);">@(selectedDiscount.Quantity > 0 ? $"{selectedDiscount.Quantity} mã" : "Không giới hạn")</div>
+                    </div>
+                    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:12px 14px;">
+                        <div style="font-size:.7rem;color:var(--text-muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Trạng thái</div>
+                        <div style="font-size:.9rem;font-weight:700;color:var(--text-pri);">@(selectedDiscount.IsActive ? "Kích hoạt" : "Vô hiệu")</div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" @onclick="DetailToDelete">
+                    <i class="bi bi-trash3"></i> Xóa mã
+                </button>
+                <button class="btn btn-outline" @onclick="CloseDetail">Đóng</button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- ── DELETE CONFIRM ── -->
+@if (showDelete && deleteTarget != null)
+{
+    <div class="modal-backdrop" @onclick="()=>showDelete=false">
+        <div class="confirm-box" @onclick:stopPropagation="true">
+            <div class="confirm-ico">🗑️</div>
+            <div class="confirm-title">Xóa mã giảm giá?</div>
+            <div class="confirm-desc">
+                Mã <strong style="font-family:'DM Mono','Courier New',monospace;color:var(--brown);">@deleteTarget.Code</strong> sẽ bị xóa vĩnh viễn.<br />
+                Hành động này không thể hoàn tác.
+            </div>
+            <div class="confirm-btns">
+                <button class="btn btn-outline" @onclick="()=>showDelete=false">Hủy</button>
+                <button class="btn btn-danger" @onclick="ConfirmDelete" disabled="@isDeleting">
+                    @if (isDeleting)
+                    {
+                        <i class="bi bi-arrow-repeat" style="animation:spin 1s linear infinite;display:inline-block;"></i>
+                        <span>Đang xóa...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-trash3"></i>
+
+                        <span>Xóa</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- TOAST -->
+@if (showToast)
+{
+    <div class="toast-wrap @(toastOk?"toast-ok":"toast-err")">
+        <i class="bi @(toastOk?"bi-check-circle-fill":"bi-x-circle-fill")"></i>@toastMsg
+    </div>
+}
+
+@code {
+    // ── State ──
+    private List<DiscountDto> discounts = new();
+    private bool isLoading = true, isSaving = false, isDeleting = false;
+    private bool showCreate = false, showDetail = false, showDelete = false, showToast = false;
+    private string searchText = "", filterStatus = "";
+    private string formError = "", toastMsg = "";
+    private bool toastOk = true;
+    private HashSet<string> fieldErr = new();
+    private DiscountDto? selectedDiscount, deleteTarget;
+    private string accessToken = "";
+
+    // ── Form ──
+    private CreateForm form = new();
+
+    private IEnumerable<DiscountDto> Filtered => discounts
+        .Where(d => string.IsNullOrEmpty(searchText) ||
+                    d.Code.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+        .Where(d => string.IsNullOrEmpty(filterStatus) || GetStatus(d) == filterStatus);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        accessToken = await JS.InvokeAsync<string?>("localStorage.getItem", "accessToken") ?? "";
+        await LoadData();
+        StateHasChanged();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true; StateHasChanged();
+        try
+        {
+            var req = new HttpRequestMessage(HttpMethod.Get, "api/Discount");
+            if (!string.IsNullOrEmpty(accessToken))
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            var resp = await Http.SendAsync(req);
+            if (resp.IsSuccessStatusCode)
+                discounts = await resp.Content.ReadFromJsonAsync<List<DiscountDto>>() ?? new();
+        }
+        catch { }
+        finally { isLoading = false; StateHasChanged(); }
+    }
+
+    private static string GetStatus(DiscountDto d)
+    {
+        var now = DateTime.Today;
+        if (d.StartDate > now) return "upcoming";
+        if (d.EndDate < now) return "expired";
+        return "active";
+    }
+
+    // ── Create ──
+    private void OpenCreate() { form = new CreateForm { StartDate = DateTime.Today, EndDate = DateTime.Today.AddDays(30) }; formError = ""; fieldErr.Clear(); showCreate = true; }
+    private void CloseCreate() => showCreate = false;
+
+    private async Task SubmitCreate()
+    {
+        formError = ""; fieldErr.Clear();
+        if (string.IsNullOrWhiteSpace(form.Code)) { fieldErr.Add("Code"); formError = "Vui lòng nhập mã giảm giá."; return; }
+        if (form.DiscountValue <= 0) { fieldErr.Add("Value"); formError = "Giá trị giảm phải lớn hơn 0."; return; }
+        if (form.EndDate <= form.StartDate) { fieldErr.Add("End"); formError = "Ngày kết thúc phải sau ngày bắt đầu."; return; }
+
+        isSaving = true; StateHasChanged();
+        try
+        {
+            var req = new HttpRequestMessage(HttpMethod.Post, "api/Discount");
+            if (!string.IsNullOrEmpty(accessToken))
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            req.Content = JsonContent.Create(new
+            {
+                code = form.Code.Trim().ToUpper(),
+                discountType = form.DiscountType,
+                discountValue = form.DiscountValue,
+                maxDiscountAmount = form.MaxDiscountAmount,
+                minOrderAmount = form.MinOrderAmount,
+                quantity = form.Quantity,
+                startDate = form.StartDate,
+                endDate = form.EndDate,
+            });
+            var resp = await Http.SendAsync(req);
+            if (resp.IsSuccessStatusCode)
+            {
+                showCreate = false;
+                await LoadData();
+                await Toast("Tạo mã giảm giá thành công!", true);
+            }
+            else
+            {
+                var err = await resp.Content.ReadFromJsonAsync<ErrorDto>();
+                formError = err?.Message ?? "Tạo thất bại. Mã có thể đã tồn tại.";
+            }
+        }
+        catch { formError = "Lỗi kết nối. Vui lòng thử lại."; }
+        finally { isSaving = false; StateHasChanged(); }
+    }
+
+    // ── Detail ──
+    private void OpenDetail(DiscountDto d) { selectedDiscount = d; showDetail = true; }
+    private void CloseDetail() => showDetail = false;
+    private void DetailToDelete() { showDetail = false; if (selectedDiscount != null) OpenDelete(selectedDiscount); }
+
+    private string DetailStatusCls => selectedDiscount == null ? "" : GetStatus(selectedDiscount) switch
+    {
+        "active" => "s-active",
+        "expired" => "s-expired",
+        "upcoming" => "s-upcoming",
+        _ => "s-inactive"
+    };
+
+    private string DetailStatusLbl => selectedDiscount == null ? "" : GetStatus(selectedDiscount) switch
+    {
+        "active" => "Đang hoạt động",
+        "expired" => "Đã hết hạn",
+        "upcoming" => "Sắp có hiệu lực",
+        _ => "—"
+    };
+
+    // ── Delete ──
+    private void OpenDelete(DiscountDto d) { deleteTarget = d; showDelete = true; }
+
+    private async Task ConfirmDelete()
+    {
+        if (deleteTarget == null) return;
+        isDeleting = true; StateHasChanged();
+        try
+        {
+            var req = new HttpRequestMessage(HttpMethod.Delete, $"api/Discount/{deleteTarget.DiscountCodeId}");
+            if (!string.IsNullOrEmpty(accessToken))
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            var resp = await Http.SendAsync(req);
+            if (resp.IsSuccessStatusCode)
+            {
+                showDelete = false;
+                await LoadData();
+                await Toast("Xóa mã giảm giá thành công!", true);
+            }
+            else
+            {
+                showDelete = false;
+                await Toast("Xóa thất bại. Mã đã được sử dụng trong đơn hàng.", false);
+            }
+        }
+        catch { await Toast("Lỗi kết nối.", false); }
+        finally { isDeleting = false; StateHasChanged(); }
+    }
+
+    // ── Helpers ──
+    private void ClearSearch() => searchText = string.Empty;
+
+    private async Task CopyCode(string code)
+    {
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", code);
+        await Toast("Đã sao chép mã: " + code, true);
+    }
+
+    private async Task Toast(string msg, bool ok)
+    {
+        toastMsg = msg; toastOk = ok; showToast = true; StateHasChanged();
+        await Task.Delay(3000);
+        showToast = false; StateHasChanged();
+    }
+
+    // ── DTOs ──
+    private class DiscountDto
+    {
+        // Khớp với DiscountCodeResponseDto từ API
+        public int DiscountCodeId { get; set; }
+        public string Code { get; set; } = "";
+        public string DiscountType { get; set; } = "Percentage";
+        public decimal DiscountValue { get; set; }
+        public decimal? MaxDiscountAmount { get; set; }
+        public decimal MinOrderAmount { get; set; }
+        public int Quantity { get; set; }  // API dùng Quantity thay MaxUsage
+        public bool IsActive { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+
+        // Alias để UI dùng chung
+        public int DiscountId => DiscountCodeId;
+        public int MaxUsage => Quantity;
+        public int UsedCount => 0;              // API chưa trả về, tạm để 0
+    }
+
+    private class ErrorDto { public string? Message { get; set; } }
+
+    private class CreateForm
+    {
+        public string Code { get; set; } = "";
+        public string DiscountType { get; set; } = "Percentage";
+        public decimal DiscountValue { get; set; }
+        public decimal? MaxDiscountAmount { get; set; }  // giảm tối đa (với loại %)
+        public decimal MinOrderAmount { get; set; }
+        public int Quantity { get; set; }  // số lần dùng tối đa
+        public DateTime StartDate { get; set; } = DateTime.Today;
+        public DateTime EndDate { get; set; } = DateTime.Today.AddDays(30);
+    }
+}

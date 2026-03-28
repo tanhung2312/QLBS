@@ -2,8 +2,8 @@
 {
     public static class PaymentMethodConstants
     {
-        public const int COD = 1;
-        public const int VNPay = 2;
+        public const int COD = 2;
+        public const int VNPay = 1;
         public static string GetMethodName(int id)
         {
             return id switch

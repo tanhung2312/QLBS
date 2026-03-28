@@ -10,6 +10,7 @@ using QLBS.Repository.Interfaces;
 using QLBS.Dtos;
 using QLBS.Models;
 using QLBS.Constants;
+using QLBS.Repository.Implementations;
 
 namespace QLBS.Services.Implementations
 {
@@ -103,15 +104,17 @@ namespace QLBS.Services.Implementations
 
                 return new AuthResponseDto
                 {
+                    UserId = account.AccountId,
                     AccessToken = accessToken,
                     RefreshToken = refreshToken,
                     Email = account.Email,
-                    FullName = account.UserProfile?.FullName ?? account.Email
+                    FullName = account.UserProfile?.FullName ?? account.Email,
+                    Role = account.Role?.RoleName ?? ""
                 };
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return null;
+                throw new Exception($"Lỗi đăng nhập: {ex.Message} - {ex.InnerException?.Message}");
             }
         }
 
@@ -150,34 +153,34 @@ namespace QLBS.Services.Implementations
 
         private string GenerateAccessToken(Account account)
         {
-            var secretKey = _configuration["JwtSettings:SecretKey"];
-            var issuer = _configuration["JwtSettings:Issuer"];
-            var audience = _configuration["JwtSettings:Audience"];
+            var secretKey = _configuration["Jwt:Key"];
+            var issuer = _configuration["Jwt:Issuer"];
+            var audience = _configuration["Jwt:Audience"];
 
             if (string.IsNullOrEmpty(secretKey) || secretKey.Length < 32)
             {
-                throw new InvalidOperationException("Cấu hình 'JwtSettings:SecretKey' bị thiếu hoặc quá ngắn (tối thiểu 32 ký tự).");
+                throw new InvalidOperationException("Cấu hình 'Jwt:Key' bị thiếu hoặc quá ngắn (tối thiểu 32 ký tự).");
             }
 
             if (string.IsNullOrEmpty(issuer))
             {
-                throw new InvalidOperationException("Cấu hình 'JwtSettings:Issuer' bị thiếu.");
+                throw new InvalidOperationException("Cấu hình 'Jwt:Issuer' bị thiếu.");
             }
 
             if (string.IsNullOrEmpty(audience))
             {
-                throw new InvalidOperationException("Cấu hình 'JwtSettings:Audience' bị thiếu.");
+                throw new InvalidOperationException("Cấu hình 'Jwt:Audience' bị thiếu.");
             }
 
             var key = Encoding.UTF8.GetBytes(secretKey);
 
             var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, account.AccountId.ToString()),
-                new Claim(ClaimTypes.Email, account.Email),
-                new Claim(ClaimTypes.Role, account.Role?.RoleName ?? QLBSRoles.Customer),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()) 
-            };
+    {
+        new Claim(ClaimTypes.NameIdentifier, account.AccountId.ToString()),
+        new Claim(ClaimTypes.Email, account.Email),
+        new Claim(ClaimTypes.Role, account.Role?.RoleName ?? QLBSRoles.Customer),
+        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+    };
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -274,6 +277,100 @@ namespace QLBS.Services.Implementations
             }
 
             return "Đặt lại mật khẩu thành công";
+        }
+
+        public async Task<AuthResponseDto?> GoogleLoginAsync(
+    string email, string? fullName, string? avatarUrl)
+        {
+            try
+            {
+                // 1. Tìm account theo email
+                var account = await _accountRepository.GetByEmailWithProfileAsync(email);
+
+                if (account == null)
+                {
+                    // 2a. Tạo account + profile mới
+                    var roleId = await _accountRepository.GetRoleIdByNameAsync("Customer");
+                    if (roleId == null)
+                        throw new Exception("Không tìm thấy role Customer.");
+
+                    var newAccount = new Account
+                    {
+                        Email = email,
+                        Password = string.Empty,
+                        RoleId = roleId.Value,
+                        IsActive = true,
+                        IsEmailVerified = true,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+
+                    var newProfile = new UserProfile
+                    {
+                        FullName = fullName ?? email,
+                        AvatarUrl = avatarUrl,
+                        IsDeleted = false
+                    };
+
+                    var created = await _accountRepository
+                        .CreateAccountWithProfileAsync(newAccount, newProfile);
+
+                    if (!created)
+                        throw new Exception("Không thể tạo tài khoản.");
+
+                    // Reload để có Role + UserProfile
+                    account = await _accountRepository.GetByEmailWithProfileAsync(email);
+
+                    if (account == null)
+                        throw new Exception("Lỗi tải tài khoản sau khi tạo.");
+                }
+                else
+                {
+                    // 2b. Cập nhật avatar nếu chưa có
+                    if (account.UserProfile != null
+                        && string.IsNullOrEmpty(account.UserProfile.AvatarUrl)
+                        && !string.IsNullOrEmpty(avatarUrl))
+                    {
+                        account.UserProfile.AvatarUrl = avatarUrl;
+                    }
+
+                    account.IsEmailVerified = true;
+                    account.LastLogin = DateTime.UtcNow;
+                    account.UpdatedAt = DateTime.UtcNow;
+
+                    await _accountRepository.UpdateAccountAsync(account);
+                }
+
+                // 3. Kiểm tra bị khoá không
+                if (!account.IsActive)
+                    throw new UnauthorizedAccessException("Tài khoản đã bị khoá.");
+
+                // 4. Tạo JWT + Refresh Token dùng method có sẵn
+                var accessToken = GenerateAccessToken(account);
+                var refreshToken = GenerateRefreshToken();
+
+                account.RefreshToken = refreshToken;
+                account.UpdatedAt = DateTime.UtcNow;
+                await _accountRepository.UpdateAccountAsync(account);
+
+                return new AuthResponseDto
+                {
+                    UserId = account.AccountId,
+                    AccessToken = accessToken,
+                    RefreshToken = refreshToken,
+                    Email = account.Email,
+                    FullName = account.UserProfile?.FullName ?? fullName ?? email,
+                    Role = account.Role?.RoleName ?? "Customer"
+                };
+            }
+            catch (UnauthorizedAccessException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi Google Login: {ex.Message}");
+            }
         }
     }
 }

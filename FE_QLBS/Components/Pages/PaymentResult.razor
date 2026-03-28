@@ -1,0 +1,830 @@
+﻿@page "/payment-result"
+@rendermode InteractiveServer
+@using System.Net.Http.Json
+@using System.Net.Http.Headers
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<PageTitle>Kết Quả Thanh Toán - BookStore</PageTitle>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background: #FAF7F2;
+        color: #1A1208;
+        margin: 0;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Animations ── */
+    @@keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(28px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    @@keyframes scaleIn {
+        from {
+            opacity: 0;
+            transform: scale(.6);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @@keyframes checkDraw {
+        from {
+            stroke-dashoffset: 80;
+        }
+
+        to {
+            stroke-dashoffset: 0;
+        }
+    }
+
+    @@keyframes ringPulse {
+        0% {
+            transform: scale(1);
+            opacity: .6;
+        }
+
+        100% {
+            transform: scale(1.9);
+            opacity: 0;
+        }
+    }
+
+    @@keyframes confettiFall {
+        0% {
+            transform: translateY(-10px) rotate(0deg);
+            opacity: 1;
+        }
+
+        100% {
+            transform: translateY(120px) rotate(720deg);
+            opacity: 0;
+        }
+    }
+
+    @@keyframes shimmer {
+        0% {
+            background-position: -400px 0;
+        }
+
+        100% {
+            background-position: 400px 0;
+        }
+    }
+
+    @@keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @@keyframes dropIn {
+        from {
+            opacity: 0;
+            transform: translateY(-8px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .fade-up-1 {
+        animation: fadeUp .55s cubic-bezier(.22,1,.36,1) .1s both;
+    }
+
+    .fade-up-2 {
+        animation: fadeUp .55s cubic-bezier(.22,1,.36,1) .25s both;
+    }
+
+    .fade-up-3 {
+        animation: fadeUp .55s cubic-bezier(.22,1,.36,1) .4s both;
+    }
+
+    .fade-up-4 {
+        animation: fadeUp .55s cubic-bezier(.22,1,.36,1) .55s both;
+    }
+
+    .fade-up-5 {
+        animation: fadeUp .55s cubic-bezier(.22,1,.36,1) .7s both;
+    }
+
+    /* ── Success icon ── */
+    .success-icon-wrap {
+        position: relative;
+        width: 96px;
+        height: 96px;
+        margin: 0 auto 24px;
+        animation: scaleIn .5s cubic-bezier(.34,1.56,.64,1) .05s both;
+    }
+
+    .ring-pulse {
+        position: absolute;
+        inset: -8px;
+        border-radius: 50%;
+        border: 3px solid rgba(212,134,11,.4);
+        animation: ringPulse 1.4s ease-out .5s infinite;
+    }
+
+    .ring-pulse-2 {
+        position: absolute;
+        inset: -8px;
+        border-radius: 50%;
+        border: 3px solid rgba(212,134,11,.25);
+        animation: ringPulse 1.4s ease-out .8s infinite;
+    }
+
+    .icon-circle {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #D4860B, #F5A623);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 12px 40px rgba(212,134,11,.45);
+        position: relative;
+        z-index: 1;
+    }
+
+    .check-svg {
+        width: 46px;
+        height: 46px;
+    }
+
+    .check-path {
+        stroke-dasharray: 80;
+        stroke-dashoffset: 80;
+        animation: checkDraw .5s cubic-bezier(.65,0,.35,1) .55s forwards;
+    }
+
+    /* ── Fail icon ── */
+    .fail-icon-wrap {
+        position: relative;
+        width: 96px;
+        height: 96px;
+        margin: 0 auto 24px;
+        animation: scaleIn .5s cubic-bezier(.34,1.56,.64,1) .05s both;
+    }
+
+    .fail-circle {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #C0392B, #E74C3C);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 12px 40px rgba(192,57,43,.35);
+    }
+
+    /* ── Confetti ── */
+    .confetti-wrap {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 160px;
+        overflow: hidden;
+        pointer-events: none;
+    }
+
+    .confetti-dot {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+        animation: confettiFall 1.4s ease-in forwards;
+    }
+
+    /* ── Card ── */
+    .result-card {
+        background: #FFFDF8;
+        border: 1.5px solid #EDE8DF;
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(107,76,42,.10);
+        padding: 48px 40px 40px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .result-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #D4860B, #F5A623, #D4860B);
+            background-size: 400px 100%;
+            animation: shimmer 2.5s linear infinite;
+        }
+
+        .result-card.fail::before {
+            background: linear-gradient(90deg, #C0392B, #E74C3C, #C0392B);
+            background-size: 400px 100%;
+        }
+
+    /* ── Order info row ── */
+    .info-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px dashed #EDE8DF;
+        font-size: .88rem;
+    }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+    .info-label {
+        color: #9B8B7A;
+        font-weight: 500;
+    }
+
+    .info-value {
+        color: #1A1208;
+        font-weight: 700;
+    }
+
+    /* ── Steps ── */
+    .step-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 12px 0;
+        border-bottom: 1px solid #F5F1EC;
+    }
+
+        .step-item:last-child {
+            border-bottom: none;
+        }
+
+    .step-num {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #D4860B, #F5A623);
+        color: #fff;
+        font-size: .72rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        margin-top: 1px;
+    }
+
+    /* ── Action buttons ── */
+    .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        background: linear-gradient(135deg, #6B4C2A, #D4860B);
+        color: #fff;
+        border: none;
+        border-radius: 50px;
+        padding: 14px 32px;
+        font-size: .92rem;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+        transition: opacity .2s, transform .15s;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        box-shadow: 0 6px 24px rgba(107,76,42,.28);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .btn-primary::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 55%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,.15), transparent);
+            transition: left .5s;
+        }
+
+        .btn-primary:hover::after {
+            left: 150%;
+        }
+
+        .btn-primary:hover {
+            opacity: .92;
+            transform: translateY(-2px);
+        }
+
+    .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        background: #fff;
+        color: #6B4C2A;
+        border: 2px solid #EDE8DF;
+        border-radius: 50px;
+        padding: 13px 28px;
+        font-size: .88rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: border-color .2s, background .2s;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+        .btn-secondary:hover {
+            border-color: #D4860B;
+            background: rgba(212,134,11,.04);
+        }
+
+    /* ── Footer link ── */
+    .footer-lnk {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: rgba(255,255,255,.4);
+        text-decoration: none;
+        font-size: .84rem;
+        margin-bottom: 9px;
+        transition: color .15s;
+    }
+
+        .footer-lnk:hover {
+            color: #F5A623;
+        }
+
+    @@keyframes badgePop {
+        0% {
+            transform: scale(0) rotate(-15deg);
+        }
+
+        70% {
+            transform: scale(1.12) rotate(4deg);
+        }
+
+        100% {
+            transform: scale(1) rotate(0deg);
+        }
+    }
+
+    .badge-pop {
+        animation: badgePop .6s cubic-bezier(.34,1.56,.64,1) .9s both;
+    }
+</style>
+
+<!-- TOP BAR -->
+<div style="background:linear-gradient(90deg,#5A3D20,#6B4C2A,#7A5A34);" class="text-white/75 text-[0.78rem] py-1.5">
+    <div class="max-w-7xl mx-auto px-5 flex justify-between items-center flex-wrap gap-2">
+        <div class="flex items-center gap-4">
+            <span class="flex items-center gap-1.5"><i class="bi bi-telephone-fill text-[#F5A623] text-[0.7rem]"></i>0901 234 567</span>
+            <span class="hidden sm:inline opacity-50">|</span>
+            <span class="hidden sm:flex items-center gap-1.5"><i class="bi bi-envelope-fill text-[#F5A623] text-[0.7rem]"></i>bookstore@gmail.com</span>
+        </div>
+        <div class="flex items-center gap-5">
+            <a href="#" class="text-white/70 no-underline hover:text-[#F5A623] transition-colors flex items-center gap-1">
+                <i class="bi bi-box-seam text-[0.7rem]"></i> Theo dõi đơn hàng
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- NAVBAR -->
+<nav class="bg-[#FFFDF8]/95 border-b border-[#EDE8DF] py-3 sticky top-0 z-50"
+     style="backdrop-filter:blur(20px);box-shadow:0 1px 0 rgba(107,76,42,.06),0 4px 24px rgba(107,76,42,.06);">
+    <div class="max-w-7xl mx-auto px-5 flex items-center gap-4">
+        <a href="/" class="font-serif font-bold text-[#6B4C2A] no-underline flex items-center gap-2.5 mr-auto"
+           style="font-family:'Playfair Display',serif;font-size:1.55rem;letter-spacing:-.5px;">
+            <div class="w-9 h-9 rounded-[10px] flex items-center justify-center text-white text-[1rem] flex-shrink-0"
+                 style="background:linear-gradient(135deg,#D4860B,#F5A623);box-shadow:0 4px 12px rgba(212,134,11,.35);">
+                <i class="bi bi-book-half"></i>
+            </div>
+            Book<span style="color:#D4860B;">Store</span>
+        </a>
+        <div class="flex items-center gap-2">
+            @if (!isLoggedIn)
+            {
+                <a href="/login" class="flex items-center gap-2 bg-[#1A1208] text-white rounded-full px-5 py-[0.45rem] text-[0.84rem] font-semibold no-underline hover:bg-[#D4860B] transition-colors"
+                   style="box-shadow:0 2px 10px rgba(26,18,8,.2);">
+                    <i class="bi bi-person text-sm"></i>Đăng nhập
+                </a>
+            }
+            else
+            {
+                <div class="relative">
+                    <button class="w-9 h-9 rounded-full flex items-center justify-center text-white text-[.78rem] font-bold cursor-pointer border-0"
+                            style="background:linear-gradient(135deg,#D4860B,#F5A623);box-shadow:0 2px 10px rgba(212,134,11,.3);"
+                            @onclick="ToggleDropdown">
+                        @GetInitials(userFullName)
+                    </button>
+                    @if (showDropdown)
+                    {
+                        <div class="absolute top-[calc(100%+10px)] right-0 bg-[#FFFDF8] border border-[#EDE8DF] rounded-2xl min-w-[210px] z-[9999] overflow-hidden"
+                             style="box-shadow:0 8px 32px rgba(107,76,42,.14);animation:dropIn .18s ease both;">
+                            <div class="px-4 py-3.5 border-b border-[#EDE8DF]" style="background:linear-gradient(135deg,rgba(212,134,11,.06),transparent);">
+                                <div class="text-[.88rem] font-bold text-[#1A1208] truncate">@userFullName</div>
+                                <div class="text-[.72rem] text-[#9B8B7A] truncate">@userEmail</div>
+                            </div>
+                            <a href="/profile?tab=orders" class="flex items-center gap-2.5 px-4 py-2.5 text-[.84rem] font-medium text-[#9B8B7A] no-underline hover:bg-[#D4860B]/10 hover:text-[#6B4C2A] transition-colors">
+                                <i class="bi bi-bag-check text-[#D4860B]"></i> Đơn hàng của tôi
+                            </a>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</nav>
+
+<!-- BREADCRUMB -->
+<div style="background:#FFFDF8;border-bottom:1px solid #EDE8DF;" class="py-2.5">
+    <div class="max-w-7xl mx-auto px-5">
+        <div class="flex items-center gap-2" style="font-size:.82rem;color:#9B8B7A;">
+            <a href="/" class="no-underline font-medium" style="color:#D4860B;">Trang chủ</a>
+            <i class="bi bi-chevron-right" style="font-size:.6rem;"></i>
+            <a href="/cart" class="no-underline font-medium" style="color:#D4860B;">Giỏ hàng</a>
+            <i class="bi bi-chevron-right" style="font-size:.6rem;"></i>
+            <span style="color:#1A1208;font-weight:600;">Kết quả thanh toán</span>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN -->
+<section style="background:#FAF7F2;min-height:80vh;" class="py-14 pb-24">
+    <div class="max-w-2xl mx-auto px-5">
+
+        @if (isSuccess)
+        {
+            <!-- ── SUCCESS ── -->
+            <div class="result-card fade-up-1" style="position:relative;">
+
+                <!-- Confetti -->
+                <div class="confetti-wrap">
+                    @foreach (var c in confettiItems)
+                    {
+                        <div class="confetti-dot"
+                             style="left:@(c.Left)%;top:-10px;background:@(c.Color);width:@(c.Size)px;height:@(c.Size)px;border-radius:@(c.Round);animation-delay:@(c.Delay)s;animation-duration:@(c.Duration)s;"></div>
+                    }
+                </div>
+
+                <!-- Icon -->
+                <div class="success-icon-wrap">
+                    <div class="ring-pulse"></div>
+                    <div class="ring-pulse-2"></div>
+                    <div class="icon-circle">
+                        <svg class="check-svg" viewBox="0 0 46 46" fill="none">
+                            <path class="check-path"
+                                  d="M10 24 L20 34 L36 14"
+                                  stroke="white" stroke-width="4.5"
+                                  stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Heading -->
+                <div class="fade-up-2">
+                    <div class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-4 badge-pop"
+                         style="background:rgba(212,134,11,.1);border:1.5px solid rgba(212,134,11,.25);">
+                        <i class="bi bi-stars" style="color:#D4860B;font-size:.85rem;"></i>
+                        <span style="font-size:.75rem;font-weight:700;color:#D4860B;text-transform:uppercase;letter-spacing:.06em;">Thanh toán thành công</span>
+                    </div>
+                    <h1 style="font-family:'Playfair Display',serif;font-size:2rem;font-weight:800;color:#1A1208;margin:0 0 8px;line-height:1.2;">
+                        Đơn hàng đã được xác nhận!
+                    </h1>
+                    <p style="color:#7A6A5A;font-size:.92rem;line-height:1.7;margin:0 0 28px;">
+                        Cảm ơn bạn đã mua sắm tại <strong style="color:#6B4C2A;">BookStore</strong>.<br />
+                        Chúng tôi đang chuẩn bị đơn hàng của bạn.
+                    </p>
+                </div>
+
+                <!-- Order info box -->
+                <div class="fade-up-3" style="background:#FAF7F2;border:1.5px solid #EDE8DF;border-radius:16px;padding:20px 24px;margin-bottom:28px;text-align:left;">
+                    <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9B8B7A;margin-bottom:14px;display:flex;align-items:center;gap:6px;">
+                        <i class="bi bi-receipt" style="color:#D4860B;"></i>Chi tiết đơn hàng
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label"><i class="bi bi-hash me-1"></i>Mã đơn hàng</span>
+                        <span class="info-value" style="font-family:'Playfair Display',serif;color:#D4860B;font-size:1rem;">#@orderId</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label"><i class="bi bi-calendar3 me-1"></i>Ngày đặt</span>
+                        <span class="info-value">@DateTime.Now.ToString("dd/MM/yyyy HH:mm")</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label"><i class="bi bi-credit-card me-1"></i>Phương thức</span>
+                        <span class="info-value flex items-center gap-1.5">
+                            <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold"
+                                  style="background:rgba(26,115,232,.1);color:#1a73e8;">
+                                <i class="bi bi-credit-card-2-front"></i> VNPay
+                            </span>
+                        </span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label"><i class="bi bi-shield-check me-1"></i>Trạng thái</span>
+                        <span class="info-value">
+                            <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold"
+                                  style="background:#E8F5E9;color:#2E7D32;">
+                                <i class="bi bi-check-circle-fill"></i> Đã thanh toán
+                            </span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Next steps -->
+                <div class="fade-up-4" style="background:#FFFDF8;border:1.5px solid #EDE8DF;border-radius:16px;padding:20px 24px;margin-bottom:32px;text-align:left;">
+                    <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9B8B7A;margin-bottom:14px;display:flex;align-items:center;gap:6px;">
+                        <i class="bi bi-lightning-charge-fill" style="color:#D4860B;"></i>Bước tiếp theo
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">1</div>
+                        <div>
+                            <div style="font-weight:700;font-size:.88rem;color:#1A1208;margin-bottom:2px;">Xác nhận qua email</div>
+                            <div style="font-size:.8rem;color:#9B8B7A;">Email xác nhận đơn hàng đã được gửi đến hộp thư của bạn.</div>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">2</div>
+                        <div>
+                            <div style="font-weight:700;font-size:.88rem;color:#1A1208;margin-bottom:2px;">Đóng gói & xử lý</div>
+                            <div style="font-size:.8rem;color:#9B8B7A;">Đơn hàng sẽ được đóng gói cẩn thận trong vòng 1–2 ngày làm việc.</div>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">3</div>
+                        <div>
+                            <div style="font-weight:700;font-size:.88rem;color:#1A1208;margin-bottom:2px;">Giao hàng tận nơi</div>
+                            <div style="font-size:.8rem;color:#9B8B7A;">Dự kiến nhận hàng trong 3–5 ngày. Bạn sẽ nhận SMS thông báo từ đơn vị vận chuyển.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="fade-up-5 flex flex-wrap justify-center gap-3">
+                    <a href="/profile?tab=orders" class="btn-primary">
+                        <i class="bi bi-bag-check-fill"></i>Xem đơn hàng của tôi
+                    </a>
+                    <a href="/" class="btn-secondary">
+                        <i class="bi bi-shop"></i>Tiếp tục mua sắm
+                    </a>
+                </div>
+
+                <!-- Trust badges -->
+                <div class="fade-up-5 flex justify-center gap-6 mt-8 pt-6" style="border-top:1px dashed #EDE8DF;">
+                    @foreach (var (ico, txt) in new[]{
+                ("bi-shield-check-fill","Bảo mật SSL"),
+                ("bi-headset","Hỗ trợ 24/7"),
+                ("bi-arrow-repeat","Đổi trả 7 ngày")
+                })
+                    {
+                        <div class="flex items-center gap-1.5 text-xs" style="color:#9B8B7A;">
+                            <i class="bi @ico" style="color:#D4860B;"></i>@txt
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <!-- ── FAILURE ── -->
+            <div class="result-card fail fade-up-1">
+
+                <!-- Icon -->
+                <div class="fail-icon-wrap">
+                    <div class="fail-circle">
+                        <i class="bi bi-x-lg" style="color:white;font-size:2rem;font-weight:900;"></i>
+                    </div>
+                </div>
+
+                <div class="fade-up-2">
+                    <div class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-4"
+                         style="background:rgba(192,57,43,.08);border:1.5px solid rgba(192,57,43,.2);">
+                        <i class="bi bi-exclamation-triangle-fill" style="color:#C0392B;font-size:.8rem;"></i>
+                        <span style="font-size:.75rem;font-weight:700;color:#C0392B;text-transform:uppercase;letter-spacing:.06em;">Thanh toán thất bại</span>
+                    </div>
+                    <h1 style="font-family:'Playfair Display',serif;font-size:2rem;font-weight:800;color:#1A1208;margin:0 0 8px;line-height:1.2;">
+                        Giao dịch không thành công
+                    </h1>
+                    <p style="color:#7A6A5A;font-size:.92rem;line-height:1.7;margin:0 0 28px;">
+                        Rất tiếc, thanh toán của bạn chưa được xử lý.<br />
+                        Vui lòng thử lại hoặc chọn phương thức thanh toán khác.
+                    </p>
+                </div>
+
+                <!-- Error details -->
+                <div class="fade-up-3" style="background:#FFF5F5;border:1.5px solid #FFCDD2;border-radius:16px;padding:20px 24px;margin-bottom:28px;text-align:left;">
+                    <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#C0392B;margin-bottom:14px;display:flex;align-items:center;gap:6px;">
+                        <i class="bi bi-info-circle-fill"></i>Thông tin lỗi
+                    </div>
+                    @if (!string.IsNullOrEmpty(orderId))
+                    {
+                        <div class="info-row">
+                            <span class="info-label">Mã đơn hàng</span>
+                            <span class="info-value">#@orderId</span>
+                        </div>
+                    }
+                    <div class="info-row">
+                        <span class="info-label">Lý do</span>
+                        <span class="info-value" style="color:#C0392B;">@GetFailReason()</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Thời gian</span>
+                        <span class="info-value">@DateTime.Now.ToString("dd/MM/yyyy HH:mm")</span>
+                    </div>
+                </div>
+
+                <!-- Tips -->
+                <div class="fade-up-4" style="background:#FFF8F0;border:1.5px solid rgba(212,134,11,.2);border-radius:16px;padding:20px 24px;margin-bottom:32px;text-align:left;">
+                    <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9B8B7A;margin-bottom:14px;display:flex;align-items:center;gap:6px;">
+                        <i class="bi bi-lightbulb-fill" style="color:#D4860B;"></i>Gợi ý xử lý
+                    </div>
+                    @foreach (var tip in new[] {
+                "Kiểm tra số dư tài khoản / hạn mức thẻ",
+                "Đảm bảo thông tin thẻ nhập đúng và chưa hết hạn",
+                "Thử lại sau vài phút nếu lỗi tạm thời",
+                "Liên hệ ngân hàng nếu vấn đề vẫn tiếp tục"
+                })
+                    {
+                        <div class="flex items-start gap-2.5 mb-2.5 text-sm" style="color:#6B4C2A;">
+                            <i class="bi bi-check2-circle flex-shrink-0 mt-0.5" style="color:#D4860B;"></i>@tip
+                        </div>
+                    }
+                </div>
+
+                <!-- Actions -->
+                <div class="fade-up-5 flex flex-wrap justify-center gap-3">
+                    <a href="/cart" class="btn-primary">
+                        <i class="bi bi-arrow-repeat"></i>Thử thanh toán lại
+                    </a>
+                    <a href="/" class="btn-secondary">
+                        <i class="bi bi-house"></i>Về trang chủ
+                    </a>
+                </div>
+
+                <!-- Support -->
+                <div class="fade-up-5 mt-8 pt-6 text-center" style="border-top:1px dashed #EDE8DF;">
+                    <p class="text-xs" style="color:#9B8B7A;">
+                        Cần hỗ trợ?
+                        <a href="mailto:bookstore@gmail.com" style="color:#D4860B;font-weight:600;text-decoration:none;">bookstore@gmail.com</a>
+                        hoặc gọi <a href="tel:0901234567" style="color:#D4860B;font-weight:600;text-decoration:none;">0901 234 567</a>
+                    </p>
+                </div>
+            </div>
+        }
+
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer style="background:#1A1208;" class="pt-12">
+    <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+            <div>
+                <a href="/" class="flex items-center gap-2.5 no-underline mb-4">
+                    <div style="width:38px;height:38px;background:#D4860B;border-radius:10px;"
+                         class="flex items-center justify-center text-white text-lg flex-shrink-0">
+                        <i class="bi bi-book-half"></i>
+                    </div>
+                    <span style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:800;color:#fff;">BookStore</span>
+                </a>
+                <p class="text-xs leading-loose" style="color:rgba(255,255,255,.45);">Nơi quy tụ kho tàng tri thức nhân loại.</p>
+            </div>
+            <div>
+                <div class="text-xs font-bold uppercase tracking-widest mb-4" style="color:rgba(255,255,255,.35);">Hỗ trợ</div>
+                @foreach (var l in new[] { "Hướng dẫn mua hàng", "Chính sách đổi trả", "Liên hệ chúng tôi" })
+                {
+                    <a href="#" class="footer-lnk"><i class="bi bi-chevron-right" style="font-size:.6rem;"></i>@l</a>
+                }
+            </div>
+            <div>
+                <div class="text-xs font-bold uppercase tracking-widest mb-4" style="color:rgba(255,255,255,.35);">Liên hệ</div>
+                @foreach (var (ico, txt) in new[] { ("bi-geo-alt-fill", "123 Nguyễn Huệ, Quận 1, TP.HCM"), ("bi-telephone-fill", "0901 234 567"), ("bi-envelope-fill", "bookstore@gmail.com") })
+                {
+                    <div class="flex items-start gap-2.5 mb-2 text-xs" style="color:rgba(255,255,255,.45);">
+                        <i class="bi @ico flex-shrink-0 mt-0.5" style="color:#D4860B;"></i>@txt
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="flex flex-wrap justify-between items-center py-5 mt-8 border-t gap-3"
+             style="border-color:rgba(255,255,255,.07);">
+            <p class="text-xs m-0" style="color:rgba(255,255,255,.28);">&copy; @DateTime.Now.Year BookStore. Tất cả quyền được bảo lưu.</p>
+        </div>
+    </div>
+</footer>
+
+@code {
+    private bool isSuccess = true;
+    private string orderId = "";
+    private string reason = "";
+    private string errorCode = "";
+
+    private bool isLoggedIn = false;
+    private string userFullName = "";
+    private string userEmail = "";
+    private bool showDropdown = false;
+
+    // Confetti data
+    private record ConfettiItem(double Left, string Color, int Size, string Round, double Delay, double Duration);
+    private List<ConfettiItem> confettiItems = new();
+
+    private static readonly string[] ConfettiColors = { "#D4860B", "#F5A623", "#6B4C2A", "#2E7D32", "#1a73e8", "#E74C3C", "#F5A623" };
+
+    protected override void OnInitialized()
+    {
+        var uri = new Uri(Navigation.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        isSuccess = query["success"]?.ToLower() == "true";
+        orderId = query["orderId"] ?? "";
+        reason = query["reason"] ?? "";
+        errorCode = query["code"] ?? "";
+
+        // Strip timestamp from orderId if format is "id_timestamp"
+        if (orderId.Contains('_'))
+            orderId = orderId.Split('_')[0];
+
+        // Generate confetti only for success
+        if (isSuccess)
+        {
+            var rng = new Random(42);
+            for (int i = 0; i < 28; i++)
+            {
+                confettiItems.Add(new ConfettiItem(
+                    Left: rng.NextDouble() * 100,
+                    Color: ConfettiColors[rng.Next(ConfettiColors.Length)],
+                    Size: rng.Next(6, 12),
+                    Round: rng.Next(2) == 0 ? "50%" : "2px",
+                    Delay: rng.NextDouble() * .8,
+                    Duration: 1.2 + rng.NextDouble() * .8
+                ));
+            }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        userFullName = await JS.InvokeAsync<string?>("localStorage.getItem", "userFullName") ?? "";
+        userEmail = await JS.InvokeAsync<string?>("localStorage.getItem", "userEmail") ?? "";
+        if (!string.IsNullOrEmpty(userFullName)) isLoggedIn = true;
+        StateHasChanged();
+    }
+
+    private string GetFailReason() => reason switch
+    {
+        "invalid_signature" => "Chữ ký không hợp lệ",
+        "update_failed" => "Cập nhật đơn hàng thất bại",
+        "vnpay_error" => $"Lỗi VNPay (code: {errorCode})",
+        _ => "Giao dịch bị từ chối"
+    };
+
+    private void ToggleDropdown() => showDropdown = !showDropdown;
+
+    private static string GetInitials(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return "?";
+        var parts = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length == 1 ? parts[0][..1].ToUpper() : $"{parts[0][..1]}{parts[^1][..1]}".ToUpper();
+    }
+}

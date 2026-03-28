@@ -8,40 +8,44 @@ using QLBS.Repository.Interfaces;
 using QLBS.Repository.Implementations;
 using QLBS.Services.Interfaces;
 using QLBS.Services.Implementations;
-using CloudinaryDotNet;
 using QLBS.Helpers;
+using QLBS.Hubs;
+using CloudinaryDotNet;
+using Microsoft.AspNetCore.Authentication.Cookies;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ── Cloudinary ────────────────────────────────────────────────────────────────
 var cloudinarySection = builder.Configuration.GetSection("CloudinarySettings");
 var account = new CloudinaryDotNet.Account(
     cloudinarySection["CloudName"],
     cloudinarySection["ApiKey"],
     cloudinarySection["ApiSecret"]
 );
-
-// Đăng ký Cloudinary như một Singleton hoặc Scoped
 Cloudinary cloudinary = new Cloudinary(account);
 builder.Services.AddSingleton(cloudinary);
 
+// ── CORS — bắt buộc AllowCredentials() cho SignalR ───────────────────────────
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowBlazorOrigin",
-        policy =>
-        {
-            policy.WithOrigins("https://localhost:7241", "http://localhost:5285") 
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
-        });
+    options.AddPolicy("AllowBlazorOrigin", policy =>
+    {
+        policy.WithOrigins("https://localhost:7241", "http://localhost:5285")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // ← THÊM DÒNG NÀY
+    });
 });
 
 builder.Services.AddControllers();
-
+builder.Services.AddSignalR();
 builder.Services.AddEndpointsApiExplorer();
+
+// ── Swagger ───────────────────────────────────────────────────────────────────
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "QLCHBS API", Version = "v1" });
-
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -54,11 +58,7 @@ builder.Services.AddSwaggerGen(c =>
         {
             new OpenApiSecurityScheme
             {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                },
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" },
                 Scheme = "oauth2",
                 Name = "Bearer",
                 In = ParameterLocation.Header,
@@ -68,10 +68,11 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// ── Database ──────────────────────────────────────────────────────────────────
 builder.Services.AddDbContext<QLBSDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddSignalR();
 
+// ── Services ──────────────────────────────────────────────────────────────────
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
@@ -91,11 +92,18 @@ builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IVnPayService, VnPayService>();
 builder.Services.Configure<VnPaySettings>(builder.Configuration.GetSection("VnPay"));
-builder.Services.AddHttpClient<IGhnService, GhnService>();
+builder.Services.AddHttpClient<IGhnService, GhnService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(15);
+});
 builder.Services.Configure<GhnSettings>(builder.Configuration.GetSection("GhnSettings"));
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<IFavoriteBookRepository, FavoriteBookRepository>();
+builder.Services.AddScoped<IFavoriteBookService, FavoriteBookService>();
+builder.Services.Configure<GoogleAuthSettings>(builder.Configuration.GetSection("GoogleAuth"));
 
+// ── JWT Authentication + SignalR token support ────────────────────────────────
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -107,18 +115,46 @@ builder.Services.AddAuthentication(options =>
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
-
-        ValidateIssuer = true,  
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
+        ValidateIssuer = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
-
         ValidateAudience = true,
         ValidAudience = builder.Configuration["Jwt:Audience"],
-
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero
     };
+
+    // ← BẮT BUỘC cho SignalR: đọc token từ query string của WebSocket
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+
+            if (!string.IsNullOrEmpty(accessToken) &&
+                path.StartsWithSegments("/notificationHub"))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
+    };
+})
+.AddCookie()
+.AddGoogle(options =>
+{
+    options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.ClientId = builder.Configuration["GoogleAuth:ClientId"]!;
+    options.ClientSecret = builder.Configuration["GoogleAuth:ClientSecret"]!;
+    options.CallbackPath = "/signin-google"; // Google redirect về đây
+
+    // Lấy thêm thông tin avatar
+    options.Scope.Add("profile");
+    options.SaveTokens = true;
 });
+
 
 var app = builder.Build();
 
@@ -130,13 +166,15 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors("AllowBlazorOrigin");
+app.UseCors("AllowBlazorOrigin"); // ← phải đứng TRƯỚC Authentication
+
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
+// ← THÊM DÒNG NÀY: đăng ký route cho SignalR Hub
+app.MapHub<NotificationHub>("/notificationHub");
+
 app.Run();
-
-

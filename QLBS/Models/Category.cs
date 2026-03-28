@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QLBS.Models
 {
-    [Table("Categorie")]
+    [Table("Category")]
     public class Category
     {
         public int CategoryId { get; set; }

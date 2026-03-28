@@ -1,0 +1,888 @@
+﻿@page "/category/{Slug}"
+@rendermode InteractiveServer
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+
+<PageTitle>@(categoryName != "" ? categoryName + " - BookStore" : "Danh mục - BookStore")</PageTitle>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+    :root {
+        --ink: #0D0B08;
+        --gold: #C9960A;
+        --gold2: #E8AF1A;
+        --sand: #EAE3D9;
+        --surface: #F9F6F1;
+        --card: #FFFFFF;
+        --muted: #7C6F5E;
+        --pale: #B0A496;
+        --fog: rgba(249,246,241,0.96);
+    }
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: 'Outfit', sans-serif;
+        background: var(--surface);
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+    }
+
+    ::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--surface);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--sand);
+        border-radius: 8px;
+    }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gold);
+        }
+
+    @@keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0)
+        }
+    }
+
+    @@keyframes shimmer {
+        0% {
+            background-position: -600px 0
+        }
+
+        100% {
+            background-position: 600px 0
+        }
+    }
+
+    @@keyframes scaleIn {
+        from {
+            opacity: 0;
+            transform: scale(.94)
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1)
+        }
+    }
+
+    @@keyframes glowRing {
+        0%, 100% {
+            box-shadow: 0 0 0 0 rgba(201,150,10,.3)
+        }
+
+        50% {
+            box-shadow: 0 0 0 8px rgba(201,150,10,0)
+        }
+    }
+
+    .a1 {
+        animation: fadeUp .5s cubic-bezier(.22,1,.36,1) .04s both
+    }
+
+    .a2 {
+        animation: fadeUp .5s cubic-bezier(.22,1,.36,1) .10s both
+    }
+
+    .a3 {
+        animation: fadeUp .5s cubic-bezier(.22,1,.36,1) .16s both
+    }
+
+    .skel {
+        background: linear-gradient(90deg,#EAE3D9 25%,#F5F0EA 50%,#EAE3D9 75%);
+        background-size: 600px 100%;
+        animation: shimmer 1.5s infinite;
+        border-radius: 10px;
+    }
+
+    .nav-a {
+        color: rgba(13,11,8,.5);
+        text-decoration: none;
+        font-size: .85rem;
+        font-weight: 500;
+        padding: 6px 14px;
+        border-radius: 8px;
+        transition: all .15s;
+    }
+
+        .nav-a:hover {
+            color: var(--ink);
+            background: rgba(13,11,8,.05);
+        }
+
+        .nav-a.active {
+            color: var(--gold);
+        }
+
+    .hero-bg {
+        background: linear-gradient(145deg,#0D0B08 0%,#221810 50%,#3A2415 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .hero-bg::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 60% 50% at 80% 50%,rgba(201,150,10,.18) 0%,transparent 70%), radial-gradient(ellipse 40% 60% at 10% 80%,rgba(201,150,10,.08) 0%,transparent 60%);
+            pointer-events: none;
+        }
+
+        .hero-bg::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px), linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+            background-size: 48px 48px;
+            pointer-events: none;
+        }
+
+    .filter-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 16px;
+        border-radius: 50px;
+        font-size: .78rem;
+        font-weight: 600;
+        border: 1.5px solid var(--sand);
+        background: var(--card);
+        color: var(--muted);
+        cursor: pointer;
+        transition: all .18s;
+        white-space: nowrap;
+        font-family: 'Outfit',sans-serif;
+    }
+
+        .filter-pill:hover, .filter-pill.active {
+            border-color: var(--gold);
+            color: #8C6A00;
+            background: rgba(201,150,10,.08);
+        }
+
+    .book-card {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        background: var(--card);
+        border: 1px solid rgba(234,227,217,.7);
+        border-radius: 18px;
+        overflow: hidden;
+        transition: all .3s cubic-bezier(.22,1,.36,1);
+        box-shadow: 0 1px 2px rgba(13,11,8,.04),0 4px 12px rgba(13,11,8,.05);
+    }
+
+        .book-card:hover {
+            transform: translateY(-7px);
+            border-color: rgba(201,150,10,.3);
+            box-shadow: 0 12px 32px rgba(13,11,8,.1),0 0 0 1px rgba(201,150,10,.15);
+        }
+
+    .book-cover {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 2/3;
+        background: linear-gradient(135deg,#EAE3D9,#DDD5C8);
+        overflow: hidden;
+    }
+
+        .book-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform .4s cubic-bezier(.22,1,.36,1);
+        }
+
+    .book-card:hover .book-cover img {
+        transform: scale(1.06);
+    }
+
+    .cover-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top,rgba(13,11,8,.65) 0%,transparent 55%);
+        opacity: 0;
+        transition: opacity .25s;
+        display: flex;
+        align-items: flex-end;
+        padding: 12px;
+    }
+
+    .book-card:hover .cover-overlay {
+        opacity: 1;
+    }
+
+    .no-cover {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.8rem;
+        color: var(--pale);
+    }
+
+    .out-badge {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        background: #C94444;
+        color: #fff;
+        font-size: .58rem;
+        font-weight: 800;
+        letter-spacing: .05em;
+        padding: 3px 9px;
+        border-radius: 50px;
+        text-transform: uppercase;
+    }
+
+    .book-body {
+        padding: 13px 14px 15px;
+    }
+
+    .book-title {
+        font-family: 'Playfair Display',serif;
+        font-size: .94rem;
+        font-weight: 700;
+        color: var(--ink);
+        line-height: 1.3;
+        margin-bottom: 4px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .book-author {
+        font-size: .74rem;
+        color: var(--muted);
+        margin-bottom: 10px;
+    }
+
+    .book-price {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--gold);
+    }
+
+    .book-price-out {
+        font-size: .72rem;
+        font-weight: 700;
+        color: #C94444;
+    }
+
+    .pg-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        font-size: .82rem;
+        font-weight: 600;
+        border: 1.5px solid var(--sand);
+        background: var(--card);
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all .18s;
+        font-family: 'Outfit',sans-serif;
+    }
+
+        .pg-btn:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: rgba(201,150,10,.06);
+        }
+
+        .pg-btn.on {
+            border-color: var(--gold);
+            background: var(--gold);
+            color: #fff;
+        }
+
+        .pg-btn.off {
+            opacity: .4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+    .tag-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 12px;
+        border-radius: 50px;
+        background: rgba(201,150,10,.15);
+        border: 1px solid rgba(201,150,10,.3);
+        color: #E8AF1A;
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .pdot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--gold2);
+        display: inline-block;
+        animation: glowRing 2.5s ease-in-out infinite;
+    }
+
+    .ft-a {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: rgba(255,255,255,.3);
+        text-decoration: none;
+        font-size: .8rem;
+        margin-bottom: 9px;
+        transition: color .14s;
+    }
+
+        .ft-a:hover {
+            color: var(--gold2);
+        }
+
+    .book-item {
+        animation: scaleIn .4s cubic-bezier(.22,1,.36,1) both;
+    }
+</style>
+
+<!-- TOP STRIP -->
+<div class="py-1.5" style="background:#0D0B08;">
+    <div class="max-w-7xl mx-auto px-5 flex justify-between items-center flex-wrap gap-2">
+        <div class="flex items-center gap-4" style="color:rgba(255,255,255,.38);font-size:.73rem;">
+            <span class="flex items-center gap-1.5">
+                <i class="bi bi-telephone-fill" style="color:var(--gold2);font-size:.6rem;"></i>0901 234 567
+            </span>
+            <span class="hidden sm:flex items-center gap-1.5">
+                <i class="bi bi-envelope-fill" style="color:var(--gold2);font-size:.6rem;"></i>bookstore@@gmail.com
+            </span>
+        </div>
+        <a href="#" class="no-underline flex items-center gap-1.5" style="color:rgba(255,255,255,.3);font-size:.73rem;">
+            <i class="bi bi-box-seam" style="font-size:.6rem;"></i>Theo dõi đơn hàng
+        </a>
+    </div>
+</div>
+
+<!-- NAVBAR -->
+<nav class="py-3 sticky top-0 z-50" style="background:var(--fog);border-bottom:1px solid var(--sand);backdrop-filter:blur(24px);">
+    <div class="max-w-7xl mx-auto px-5 flex items-center gap-4">
+        <a href="/" class="no-underline flex items-center gap-2.5 mr-auto lg:mr-0 flex-shrink-0"
+           style="font-family:'Playfair Display',serif;font-size:1.48rem;color:var(--ink);">
+            <div class="w-9 h-9 rounded-[11px] flex items-center justify-center text-white text-sm flex-shrink-0"
+                 style="background:linear-gradient(135deg,var(--gold),var(--gold2));box-shadow:0 3px 10px rgba(201,150,10,.35);">
+                <i class="bi bi-book-half"></i>
+            </div>
+            Book<span style="color:var(--gold);">Store</span>
+        </a>
+        <div class="hidden lg:flex items-center gap-0.5 mx-auto">
+            <a href="/" class="nav-a">Trang Chủ</a>
+            <a href="/categories" class="nav-a active">Danh Mục</a>
+            <a href="/books/new" class="nav-a">Sách Mới</a>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+            <a href="/cart" class="relative w-9 h-9 rounded-[10px] flex items-center justify-center text-sm no-underline"
+               style="background:var(--surface);border:1px solid var(--sand);color:var(--ink);">
+                <i class="bi bi-bag"></i>
+            </a>
+            <a href="/profile" class="flex items-center gap-2 text-white rounded-[10px] px-4 py-[8px] text-sm font-semibold no-underline"
+               style="background:var(--ink);">
+                <i class="bi bi-person text-sm"></i><span class="hidden sm:inline">Hồ sơ</span>
+            </a>
+        </div>
+    </div>
+</nav>
+
+<!-- HERO BANNER -->
+<section class="hero-bg py-14">
+    <div class="max-w-7xl mx-auto px-5 relative" style="z-index:10;">
+        <div class="a1">
+            <!-- Breadcrumb -->
+            <div class="flex items-center gap-2 mb-5 flex-wrap" style="font-size:.75rem;color:rgba(255,255,255,.38);">
+                <a href="/" class="no-underline transition-colors" style="color:rgba(255,255,255,.38);">Trang chủ</a>
+                <i class="bi bi-chevron-right" style="font-size:.55rem;"></i>
+                <a href="/categories" class="no-underline transition-colors" style="color:rgba(255,255,255,.38);">Danh mục</a>
+                <i class="bi bi-chevron-right" style="font-size:.55rem;"></i>
+                <span style="color:var(--gold2);">@(isLoading ? Slug : categoryName)</span>
+            </div>
+
+            <div class="tag-pill mb-5">
+                <span class="pdot"></span>Danh mục sách
+            </div>
+
+            @if (isLoading)
+            {
+                <div class="skel mb-3" style="height:40px;width:250px;background:rgba(255,255,255,.1);animation:none;border-radius:8px;"></div>
+                <div class="skel" style="height:22px;width:140px;background:rgba(255,255,255,.07);animation:none;border-radius:20px;"></div>
+            }
+            else if (!notFound)
+            {
+                <h1 class="mb-3" style="font-family:'Playfair Display',serif;font-size:clamp(1.9rem,5vw,3rem);font-weight:700;color:#fff;line-height:1.12;letter-spacing:-.02em;">
+                    @categoryName
+                </h1>
+                <div class="flex items-center gap-3 flex-wrap">
+                    <span class="tag-pill">
+                        <i class="bi bi-book" style="font-size:.65rem;"></i>
+                        @totalCount cuốn sách
+                    </span>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- FILTER BAR -->
+<div class="py-3 sticky z-40" style="top:57px;background:var(--fog);border-bottom:1px solid var(--sand);backdrop-filter:blur(20px);">
+    <div class="max-w-7xl mx-auto px-5">
+        <div class="flex items-center gap-3 flex-wrap">
+
+            <!-- Search input -->
+            <div class="flex items-center gap-2 rounded-[10px] px-3 py-2 flex-1 min-w-[160px] max-w-xs"
+                 style="background:var(--card);border:1.5px solid var(--sand);">
+                <i class="bi bi-search flex-shrink-0" style="color:var(--pale);font-size:.78rem;"></i>
+                <input @bind="searchQuery" @bind:event="oninput"
+                       type="text" placeholder="Tìm trong danh mục..."
+                       style="background:none;border:none;outline:none;font-family:'Outfit',sans-serif;font-size:.82rem;color:var(--ink);width:100%;" />
+                @if (!string.IsNullOrEmpty(searchQuery))
+                {
+                    <button @onclick="@(() => searchQuery = "")"
+                            style="background:none;border:none;color:var(--pale);cursor:pointer;font-size:.72rem;flex-shrink:0;">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                }
+            </div>
+
+            <div class="w-px h-5 flex-shrink-0" style="background:var(--sand);"></div>
+
+            <!-- Sort pills -->
+            <span style="font-size:.75rem;color:var(--muted);flex-shrink:0;">Sắp xếp:</span>
+            @foreach (var (key, lbl, ico) in sortOptions)
+            {
+                var k = key;
+                <button class="filter-pill @(sortBy == k ? "active" : "")" @onclick="@(() => SetSort(k))">
+                    <i class="bi @ico" style="font-size:.68rem;"></i>@lbl
+                </button>
+            }
+
+            <!-- Count -->
+            <div class="ml-auto flex-shrink-0" style="font-size:.8rem;color:var(--muted);">
+                <strong style="color:var(--ink);">@FilteredBooks().Count()</strong> kết quả
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<section class="py-8 pb-20" style="background:var(--surface);">
+    <div class="max-w-7xl mx-auto px-5">
+
+        @if (notFound)
+        {
+            <div class="text-center py-28 a2">
+                <div class="text-6xl mb-6 opacity-20">🏷️</div>
+                <h3 class="mb-3" style="font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--ink);">
+                    Không tìm thấy danh mục
+                </h3>
+                <p class="mb-8" style="color:var(--muted);font-size:.88rem;">
+                    Danh mục "<strong>@Slug</strong>" không tồn tại.
+                </p>
+                <a href="/categories" class="inline-flex items-center gap-2 px-6 py-3 rounded-[12px] text-white font-semibold no-underline text-sm"
+                   style="background:var(--ink);">
+                    <i class="bi bi-arrow-left"></i> Xem tất cả danh mục
+                </a>
+            </div>
+        }
+
+        else if (isLoading)
+        {
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 a2">
+                @for (int i = 0; i < 10; i++)
+                {
+                    <div style="background:var(--card);border:1px solid var(--sand);border-radius:18px;overflow:hidden;">
+                        <div class="skel" style="aspect-ratio:2/3;border-radius:0;"></div>
+                        <div style="padding:13px 14px 15px;">
+                            <div class="skel" style="height:16px;width:80%;margin-bottom:7px;"></div>
+                            <div class="skel" style="height:12px;width:55%;margin-bottom:10px;"></div>
+                            <div class="skel" style="height:18px;width:40%;"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        else if (!FilteredBooks().Any())
+        {
+            <div class="text-center py-24 a2">
+                <div class="text-5xl mb-5 opacity-20">🔍</div>
+                <h3 class="mb-2" style="font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--ink);">
+                    Không tìm thấy sách nào
+                </h3>
+                <p style="color:var(--muted);font-size:.85rem;">
+                    @(string.IsNullOrEmpty(searchQuery)
+                        ? "Danh mục này chưa có sách."
+                        : $"Không có sách nào khớp với \"{searchQuery}\".")
+                </p>
+                @if (!string.IsNullOrEmpty(searchQuery))
+                {
+                    <button @onclick="@(() => searchQuery = "")"
+                            class="mt-5 px-5 py-2.5 rounded-xl text-sm font-semibold border-0 cursor-pointer text-white"
+                            style="background:var(--ink);font-family:'Outfit',sans-serif;">
+                        Xoá bộ lọc
+                    </button>
+                }
+            </div>
+        }
+
+        else
+        {
+            <!-- BOOK GRID -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 a2">
+                @foreach (var (book, idx) in PagedBooks().Select((b, i) => (b, i)))
+                {
+                    var bid = book.BookId;
+                    <a href="/book/@bid" class="book-card book-item"
+                       style="animation-delay:@(Math.Min(idx * 0.045, 0.45))s;">
+                        <div class="book-cover">
+                            @if (!string.IsNullOrEmpty(book.ImageUrl))
+                            {
+                                <img src="@book.ImageUrl" alt="@book.BookTitle" loading="lazy" />
+                            }
+                            else
+                            {
+                                <div class="no-cover"><i class="bi bi-book"></i></div>
+                            }
+                            <div class="cover-overlay">
+                                <span style="color:#fff;font-size:.7rem;font-weight:600;display:flex;align-items:center;gap:4px;">
+                                    <i class="bi bi-eye"></i> Xem chi tiết
+                                </span>
+                            </div>
+                            @if (book.Quantity == 0)
+                            {
+                                <div class="out-badge">Hết hàng</div>
+                            }
+                        </div>
+                        <div class="book-body">
+                            <div class="book-title">@book.BookTitle</div>
+                            <div class="book-author">@book.AuthorName</div>
+                            @if (book.Quantity > 0)
+                            {
+                                <div class="book-price">@book.Price.ToString("#,##0")đ</div>
+                            }
+                            else
+                            {
+                                <div class="book-price-out">Hết hàng</div>
+                            }
+                        </div>
+                    </a>
+                }
+            </div>
+
+            @if (TotalPages > 1)
+            {
+                <div class="flex items-center justify-center gap-2 mt-10 flex-wrap a3">
+                    <button class="pg-btn @(currentPage <= 1 ? "off" : "")"
+                            @onclick="@(() => { if (currentPage > 1) currentPage--; })">
+                        <i class="bi bi-chevron-left" style="font-size:.7rem;"></i>
+                    </button>
+
+                    @for (int p = 1; p <= TotalPages; p++)
+                    {
+                        var pg = p;
+                        @if (pg == 1 || pg == TotalPages || (pg >= currentPage - 1 && pg <= currentPage + 1))
+                        {
+                            <button class="pg-btn @(pg == currentPage ? "on" : "")"
+                                    @onclick="@(() => currentPage = pg)">
+                                @pg
+                            </button>
+                        }
+                        else if (pg == currentPage - 2 || pg == currentPage + 2)
+                        {
+                            <span style="color:var(--pale);padding:0 2px;">…</span>
+                        }
+                    }
+
+                    <button class="pg-btn @(currentPage >= TotalPages ? "off" : "")"
+                            @onclick="@(() => { if (currentPage < TotalPages) currentPage++; })">
+                        <i class="bi bi-chevron-right" style="font-size:.7rem;"></i>
+                    </button>
+                </div>
+                <div class="text-center mt-3" style="font-size:.75rem;color:var(--muted);">
+                    Trang @currentPage / @TotalPages &nbsp;·&nbsp; @FilteredBooks().Count() kết quả
+                </div>
+            }
+        }
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="pt-12" style="background:#0D0B08;">
+    <div class="max-w-7xl mx-auto px-5">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-10 pb-10">
+            <div>
+                <a href="/" class="flex items-center gap-2.5 no-underline mb-4"
+                   style="font-family:'Playfair Display',serif;font-size:1.45rem;color:#fff;">
+                    <div class="w-9 h-9 rounded-[11px] flex items-center justify-center text-white text-sm"
+                         style="background:linear-gradient(135deg,var(--gold),var(--gold2));">
+                        <i class="bi bi-book-half"></i>
+                    </div>BookStore
+                </a>
+                <p class="text-xs leading-loose" style="color:rgba(255,255,255,.28);">Nơi quy tụ kho tàng tri thức nhân loại.</p>
+            </div>
+            <div>
+                <div class="text-xs font-bold uppercase tracking-widest mb-4" style="color:rgba(255,255,255,.2);">Liên kết</div>
+                @foreach (var (lbl, href) in new[] { ("Trang chủ", "/"), ("Tất cả danh mục", "/categories"), ("Hồ sơ", "/profile"), ("Giỏ hàng", "/cart") })
+                {
+                    <a href="@href" class="ft-a"><i class="bi bi-chevron-right" style="font-size:.48rem;"></i>@lbl</a>
+                }
+            </div>
+            <div>
+                <div class="text-xs font-bold uppercase tracking-widest mb-4" style="color:rgba(255,255,255,.2);">Hỗ trợ</div>
+                @foreach (var l in new[] { "Hướng dẫn mua hàng", "Chính sách đổi trả", "Liên hệ" })
+                {
+                    <a href="#" class="ft-a"><i class="bi bi-chevron-right" style="font-size:.48rem;"></i>@l</a>
+                }
+            </div>
+        </div>
+        <div class="flex flex-wrap justify-between items-center py-5 border-t gap-3" style="border-color:rgba(255,255,255,.06);">
+            <p class="text-xs m-0" style="color:rgba(255,255,255,.18);">&copy; @DateTime.Now.Year BookStore.</p>
+        </div>
+    </div>
+</footer>
+
+@code {
+    [Parameter] public string Slug { get; set; } = "";
+
+    // ── State ──────────────────────────────────────────────────────────────
+    private bool isLoading = true;
+    private bool notFound = false;
+    private string categoryName = "";
+    private int totalCount = 0;
+    private int currentPage = 1;
+    private const int PageSize = 20;
+    private int resolvedId = 0;
+    private List<BookItem> allBooks = new();
+
+    // FIX: dùng backing field để tự động reset currentPage khi search/sort thay đổi
+    private string _sortBy = "default";
+    private string sortBy
+    {
+        get => _sortBy;
+        set { _sortBy = value; currentPage = 1; }
+    }
+
+    private string _searchQuery = "";
+    private string searchQuery
+    {
+        get => _searchQuery;
+        set { _searchQuery = value; currentPage = 1; }
+    }
+
+    private static readonly (string key, string lbl, string ico)[] sortOptions =
+    {
+        ("default",    "Mặc định",        "bi-stars"),
+        ("price-asc",  "Giá tăng",        "bi-sort-numeric-down"),
+        ("price-desc", "Giá giảm",        "bi-sort-numeric-up"),
+        ("name-asc",   "A → Z",           "bi-sort-alpha-down"),
+        ("qty-desc",   "Còn hàng trước",  "bi-check-circle"),
+    };
+
+    // ── Paging helpers (dùng trong template, tránh @{} block trong else) ──
+    private List<BookItem> PagedBooks() =>
+        FilteredBooks()
+            .Skip((currentPage - 1) * PageSize)
+            .Take(PageSize)
+            .ToList();
+
+    private int TotalPages =>
+        (int)Math.Ceiling(FilteredBooks().Count() / (double)PageSize);
+
+    // Helper để set sort (dùng trong onclick thay vì gán trực tiếp)
+    private void SetSort(string key) => sortBy = key;
+
+    // ── Lifecycle ──────────────────────────────────────────────────────────
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        notFound = false;
+        currentPage = 1;
+        _searchQuery = "";
+        _sortBy = "default";
+        allBooks = new();
+        categoryName = "";
+        resolvedId = 0;
+
+        await ResolveSlugThenLoad();
+    }
+
+    // ── Bước 1: slug → categoryId ──────────────────────────────────────────
+    private async Task ResolveSlugThenLoad()
+    {
+        try
+        {
+            var cats = await Http.GetFromJsonAsync<List<ApiCategoryDto>>("api/Category");
+            if (cats == null || !cats.Any())
+            {
+                notFound = true; isLoading = false; return;
+            }
+
+            var matched = cats.FirstOrDefault(c =>
+                Slugify(c.CategoryName).Equals(Slug, StringComparison.OrdinalIgnoreCase));
+
+            if (matched == null)
+            {
+                notFound = true; isLoading = false; return;
+            }
+
+            resolvedId = matched.CategoryId;
+            categoryName = matched.CategoryName;
+
+            await LoadBooks();
+        }
+        catch
+        {
+            notFound = true; isLoading = false;
+        }
+    }
+
+    // ── Bước 2: gọi API lấy sách ──────────────────────────────────────────
+    private async Task LoadBooks()
+    {
+        isLoading = true;
+        try
+        {
+            var resp = await Http.GetAsync($"api/category/{resolvedId}/books");
+
+            if (resp.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                notFound = true; return;
+            }
+
+            resp.EnsureSuccessStatusCode();
+            var data = await resp.Content.ReadFromJsonAsync<BookByCategoryResponse>();
+
+            if (data != null)
+            {
+                categoryName = data.CategoryName;
+                totalCount = data.TotalCount;
+                allBooks = data.Books?.ToList() ?? new();
+            }
+        }
+        catch
+        {
+            notFound = true;
+        }
+        finally { isLoading = false; }
+    }
+
+    // ── Filter + Sort (client-side) ────────────────────────────────────────
+    private IEnumerable<BookItem> FilteredBooks()
+    {
+        var q = allBooks.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(_searchQuery))
+        {
+            var s = _searchQuery.Trim();
+            q = q.Where(b =>
+                b.BookTitle.Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                b.AuthorName.Contains(s, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return _sortBy switch
+        {
+            "price-asc" => q.OrderBy(b => b.Price),
+            "price-desc" => q.OrderByDescending(b => b.Price),
+            "name-asc" => q.OrderBy(b => b.BookTitle),
+            "qty-desc" => q.OrderByDescending(b => b.Quantity),
+            _ => q
+        };
+    }
+
+    // ── Slugify ────────────────────────────────────────────────────────────
+    private static string Slugify(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return "";
+        var map = new Dictionary<char, string>
+        {
+            {'đ',"d"},{'à',"a"},{'á',"a"},{'ả',"a"},{'ã',"a"},{'ạ',"a"},
+            {'ă',"a"},{'ằ',"a"},{'ắ',"a"},{'ẳ',"a"},{'ẵ',"a"},{'ặ',"a"},
+            {'â',"a"},{'ầ',"a"},{'ấ',"a"},{'ẩ',"a"},{'ẫ',"a"},{'ậ',"a"},
+            {'è',"e"},{'é',"e"},{'ẻ',"e"},{'ẽ',"e"},{'ẹ',"e"},
+            {'ê',"e"},{'ề',"e"},{'ế',"e"},{'ể',"e"},{'ễ',"e"},{'ệ',"e"},
+            {'ì',"i"},{'í',"i"},{'ỉ',"i"},{'ĩ',"i"},{'ị',"i"},
+            {'ò',"o"},{'ó',"o"},{'ỏ',"o"},{'õ',"o"},{'ọ',"o"},
+            {'ô',"o"},{'ồ',"o"},{'ố',"o"},{'ổ',"o"},{'ỗ',"o"},{'ộ',"o"},
+            {'ơ',"o"},{'ờ',"o"},{'ớ',"o"},{'ở',"o"},{'ỡ',"o"},{'ợ',"o"},
+            {'ù',"u"},{'ú',"u"},{'ủ',"u"},{'ũ',"u"},{'ụ',"u"},
+            {'ư',"u"},{'ừ',"u"},{'ứ',"u"},{'ử',"u"},{'ữ',"u"},{'ự',"u"},
+            {'ỳ',"y"},{'ý',"y"},{'ỷ',"y"},{'ỹ',"y"},{'ỵ',"y"},
+        };
+        var sb = new System.Text.StringBuilder();
+        foreach (var ch in name.ToLower())
+        {
+            if (map.TryGetValue(ch, out var r)) sb.Append(r);
+            else if (ch == ' ') sb.Append('-');
+            else if (char.IsLetterOrDigit(ch)) sb.Append(ch);
+        }
+        return sb.ToString().Replace("--", "-").Trim('-');
+    }
+
+    // ── Models ─────────────────────────────────────────────────────────────
+    private class BookByCategoryResponse
+    {
+        public int CategoryId { get; set; }
+        public string CategoryName { get; set; } = "";
+        public int TotalCount { get; set; }
+        public IEnumerable<BookItem>? Books { get; set; }
+    }
+
+    private class BookItem
+    {
+        public int BookId { get; set; }
+        public string BookTitle { get; set; } = "";
+        public string AuthorName { get; set; } = "";
+        public string CategoryName { get; set; } = "";
+        public int PublishYear { get; set; }
+        public string Publisher { get; set; } = "";
+        public decimal Price { get; set; }
+        public int Quantity { get; set; }
+        public string? Description { get; set; }
+        public string? ImageUrl { get; set; }
+    }
+
+    private class ApiCategoryDto
+    {
+        public int CategoryId { get; set; }
+        public string CategoryName { get; set; } = "";
+        public string? Description { get; set; }
+    }
+}

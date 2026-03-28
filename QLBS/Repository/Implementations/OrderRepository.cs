@@ -14,6 +14,7 @@ namespace QLBS.Repository.Implementations
             _context = context;
         }
 
+        // ── Tạo đơn hàng ─────────────────────────────────────────────────────
         public async Task<OrderTable> CreateOrderAsync(OrderTable order, List<OrderDetail> details, int userId, int paymentMethodId)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
@@ -30,7 +31,8 @@ namespace QLBS.Repository.Implementations
                     var book = await _context.Books.FindAsync(detail.BookId);
                     if (book != null)
                     {
-                        if (book.Quantity < detail.Quantity) throw new Exception($"Sách {book.BookTitle} hết hàng.");
+                        if (book.Quantity < detail.Quantity)
+                            throw new Exception($"Sách {book.BookTitle} hết hàng.");
                         book.Quantity -= detail.Quantity;
                         _context.Books.Update(book);
                     }
@@ -62,6 +64,18 @@ namespace QLBS.Repository.Implementations
             }
         }
 
+        // ── Lấy đơn theo ID ──────────────────────────────────────────────────
+        public async Task<OrderTable?> GetByIdAsync(int id)
+        {
+            return await _context.OrderTables
+                .Include(o => o.Payments)
+                .Include(o => o.OrderDetails)
+                    .ThenInclude(od => od.Book)
+                        .ThenInclude(b => b.BookImages)
+                .FirstOrDefaultAsync(o => o.OrderId == id);
+        }
+
+        // ── Cập nhật trạng thái đơn hàng ─────────────────────────────────────
         public async Task UpdateOrderStatusAsync(int orderId, byte status)
         {
             var order = await _context.OrderTables.FindAsync(orderId);
@@ -72,6 +86,7 @@ namespace QLBS.Repository.Implementations
             }
         }
 
+        // ── Cập nhật mã GHN ──────────────────────────────────────────────────
         public async Task UpdateOrderGhnCodeAsync(int orderId, string ghnCode)
         {
             var order = await _context.OrderTables.FindAsync(orderId);
@@ -83,29 +98,22 @@ namespace QLBS.Repository.Implementations
             }
         }
 
-        public async Task UpdatePaymentStatusAsync(int orderId, byte status, string? transactionCode)
+        // ── Cập nhật trạng thái thanh toán ───────────────────────────────────
+        public async Task UpdatePaymentStatusAsync(int orderId, byte paymentStatus, string transactionId)
         {
-            var payment = await _context.Payments.FirstOrDefaultAsync(p => p.OrderId == orderId);
+            var payment = await _context.Payments
+                .FirstOrDefaultAsync(p => p.OrderId == orderId);
+
             if (payment != null)
             {
-                payment.PaymentStatus = status;
-                payment.TransactionCode = transactionCode;
+                payment.PaymentStatus = paymentStatus;
+                payment.TransactionCode = transactionId;
                 payment.PaymentDate = DateTime.Now;
-                _context.Payments.Update(payment);
                 await _context.SaveChangesAsync();
             }
         }
 
-        public async Task<OrderTable?> GetByIdAsync(int id)
-        {
-            return await _context.OrderTables
-                .Include(o => o.Payments)
-                .Include(o => o.OrderDetails)
-                    .ThenInclude(od => od.Book)
-                        .ThenInclude(b => b.BookImages)
-                .FirstOrDefaultAsync(o => o.OrderId == id);
-        }
-
+        // ── Huỷ đơn và hoàn kho ──────────────────────────────────────────────
         public async Task CancelOrderAndRestoreStockAsync(int orderId)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
@@ -139,12 +147,26 @@ namespace QLBS.Repository.Implementations
             }
         }
 
+        // ── Lấy đơn theo user ────────────────────────────────────────────────
         public async Task<IEnumerable<OrderTable>> GetOrdersByUserIdAsync(int userId)
         {
             return await _context.OrderTables
                 .AsNoTracking()
                 .Include(o => o.Payments)
                 .Where(o => o.UserId == userId)
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
+        }
+
+        // ── Lấy tất cả đơn (admin) ───────────────────────────────────────────
+        public async Task<IEnumerable<OrderTable>> GetAllOrdersAsync()
+        {
+            return await _context.OrderTables
+                .AsNoTracking()
+                .Include(o => o.Payments)
+                .Include(o => o.OrderDetails)
+                    .ThenInclude(d => d.Book)
+                        .ThenInclude(b => b.BookImages)
                 .OrderByDescending(o => o.OrderDate)
                 .ToListAsync();
         }

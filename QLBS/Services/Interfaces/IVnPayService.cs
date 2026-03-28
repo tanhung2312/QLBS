@@ -9,6 +9,7 @@ namespace QLBS.Services.Interfaces
     {
         string CreatePaymentUrl(HttpContext context, OrderTable order);
         PaymentResponseModel PaymentExecute(IQueryCollection collections);
+        Task<bool> HandlePaymentCallbackAsync(PaymentResponseModel model);
     }
 }
 

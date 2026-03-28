@@ -10,5 +10,6 @@ namespace QLBS.Repository.Interfaces
         Task<DiscountCode> AddAsync(DiscountCode discountCode);
         Task<bool> DeleteAsync(int id);
         Task<bool> CodeExistsAsync(string code);
+        Task UpdateDiscountAsync(DiscountCode discountCode);
     }
 }

@@ -163,5 +163,30 @@ namespace QLBS.Services.Implementations
         {
             return await _bookRepository.DeleteBookAsync(id);
         }
+
+        public async Task<IEnumerable<BookResponseDto>> GetTopSellingBooksAsync(int top = 8)
+        {
+            var topBooks = await _bookRepository.GetTopSellingBooksAsync(top);
+
+            var result = topBooks.Select(b => new BookResponseDto
+            {
+                BookId = b.BookId,
+                BookTitle = b.BookTitle,
+                CategoryId = b.CategoryId,
+                CategoryName = b.Category?.CategoryName,
+                AuthorId = b.AuthorId,
+                AuthorName = b.Author?.AuthorName,
+                PublishYear = b.PublishYear,
+                Publisher = b.Publisher,
+                Price = b.Price,
+                Quantity = b.Quantity,
+                Description = b.Description,
+
+                ImageUrl = b.BookImages?.FirstOrDefault(i => i.IsCover)?.URL
+                        ?? b.BookImages?.FirstOrDefault()?.URL
+            });
+
+            return result;
+        }
     }
 }

@@ -1,0 +1,687 @@
+﻿@page "/order/{OrderId:int}"
+@rendermode InteractiveServer
+@using System.Net.Http.Json
+@using System.Net.Http.Headers
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+
+<PageTitle>Chi Tiết Đơn Hàng - BookStore</PageTitle>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+    @@keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0)
+        }
+    }
+
+    @@keyframes shimmer {
+        0% {
+            background-position: -200% 0
+        }
+
+        100% {
+            background-position: 200% 0
+        }
+    }
+
+    @@keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(30px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0)
+        }
+    }
+
+    .font-cormorant {
+        font-family: 'Cormorant Garamond', serif;
+    }
+
+    .font-jakarta {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .fade-up-1 {
+        animation: fadeUp .5s cubic-bezier(.4,0,.2,1) .05s both;
+    }
+
+    .fade-up-2 {
+        animation: fadeUp .5s cubic-bezier(.4,0,.2,1) .12s both;
+    }
+
+    .fade-up-3 {
+        animation: fadeUp .5s cubic-bezier(.4,0,.2,1) .18s both;
+    }
+
+    .fade-up-4 {
+        animation: fadeUp .5s cubic-bezier(.4,0,.2,1) .24s both;
+    }
+
+    .skel {
+        background: linear-gradient(90deg,#EDE8DF 25%,#FFFDF8 50%,#EDE8DF 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.4s infinite;
+        border-radius: 6px;
+    }
+
+    .status-delivered {
+        background: rgba(46,125,82,.1);
+        color: #2E7D52;
+    }
+
+    .status-shipping {
+        background: rgba(212,134,11,.1);
+        color: #D4860B;
+    }
+
+    .status-pending {
+        background: rgba(37,99,168,.1);
+        color: #2563A8;
+    }
+
+    .status-cancelled {
+        background: rgba(192,57,43,.1);
+        color: #C0392B;
+    }
+
+    .pf-toast {
+        animation: slideIn .25s ease both;
+    }
+
+    .info-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 11px 0;
+        border-bottom: 1px solid #F0EBE3;
+        font-size: .84rem;
+    }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+    .info-label {
+        color: #9B8B7A;
+        font-weight: 500;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .info-value {
+        color: #1A1208;
+        font-weight: 600;
+        text-align: right;
+    }
+
+    .book-row {
+        transition: background .15s;
+    }
+
+        .book-row:hover {
+            background: rgba(250,247,242,.8);
+        }
+
+    ::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #DDD5C8;
+        border-radius: 10px;
+    }
+</style>
+
+<div class="font-jakarta bg-[#FAF7F2] min-h-screen text-[#1A1208]">
+
+    <!-- TOP BAR -->
+    <div style="background:linear-gradient(90deg,#5A3D20,#6B4C2A,#7A5A34);" class="text-white/85 text-[0.78rem] py-[7px]">
+        <div class="max-w-[1100px] mx-auto px-6 flex justify-between items-center flex-wrap gap-2">
+            <div class="flex items-center gap-4">
+                <span class="flex items-center gap-1.5">
+                    <i class="bi bi-telephone-fill text-[#F5A623] text-[0.7rem]"></i>0901 234 567
+                </span>
+                <span class="opacity-40 hidden sm:inline">|</span>
+                <span class="hidden sm:flex items-center gap-1.5">
+                    <i class="bi bi-envelope-fill text-[#F5A623] text-[0.7rem]"></i>bookstore@@gmail.com
+                </span>
+            </div>
+            <a href="/orders" class="text-[rgba(255,221,167,.75)] no-underline hover:text-[rgba(255,221,167,1)] transition-colors flex items-center gap-1">
+                <i class="bi bi-bag-check text-[0.7rem]"></i> Đơn hàng của tôi
+            </a>
+        </div>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav class="bg-[#FFFDF8]/95 border-b border-[#EDE8DF] py-3 sticky top-0 z-50"
+         style="backdrop-filter:blur(20px);box-shadow:0 1px 0 rgba(107,76,42,.06),0 4px 24px rgba(107,76,42,.06);">
+        <div class="max-w-[1100px] mx-auto px-6 flex items-center gap-4">
+            <a href="/" class="font-cormorant text-[1.75rem] font-bold text-[#6B4C2A] no-underline flex items-center gap-2.5 mr-auto" style="letter-spacing:-.5px;">
+                <div class="w-9 h-9 rounded-[10px] flex items-center justify-center text-white text-base flex-shrink-0"
+                     style="background:linear-gradient(135deg,#D4860B,#F5A623);box-shadow:0 4px 12px rgba(212,134,11,.35);">
+                    <i class="bi bi-book-half"></i>
+                </div>
+                Book<span class="text-[#D4860B]">Store</span>
+            </a>
+            <a href="/cart" class="relative w-9 h-9 rounded-full bg-[#FAF7F2] border border-[#EDE8DF] flex items-center justify-center text-[#6B4C2A] text-sm no-underline hover:bg-[#D4860B] hover:text-white transition-colors">
+                <i class="bi bi-bag"></i>
+            </a>
+            <a href="/profile" class="flex items-center gap-2 bg-[#1A1208] text-white rounded-full px-4 py-[0.42rem] text-[0.82rem] font-semibold no-underline hover:bg-[#D4860B] transition-colors ml-1">
+                <i class="bi bi-person"></i> Hồ sơ
+            </a>
+        </div>
+    </nav>
+
+    <!-- HEADER BANNER -->
+    <div class="relative overflow-hidden pt-10 pb-8"
+         style="background:linear-gradient(140deg,#1A1208 0%,#3D2B1F 45%,#6B4C2A 100%);">
+        <div class="absolute pointer-events-none rounded-full"
+             style="width:500px;height:400px;top:-100px;right:5%;background:rgba(212,134,11,.1);filter:blur(80px);"></div>
+        <div class="relative z-10 max-w-[1100px] mx-auto px-6 fade-up-1">
+            <!-- Breadcrumb -->
+            <div class="flex items-center gap-2 text-white/45 text-[.76rem] mb-5 flex-wrap">
+                <a href="/" class="hover:text-white/70 transition-colors no-underline text-white/45">Trang chủ</a>
+                <i class="bi bi-chevron-right text-[.6rem]"></i>
+                <a href="/profile" class="hover:text-white/70 transition-colors no-underline text-white/45">Hồ sơ</a>
+                <i class="bi bi-chevron-right text-[.6rem]"></i>
+                <a href="/orders" class="hover:text-white/70 transition-colors no-underline text-white/45">Đơn hàng</a>
+                <i class="bi bi-chevron-right text-[.6rem]"></i>
+                <span class="text-[#F5A623]">#@OrderId</span>
+            </div>
+
+            <div class="flex items-center gap-5">
+                <div class="w-14 h-14 rounded-[16px] flex items-center justify-center text-2xl flex-shrink-0"
+                     style="background:rgba(212,134,11,.15);border:1px solid rgba(212,134,11,.3);">
+                    <i class="bi bi-receipt text-[#F5A623]"></i>
+                </div>
+                <div>
+                    <h1 class="font-cormorant text-[2.1rem] font-bold text-white leading-tight mb-1">
+                        Chi tiết đơn hàng <span class="text-[#F5A623]">#@OrderId</span>
+                    </h1>
+                    @if (order != null)
+                    {
+                        <div class="flex items-center gap-2.5 flex-wrap">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[.78rem] font-medium text-white/75"
+                                  style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);">
+                                <i class="bi bi-calendar3 text-[#F5A623] text-[.72rem]"></i>
+                                @order.OrderDate.ToString("dd/MM/yyyy HH:mm")
+                            </span>
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[.72rem] font-bold @GetStatusClass(order.OrderStatusName)">
+                                ● @order.OrderStatusName
+                            </span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="max-w-[1100px] mx-auto px-6 py-8 pb-20">
+
+        @if (isLoading)
+        {
+            <!-- Skeleton -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 fade-up-2">
+                <div class="lg:col-span-2 flex flex-col gap-5">
+                    <div class="bg-white border border-[#EDE8DF] rounded-[18px] p-6 flex flex-col gap-3"
+                         style="box-shadow:0 2px 12px rgba(107,76,42,.07);">
+                        <div class="skel h-4 w-1/3 rounded"></div>
+                        @for (int i = 0; i < 3; i++)
+                        {
+                            <div class="flex gap-4 py-3 border-b border-[#F0EBE3]">
+                                <div class="skel w-16 h-20 rounded-[10px] flex-shrink-0"></div>
+                                <div class="flex-1 flex flex-col gap-2 pt-1">
+                                    <div class="skel h-3.5 w-3/4 rounded"></div>
+                                    <div class="skel h-3 w-1/3 rounded"></div>
+                                    <div class="skel h-3 w-1/4 rounded mt-auto"></div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="flex flex-col gap-5">
+                    <div class="bg-white border border-[#EDE8DF] rounded-[18px] p-6"
+                         style="box-shadow:0 2px 12px rgba(107,76,42,.07);">
+                        <div class="skel h-4 w-1/2 rounded mb-4"></div>
+                        @for (int i = 0; i < 5; i++)
+                        {
+                            <div class="flex justify-between py-2.5 border-b border-[#F0EBE3]">
+                                <div class="skel h-3 w-2/5 rounded"></div>
+                                <div class="skel h-3 w-1/3 rounded"></div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+        else if (order == null)
+        {
+            <div class="text-center py-24 fade-up-2">
+                <div class="w-20 h-20 rounded-full mx-auto mb-5 flex items-center justify-center"
+                     style="background:rgba(192,57,43,.08);border:2px dashed rgba(192,57,43,.25);">
+                    <i class="bi bi-bag-x text-[2rem] text-[#C0392B] opacity-50"></i>
+                </div>
+                <div class="font-cormorant text-[1.6rem] font-bold text-[#6B4C2A] mb-2">Không tìm thấy đơn hàng</div>
+                <p class="text-[.84rem] text-[#9B8B7A] mb-6">Đơn hàng không tồn tại hoặc bạn không có quyền truy cập.</p>
+                <a href="/orders"
+                   class="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-white text-[.86rem] font-semibold no-underline hover:-translate-y-0.5 transition-all"
+                   style="background:linear-gradient(135deg,#D4860B,#F5A623);box-shadow:0 4px 16px rgba(212,134,11,.3);">
+                    <i class="bi bi-arrow-left"></i> Quay lại đơn hàng
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                <!-- LEFT: Danh sách sách -->
+                <div class="lg:col-span-2 flex flex-col gap-5">
+
+                    <!-- Sản phẩm -->
+                    <div class="bg-[#FFFDF8] border border-[#EDE8DF] rounded-[18px] overflow-hidden fade-up-2"
+                         style="box-shadow:0 2px 12px rgba(107,76,42,.08);">
+                        <div class="px-6 py-[18px] border-b border-[#EDE8DF] flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-[9px] bg-[rgba(212,134,11,.1)] text-[#D4860B] flex items-center justify-center text-[.84rem]">
+                                <i class="bi bi-bag-fill"></i>
+                            </div>
+                            <span class="font-cormorant text-[1.15rem] font-bold text-[#1A1208]">
+                                Sản phẩm đã đặt
+                            </span>
+                            <span class="ml-auto inline-flex items-center gap-1 px-2.5 py-[3px] rounded-full text-[.7rem] font-bold bg-[rgba(212,134,11,.1)] text-[#D4860B]">
+                                @order.Items.Count món
+                            </span>
+                        </div>
+
+                        <div class="divide-y divide-[#F0EBE3]">
+                            @foreach (var item in order.Items)
+                            {
+                                var bookId = item.BookId;
+                                <div class="book-row flex gap-4 px-6 py-4 cursor-pointer"
+                                     @onclick="@(() => Navigation.NavigateTo($"/book/{bookId}"))">
+                                    <!-- Ảnh bìa -->
+                                    <div class="w-[60px] h-[80px] rounded-[10px] overflow-hidden flex-shrink-0 bg-[#FAF7F2] border border-[#EDE8DF]">
+                                        @if (!string.IsNullOrEmpty(item.BookImageUrl))
+                                        {
+                                            <img src="@item.BookImageUrl" alt="@item.BookTitle"
+                                                 class="w-full h-full object-cover" loading="lazy" />
+                                        }
+                                        else
+                                        {
+                                            <div class="w-full h-full flex items-center justify-center text-[#DDD5C8]">
+                                                <i class="bi bi-book text-xl"></i>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <!-- Info -->
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-[.88rem] font-bold text-[#1A1208] leading-snug mb-1.5 line-clamp-2">
+                                            @item.BookTitle
+                                        </div>
+                                        <div class="flex items-center gap-3 flex-wrap">
+                                            <span class="text-[.75rem] text-[#9B8B7A]">
+                                                Đơn giá: <span class="text-[#D4860B] font-semibold">@item.UnitPrice.ToString("#,##0")đ</span>
+                                            </span>
+                                            <span class="text-[#DDD5C8]">·</span>
+                                            <span class="text-[.75rem] text-[#9B8B7A]">
+                                                SL: <span class="text-[#1A1208] font-semibold">x@item.Quantity</span>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Thành tiền -->
+                                    <div class="text-right flex-shrink-0 flex flex-col justify-center">
+                                        <div class="font-cormorant text-[1.1rem] font-bold text-[#1A1208]">
+                                            @item.TotalPrice.ToString("#,##0")đ
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Tổng cộng -->
+                        <div class="px-6 py-4 border-t border-[#EDE8DF]"
+                             style="background:linear-gradient(90deg,#FAF7F2,#FFFDF8);">
+                            <div class="flex justify-between text-[.82rem] text-[#9B8B7A] mb-2">
+                                <span>Tạm tính</span>
+                                <span class="font-semibold text-[#1A1208]">
+                                    @((order.TotalAmount - order.ShippingFee).ToString("#,##0"))đ
+                                </span>
+                            </div>
+                            <div class="flex justify-between text-[.82rem] text-[#9B8B7A] mb-3">
+                                <span>Phí vận chuyển</span>
+                                <span class="font-semibold text-[#1A1208]">
+                                    @(order.ShippingFee == 0 ? "Miễn phí" : order.ShippingFee.ToString("#,##0") + "đ")
+                                </span>
+                            </div>
+                            <div class="flex justify-between items-center pt-3 border-t border-[#EDE8DF]">
+                                <span class="font-bold text-[#1A1208] text-[.9rem]">Tổng thanh toán</span>
+                                <span class="font-cormorant text-[1.4rem] font-bold text-[#D4860B]">
+                                    @order.TotalAmount.ToString("#,##0")đ
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Thông tin giao hàng -->
+                    <div class="bg-[#FFFDF8] border border-[#EDE8DF] rounded-[18px] overflow-hidden fade-up-3"
+                         style="box-shadow:0 2px 12px rgba(107,76,42,.08);">
+                        <div class="px-6 py-[18px] border-b border-[#EDE8DF] flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-[9px] bg-[rgba(212,134,11,.1)] text-[#D4860B] flex items-center justify-center text-[.84rem]">
+                                <i class="bi bi-geo-alt-fill"></i>
+                            </div>
+                            <span class="font-cormorant text-[1.15rem] font-bold text-[#1A1208]">Thông tin giao hàng</span>
+                        </div>
+                        <div class="px-6 py-2">
+                            <div class="info-row">
+                                <span class="info-label"><i class="bi bi-person me-1 text-[#D4860B]"></i>Người nhận</span>
+                                <span class="info-value">@order.ReceiverName</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label"><i class="bi bi-telephone me-1 text-[#D4860B]"></i>Số điện thoại</span>
+                                <span class="info-value">@order.ReceiverPhone</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label"><i class="bi bi-geo-alt me-1 text-[#D4860B]"></i>Địa chỉ</span>
+                                <span class="info-value max-w-[280px]">@order.ShippingAddress</span>
+                            </div>
+                            @if (!string.IsNullOrEmpty(order.GhnOrderCode))
+                            {
+                                <div class="info-row">
+                                    <span class="info-label"><i class="bi bi-truck me-1 text-[#D4860B]"></i>Mã vận đơn GHN</span>
+                                    <span class="info-value font-mono text-[#2563A8]">@order.GhnOrderCode</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT: Tóm tắt đơn hàng -->
+                <div class="flex flex-col gap-5">
+
+                    <!-- Trạng thái & Thanh toán -->
+                    <div class="bg-[#FFFDF8] border border-[#EDE8DF] rounded-[18px] overflow-hidden fade-up-2"
+                         style="box-shadow:0 2px 12px rgba(107,76,42,.08);">
+                        <div class="px-6 py-[18px] border-b border-[#EDE8DF] flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-[9px] bg-[rgba(212,134,11,.1)] text-[#D4860B] flex items-center justify-center text-[.84rem]">
+                                <i class="bi bi-info-circle-fill"></i>
+                            </div>
+                            <span class="font-cormorant text-[1.15rem] font-bold text-[#1A1208]">Thông tin đơn hàng</span>
+                        </div>
+                        <div class="px-6 py-2">
+                            <div class="info-row">
+                                <span class="info-label">Mã đơn hàng</span>
+                                <span class="info-value text-[#6B4C2A]">#@order.OrderId</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Ngày đặt</span>
+                                <span class="info-value">@order.OrderDate.ToString("dd/MM/yyyy")</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Giờ đặt</span>
+                                <span class="info-value">@order.OrderDate.ToString("HH:mm")</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Trạng thái</span>
+                                <span class="inline-flex items-center gap-1 px-2.5 py-[3px] rounded-full text-[.72rem] font-bold @GetStatusClass(order.OrderStatusName)">
+                                    ● @order.OrderStatusName
+                                </span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Thanh toán</span>
+                                <span class="text-[.8rem] font-bold @(order.PaymentStatus == "Đã thanh toán" ? "text-[#2E7D52]" : "text-[#D4860B]")">
+                                    @order.PaymentStatus
+                                </span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Phương thức</span>
+                                <span class="info-value text-[.82rem]">@order.PaymentMethod</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tiến trình đơn hàng -->
+                    <div class="bg-[#FFFDF8] border border-[#EDE8DF] rounded-[18px] overflow-hidden fade-up-3"
+                         style="box-shadow:0 2px 12px rgba(107,76,42,.08);">
+                        <div class="px-6 py-[18px] border-b border-[#EDE8DF] flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-[9px] bg-[rgba(46,125,82,.1)] text-[#2E7D52] flex items-center justify-center text-[.84rem]">
+                                <i class="bi bi-arrow-repeat"></i>
+                            </div>
+                            <span class="font-cormorant text-[1.15rem] font-bold text-[#1A1208]">Tiến trình</span>
+                        </div>
+                        <div class="px-6 py-5">
+                            @{
+                                bool isCancelled = order.OrderStatusName == "Đã hủy";
+
+                                var steps = new (string icon, string label, bool done, bool current)[]
+                                {
+                        ("bi-check-circle-fill", "Đặt hàng thành công", true, false),
+                        ("bi-box-seam",          "Đang đóng gói",
+                        IsStatusReached(order.OrderStatusName, 1),
+                        order.OrderStatusName == "Đang đóng gói" || order.OrderStatusName == "Đã xác nhận"),
+                        ("bi-truck",             "Đang giao hàng",
+                        IsStatusReached(order.OrderStatusName, 2),
+                        order.OrderStatusName == "Đang giao hàng"),
+                        ("bi-house-check-fill",  "Đã giao",
+                        order.OrderStatusName == "Hoàn thành",
+                        order.OrderStatusName == "Hoàn thành"),
+                                };
+                            }
+
+                            @if (isCancelled)
+                            {
+                                <div class="flex items-center gap-3 py-2">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-[.85rem] flex-shrink-0 bg-[rgba(192,57,43,.1)] text-[#C0392B]">
+                                        <i class="bi bi-x-circle-fill"></i>
+                                    </div>
+                                    <span class="text-[.84rem] font-bold text-[#C0392B]">Đơn hàng đã bị hủy</span>
+                                </div>
+                            }
+                            else
+                            {
+                                @for (int si = 0; si < steps.Length; si++)
+                                {
+                                    var step = steps[si];
+                                    var isLast = si == steps.Length - 1;
+
+                                    <div class="flex gap-3">
+                                        <div class="flex flex-col items-center">
+                                            <div class="w-8 h-8 rounded-full flex items-center justify-center text-[.82rem] flex-shrink-0 transition-all
+                                                @(step.done    ? "bg-[rgba(46,125,82,.12)] text-[#2E7D52]"  :
+                                                  step.current ? "bg-[rgba(212,134,11,.15)] text-[#D4860B]" :
+                                                                 "bg-[#F0EBE3] text-[#C4B8A8]")">
+                                                <i class="bi @step.icon"></i>
+                                            </div>
+                                            @if (!isLast)
+                                            {
+                                                <div class="w-px flex-1 my-1 @(step.done ? "bg-[#2E7D52]/30" : "bg-[#EDE8DF]")"
+                                                     style="min-height:20px;"></div>
+                                            }
+                                        </div>
+                                        <div class="pb-4 pt-1">
+                                            <div class="text-[.83rem] font-semibold
+                                                @(step.done    ? "text-[#2E7D52]"  :
+                                                  step.current ? "text-[#D4860B]"  :
+                                                                 "text-[#C4B8A8]")">
+                                                @step.label
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Nút hành động -->
+                    <div class="flex flex-col gap-2.5 fade-up-4">
+                        <a href="/orders"
+                           class="flex items-center justify-center gap-2 px-5 py-3 rounded-[12px] text-[.84rem] font-semibold border border-[#DDD5C8] bg-[#FFFDF8] text-[#7A6A5A] no-underline hover:border-[#D4860B] hover:text-[#D4860B] hover:bg-[rgba(212,134,11,.06)] transition-all">
+                            <i class="bi bi-arrow-left text-[.8rem]"></i> Quay lại đơn hàng
+                        </a>
+                        <a href="/"
+                           class="flex items-center justify-center gap-2 px-5 py-3 rounded-[12px] text-white text-[.84rem] font-semibold no-underline hover:-translate-y-0.5 transition-all"
+                           style="background:linear-gradient(135deg,#D4860B,#F5A623);box-shadow:0 4px 14px rgba(212,134,11,.3);">
+                            <i class="bi bi-book text-[.8rem]"></i> Tiếp tục mua sắm
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- TOAST -->
+    <div class="fixed bottom-6 right-6 z-[99999] flex flex-col gap-2 pointer-events-none">
+        @foreach (var t in toasts)
+        {
+            <div class="pf-toast pointer-events-auto flex items-center gap-2.5 px-[18px] py-3 rounded-[12px] text-white text-[.84rem] font-medium min-w-[260px] @(t.Type == "success" ? "bg-[#2E7D52]" : "bg-[#C0392B]")"
+                 style="box-shadow:0 8px 30px rgba(107,76,42,.2);">
+                <i class="bi @(t.Type == "success" ? "bi-check-circle-fill" : "bi-exclamation-circle-fill")"></i>
+                @t.Message
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public int OrderId { get; set; }
+
+    private OrderDetailModel? order;
+    private bool isLoading = true;
+    private string accessToken = "";
+    private List<ToastItem> toasts = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        accessToken = await JS.InvokeAsync<string?>("localStorage.getItem", "accessToken") ?? "";
+
+        if (string.IsNullOrEmpty(accessToken))
+        {
+            Navigation.NavigateTo($"/login?returnUrl=/order/{OrderId}");
+            return;
+        }
+
+        Http.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", accessToken);
+
+        await LoadOrder();
+        StateHasChanged();
+    }
+
+    private async Task LoadOrder()
+    {
+        isLoading = true;
+        try
+        {
+            var req = new HttpRequestMessage(HttpMethod.Get, $"api/order/{OrderId}");
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            var resp = await Http.SendAsync(req);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                order = await resp.Content.ReadFromJsonAsync<OrderDetailModel>();
+            }
+            else if (resp.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                order = null;
+            }
+            else if (resp.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                Navigation.NavigateTo($"/login?returnUrl=/order/{OrderId}");
+            }
+            else
+            {
+                await ShowToast("Không thể tải chi tiết đơn hàng.", "error");
+            }
+        }
+        catch (Exception ex)
+        {
+            await ShowToast($"Lỗi: {ex.Message}", "error");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    // ── Helpers ────────────────────────────────────────────────────────────
+    private static string GetStatusClass(string s) => s switch
+    {
+        "Hoàn thành" => "status-delivered",
+        "Đang giao hàng" => "status-shipping",
+        "Chờ xử lý" => "status-pending",
+        "Đang đóng gói" => "status-pending",
+        "Đã xác nhận" => "status-pending",
+        "Đã hủy" => "status-cancelled",
+        _ => ""
+    };
+
+    private static bool IsStatusReached(string statusName, int step) => step switch
+    {
+        1 => statusName == "Đang đóng gói" || statusName == "Đã xác nhận"
+          || statusName == "Đang giao hàng" || statusName == "Hoàn thành",
+        2 => statusName == "Đang giao hàng" || statusName == "Hoàn thành",
+        3 => statusName == "Hoàn thành",
+        _ => false
+    };
+
+    private async Task ShowToast(string msg, string type = "success")
+    {
+        var t = new ToastItem { Message = msg, Type = type };
+        toasts.Add(t);
+        StateHasChanged();
+        await Task.Delay(3500);
+        toasts.Remove(t);
+        StateHasChanged();
+    }
+
+    // ── Models ─────────────────────────────────────────────────────────────
+    private class OrderDetailModel
+    {
+        public int OrderId { get; set; }
+        public DateTime OrderDate { get; set; }
+        public decimal TotalAmount { get; set; }
+        public decimal ShippingFee { get; set; }
+        public string ReceiverName { get; set; } = "";
+        public string ReceiverPhone { get; set; } = "";
+        public string ShippingAddress { get; set; } = "";
+        public string? GhnOrderCode { get; set; }
+        public string OrderStatusName { get; set; } = "";
+        public string PaymentStatus { get; set; } = "";
+        public string PaymentMethod { get; set; } = "";
+        public List<OrderItemModel> Items { get; set; } = new();
+    }
+
+    private class OrderItemModel
+    {
+        public int BookId { get; set; }
+        public string BookTitle { get; set; } = "";
+        public string? BookImageUrl { get; set; }
+        public int Quantity { get; set; }
+        public decimal UnitPrice { get; set; }
+        public decimal TotalPrice => Quantity * UnitPrice;
+    }
+
+    public class ToastItem
+    {
+        public string Message { get; set; } = "";
+        public string Type { get; set; } = "success";
+    }
+}

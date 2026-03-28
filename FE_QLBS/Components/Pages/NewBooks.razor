@@ -1,0 +1,1303 @@
+﻿@page "/books/new"
+@rendermode InteractiveServer
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<PageTitle>Sách mới về kho - BookStore</PageTitle>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+    :root {
+        --ink: #1A1208;
+        --brown: #6B4C2A;
+        --amber: #D4860B;
+        --amber-lt: #F5A623;
+        --amber-dim: rgba(212,134,11,.10);
+        --bg: #FAF7F2;
+        --surface: #FFFFFF;
+        --text-sec: #6B5A46;
+        --text-muted: #9B8B7A;
+        --pale: #C4B8A8;
+        --border: #EDE8DF;
+        --green: #2E7D52;
+        --red: #C0392B;
+        --shadow-sm: 0 1px 3px rgba(26,18,8,.06),0 2px 10px rgba(26,18,8,.04);
+        --shadow-md: 0 8px 32px rgba(26,18,8,.12);
+        --shadow-lg: 0 20px 60px rgba(26,18,8,.18);
+        --ease: cubic-bezier(.4,0,.2,1);
+    }
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        background: var(--bg);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+    }
+
+    ::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 10px;
+    }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--amber);
+        }
+
+    /* ── NAVBAR ── */
+    .nav-link-item {
+        text-decoration: none;
+        color: rgba(26,18,8,.65);
+        font-size: .875rem;
+        font-weight: 500;
+        padding: 6px 12px;
+        border-radius: 8px;
+        transition: all .15s;
+        position: relative;
+    }
+
+        .nav-link-item::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 12px;
+            right: 12px;
+            height: 2px;
+            background: var(--amber);
+            border-radius: 2px;
+            transform: scaleX(0);
+            transition: transform .2s var(--ease);
+        }
+
+        .nav-link-item:hover {
+            color: var(--ink);
+        }
+
+            .nav-link-item:hover::after, .nav-link-item.active::after {
+                transform: scaleX(1);
+            }
+
+        .nav-link-item.active {
+            color: var(--amber);
+        }
+
+    /* ── PAGE HERO ── */
+    .page-hero {
+        background: linear-gradient(145deg,#1A1208 0%,#3D2B1F 45%,#6B4C2A 100%);
+        padding: 60px 0 56px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .page-hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.025'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+            pointer-events: none;
+        }
+
+    .hero-glow {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(70px);
+        pointer-events: none;
+    }
+
+    .hero-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(212,134,11,.18);
+        border: 1px solid rgba(212,134,11,.35);
+        color: var(--amber-lt);
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        padding: 5px 16px;
+        border-radius: 50px;
+        margin-bottom: 16px;
+    }
+
+    .hero-dot {
+        width: 5px;
+        height: 5px;
+        background: var(--amber-lt);
+        border-radius: 50%;
+        animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @@keyframes pulse-dot {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 1
+        }
+
+        50% {
+            transform: scale(1.5);
+            opacity: .6
+        }
+    }
+
+    .page-hero h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: clamp(2rem,4vw,3rem);
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 12px;
+        line-height: 1.15;
+    }
+
+        .page-hero h1 em {
+            font-style: normal;
+            background: linear-gradient(135deg,#F5A623,#D4860B);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+    .page-hero p {
+        color: rgba(255,255,255,.55);
+        font-size: .95rem;
+        max-width: 480px;
+        margin: 0 auto;
+        line-height: 1.7;
+    }
+
+    .hero-stats {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        margin-top: 32px;
+        flex-wrap: wrap;
+    }
+
+    .hero-stat {
+        background: rgba(255,255,255,.06);
+        border: 1px solid rgba(255,255,255,.12);
+        backdrop-filter: blur(10px);
+        border-radius: 14px;
+        padding: 14px 24px;
+        text-align: center;
+        min-width: 90px;
+    }
+
+    .hero-stat-num {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.7rem;
+        font-weight: 700;
+        color: var(--amber-lt);
+        line-height: 1;
+    }
+
+    .hero-stat-lbl {
+        font-size: .69rem;
+        color: rgba(255,255,255,.45);
+        margin-top: 4px;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+
+    /* ── FILTER BAR ── */
+    .filter-bar {
+        background: rgba(255,253,248,.96);
+        border-bottom: 1px solid var(--border);
+        padding: 14px 0;
+        position: sticky;
+        top: 63px;
+        z-index: 100;
+        backdrop-filter: blur(20px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .filter-search {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--bg);
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        padding: 8px 14px;
+        flex: 1;
+        max-width: 340px;
+        transition: all .15s;
+    }
+
+        .filter-search:focus-within {
+            border-color: var(--amber);
+            box-shadow: 0 0 0 3px var(--amber-dim);
+            background: var(--surface);
+        }
+
+        .filter-search i {
+            color: var(--pale);
+            font-size: .85rem;
+            flex-shrink: 0;
+        }
+
+        .filter-search input {
+            background: none;
+            border: none;
+            outline: none;
+            font-family: 'Plus Jakarta Sans',sans-serif;
+            font-size: .85rem;
+            color: var(--ink);
+            width: 100%;
+        }
+
+            .filter-search input::placeholder {
+                color: var(--pale);
+            }
+
+    .filter-select {
+        background: var(--bg);
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        padding: 8px 32px 8px 12px;
+        font-family: 'Plus Jakarta Sans',sans-serif;
+        font-size: .83rem;
+        color: var(--text-sec);
+        outline: none;
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23A8947A'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        transition: all .15s;
+    }
+
+        .filter-select:focus {
+            border-color: var(--amber);
+            box-shadow: 0 0 0 3px var(--amber-dim);
+        }
+
+    .view-toggle {
+        display: flex;
+        background: var(--bg);
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        padding: 3px;
+        gap: 2px;
+    }
+
+    .view-btn {
+        width: 34px;
+        height: 34px;
+        border: none;
+        background: none;
+        border-radius: 7px;
+        cursor: pointer;
+        color: var(--pale);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all .15s;
+    }
+
+        .view-btn.on {
+            background: var(--surface);
+            color: var(--brown);
+            box-shadow: var(--shadow-sm);
+        }
+
+    /* ── BOOK GRID ── */
+    .book-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
+        gap: 20px;
+    }
+
+    .book-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        overflow: hidden;
+        transition: transform .35s var(--ease),box-shadow .35s var(--ease);
+        display: flex;
+        flex-direction: column;
+        animation: fadeUp .4s ease both;
+        box-shadow: var(--shadow-sm);
+    }
+
+        .book-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+        }
+
+    .book-cover {
+        position: relative;
+        overflow: hidden;
+        height: 220px;
+        background: var(--bg);
+        flex-shrink: 0;
+    }
+
+        .book-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform .5s var(--ease);
+        }
+
+    .book-card:hover .book-cover img {
+        transform: scale(1.07);
+    }
+
+    .cover-gradient {
+        position: absolute;
+        inset-x: 0;
+        bottom: 0;
+        height: 60px;
+        background: linear-gradient(to top,rgba(26,18,8,.35),transparent);
+        pointer-events: none;
+    }
+
+    .book-badge-new {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #2E7D52;
+        color: #fff;
+        font-size: .62rem;
+        font-weight: 700;
+        padding: 3px 9px;
+        border-radius: 50px;
+        letter-spacing: .05em;
+    }
+
+    .book-badge-bs {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: var(--red);
+        color: #fff;
+        font-size: .62rem;
+        font-weight: 700;
+        padding: 3px 9px;
+        border-radius: 50px;
+        letter-spacing: .05em;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+    }
+
+    .book-actions {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        background: rgba(26,18,8,.5);
+        opacity: 0;
+        transition: opacity .25s var(--ease);
+    }
+
+    .book-card:hover .book-actions {
+        opacity: 1;
+    }
+
+    .action-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.92);
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--brown);
+        font-size: .9rem;
+        transition: all .18s;
+        text-decoration: none;
+    }
+
+        .action-btn:hover {
+            background: var(--amber);
+            color: #fff;
+            transform: scale(1.1);
+        }
+
+        .action-btn.wishlisted {
+            background: var(--amber);
+            color: #fff;
+        }
+
+    .book-body {
+        padding: 14px 16px 16px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .book-cat {
+        font-size: .67rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--amber);
+        margin-bottom: 6px;
+    }
+
+    .book-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--ink);
+        line-height: 1.3;
+        margin-bottom: 5px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        flex: 1;
+    }
+
+    .book-author {
+        font-size: .76rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-bottom: 12px;
+    }
+
+    .book-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: auto;
+    }
+
+    .book-price {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--amber);
+    }
+
+        .book-price sub {
+            font-size: .6em;
+            font-family: 'Plus Jakarta Sans',sans-serif;
+            font-weight: 500;
+        }
+
+    .book-stars {
+        display: flex;
+        align-items: center;
+        gap: 1px;
+    }
+
+        .book-stars i {
+            font-size: .6rem;
+            color: var(--amber-lt);
+        }
+
+    .btn-cart {
+        width: 100%;
+        margin-top: 12px;
+        background: linear-gradient(135deg,#6B4C2A,#8B6040);
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        padding: 10px;
+        font-family: 'Plus Jakarta Sans',sans-serif;
+        font-size: .8rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all .2s var(--ease);
+        box-shadow: 0 3px 12px rgba(107,76,42,.25);
+    }
+
+        .btn-cart:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(107,76,42,.35);
+        }
+
+    /* ── LIST VIEW ── */
+    .book-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .book-list-item {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        transition: all .2s var(--ease);
+        animation: fadeUp .4s ease both;
+        box-shadow: var(--shadow-sm);
+        text-decoration: none;
+        color: inherit;
+    }
+
+        .book-list-item:hover {
+            border-color: var(--amber);
+            box-shadow: var(--shadow-md);
+            transform: translateX(4px);
+        }
+
+    .list-cover {
+        width: 62px;
+        height: 84px;
+        border-radius: 8px;
+        flex-shrink: 0;
+        overflow: hidden;
+        border: 1px solid var(--border);
+    }
+
+        .list-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .list-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .list-title {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--ink);
+        margin-bottom: 3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .list-author {
+        font-size: .78rem;
+        color: var(--text-muted);
+        margin-bottom: 5px;
+    }
+
+    .list-cat {
+        display: inline-block;
+        font-size: .68rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--amber);
+        background: var(--amber-dim);
+        padding: 2px 8px;
+        border-radius: 50px;
+    }
+
+    .list-right {
+        flex-shrink: 0;
+        text-align: right;
+    }
+
+    .list-price {
+        font-family: 'Playfair Display',serif;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--amber);
+        margin-bottom: 8px;
+    }
+
+    .list-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: linear-gradient(135deg,#6B4C2A,#8B6040);
+        color: #fff;
+        border: none;
+        border-radius: 9px;
+        padding: 7px 14px;
+        font-family: 'Plus Jakarta Sans',sans-serif;
+        font-size: .78rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .18s;
+        box-shadow: 0 2px 8px rgba(107,76,42,.22);
+    }
+
+        .list-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(107,76,42,.35);
+        }
+
+    /* ── SKELETON ── */
+    .skel {
+        background: linear-gradient(90deg,var(--border) 25%,#F0EDE8 50%,var(--border) 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.4s infinite;
+        border-radius: 6px;
+    }
+
+    @@keyframes shimmer {
+        to {
+            background-position: -200% 0;
+        }
+    }
+
+    /* ── EMPTY ── */
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+    }
+
+        .empty-state h3 {
+            font-family: 'Playfair Display',serif;
+            font-size: 1.6rem;
+            color: var(--text-sec);
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            color: var(--text-muted);
+            font-size: .9rem;
+        }
+
+    /* ── TOAST ── */
+    .toast-wrap {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
+        pointer-events: none;
+    }
+
+    .toast {
+        background: rgba(26,18,8,.94);
+        color: #fff;
+        padding: 12px 22px;
+        border-radius: 50px;
+        font-size: .86rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        white-space: nowrap;
+        box-shadow: 0 12px 40px rgba(0,0,0,.35);
+        backdrop-filter: blur(16px);
+        animation: toastIn .3s var(--ease) both;
+    }
+
+    @@keyframes toastIn {
+        from {
+            opacity: 0;
+            transform: translateY(14px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0)
+        }
+    }
+
+    @@keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(16px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0)
+        }
+    }
+
+    /* ── FOOTER LINKS ── */
+    .ft-a {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: rgba(255,255,255,.35);
+        text-decoration: none;
+        font-size: .82rem;
+        margin-bottom: 9px;
+        transition: color .14s;
+    }
+
+        .ft-a:hover {
+            color: var(--amber-lt);
+        }
+
+        .ft-a i {
+            font-size: .6rem;
+            color: rgba(212,134,11,.5);
+        }
+
+        .ft-a:hover i {
+            color: var(--amber);
+        }
+
+    @@media(max-width:768px) {
+        .book-grid {
+            grid-template-columns: repeat(2,1fr);
+            gap: 14px;
+        }
+
+        .hero-stats {
+            gap: 12px;
+        }
+    }
+
+    @@media(max-width:480px) {
+        .book-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .list-cover {
+            width: 52px;
+            height: 72px;
+        }
+    }
+</style>
+
+<!-- TOP STRIP -->
+<div style="background:linear-gradient(90deg,#5A3D20,#6B4C2A,#7A5A34);" class="py-1.5">
+    <div class="max-w-7xl mx-auto px-5 flex justify-between items-center flex-wrap gap-2"
+         style="color:rgba(255,255,255,.65);font-size:.73rem;">
+        <div class="flex items-center gap-4">
+            <span class="flex items-center gap-1.5">
+                <i class="bi bi-telephone-fill" style="color:var(--amber-lt);font-size:.65rem;"></i>0901 234 567
+            </span>
+            <span class="hidden sm:flex items-center gap-1.5">
+                <i class="bi bi-envelope-fill" style="color:var(--amber-lt);font-size:.65rem;"></i>bookstore@@gmail.com
+            </span>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="#" class="no-underline flex items-center gap-1.5" style="color:rgba(255,255,255,.55);">
+                <i class="bi bi-box-seam" style="font-size:.65rem;"></i>Theo dõi đơn hàng
+            </a>
+            <a href="#" class="hidden sm:flex items-center gap-1.5 no-underline" style="color:rgba(255,255,255,.55);">
+                <i class="bi bi-book" style="font-size:.65rem;"></i>Cẩm nang đọc sách
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- NAVBAR -->
+<nav class="sticky top-0 z-50 py-3"
+     style="background:rgba(255,253,248,.96);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);box-shadow:var(--shadow-sm);">
+    <div class="max-w-7xl mx-auto px-5 flex items-center gap-4 flex-wrap">
+        <a href="/" class="no-underline flex items-center gap-2.5 mr-auto lg:mr-0 flex-shrink-0"
+           style="font-family:'Playfair Display',serif;font-size:1.55rem;color:var(--brown);letter-spacing:-.5px;">
+            <div class="w-9 h-9 rounded-[10px] flex items-center justify-center text-white text-sm flex-shrink-0"
+                 style="background:linear-gradient(135deg,var(--amber),var(--amber-lt));box-shadow:0 4px 12px rgba(212,134,11,.35);">
+                <i class="bi bi-book-half"></i>
+            </div>
+            Book<span style="color:var(--amber);">Store</span>
+        </a>
+        <div class="hidden lg:flex items-center gap-1 mx-auto">
+            <a href="/" class="nav-link-item">Trang Chủ</a>
+            <a href="/categories" class="nav-link-item">Danh Mục</a>
+            <a href="/books/new" class="nav-link-item active">Sách Mới</a>
+            <a href="/books/bestseller" class="nav-link-item">Bán Chạy</a>
+            <a href="#footer" class="nav-link-item">Liên Hệ</a>
+        </div>
+        <div class="hidden md:flex relative flex-shrink-0 items-center">
+            <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style="color:var(--pale);font-size:.85rem;"></i>
+            <input type="text" placeholder="Tìm sách, tác giả..."
+                   style="padding:8px 14px 8px 32px;border:1.5px solid var(--border);border-radius:22px;font-family:'Plus Jakarta Sans',sans-serif;font-size:.84rem;background:var(--bg);outline:none;width:220px;color:var(--ink);transition:all .25s;"
+                   onfocus="this.style.width='270px';this.style.borderColor='var(--amber)';this.style.boxShadow='0 0 0 3px var(--amber-dim)';this.style.background='white'"
+                   onblur="this.style.width='220px';this.style.borderColor='';this.style.boxShadow='';this.style.background=''"
+                   @bind="globalSearch" @bind:event="oninput" />
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+            <a href="/wishlist" class="w-9 h-9 rounded-[10px] flex items-center justify-center text-sm no-underline transition-all"
+               style="background:var(--bg);border:1.5px solid var(--border);color:var(--brown);">
+                <i class="bi bi-heart"></i>
+            </a>
+            <a href="/cart" class="relative w-9 h-9 rounded-[10px] flex items-center justify-center text-sm no-underline transition-all"
+               style="background:var(--bg);border:1.5px solid var(--border);color:var(--brown);">
+                <i class="bi bi-bag"></i>
+                @if (cartCount > 0)
+                {
+                    <span class="absolute -top-1.5 -right-1.5 text-white text-[.55rem] w-4 h-4 rounded-full flex items-center justify-center font-bold border border-white"
+                          style="background:var(--red);">@cartCount</span>
+                }
+            </a>
+            <a href="/login" class="flex items-center gap-2 text-white rounded-full px-5 py-2 text-sm font-semibold no-underline transition-colors"
+               style="background:var(--brown);font-family:'Plus Jakarta Sans',sans-serif;box-shadow:0 2px 10px rgba(107,76,42,.2);"
+               onmouseover="this.style.background='var(--amber)'"
+               onmouseout="this.style.background='var(--brown)'">
+                <i class="bi bi-person text-sm"></i><span class="hidden sm:inline">Đăng nhập</span>
+            </a>
+        </div>
+    </div>
+</nav>
+
+<!-- PAGE HERO -->
+<div class="page-hero">
+    <div class="hero-glow" style="width:500px;height:500px;top:-120px;right:-60px;background:rgba(212,134,11,.10);"></div>
+    <div class="hero-glow" style="width:300px;height:300px;bottom:-80px;left:5%;background:rgba(212,134,11,.07);"></div>
+    <div class="max-w-7xl mx-auto px-5 relative" style="z-index:2;">
+        <div class="hero-tag">
+            <span class="hero-dot"></span>📦 Mới về kho
+        </div>
+        <h1>Sách <em>mới nhất</em><br />vừa cập nhật</h1>
+        <p>Những đầu sách mới nhất từ các nhà xuất bản hàng đầu.<br />Cập nhật liên tục, đảm bảo bạn không bỏ lỡ điều gì.</p>
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <div class="hero-stat-num">@books.Count</div>
+                <div class="hero-stat-lbl">Đầu sách</div>
+            </div>
+            <div class="hero-stat">
+                <div class="hero-stat-num">@FilteredBooks.Count()</div>
+                <div class="hero-stat-lbl">Hiện tại</div>
+            </div>
+            <div class="hero-stat">
+                <div class="hero-stat-num">24h</div>
+                <div class="hero-stat-lbl">Giao hàng</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+    <div class="max-w-7xl mx-auto px-5 flex items-center gap-3 flex-wrap">
+        <div class="filter-search">
+            <i class="bi bi-search"></i>
+            <input type="text" placeholder="Tìm tên sách, tác giả..."
+                   @bind="searchText" @bind:event="oninput" />
+        </div>
+
+        <select class="filter-select" @bind="filterCategory">
+            <option value="">Tất cả danh mục</option>
+            @foreach (var cat in categoryOptions)
+            {
+                <option value="@cat">@cat</option>
+            }
+        </select>
+
+        <select class="filter-select" @bind="sortBy">
+            <option value="newest">Mới nhất</option>
+            <option value="oldest">Cũ nhất</option>
+            <option value="price_asc">Giá thấp → cao</option>
+            <option value="price_desc">Giá cao → thấp</option>
+            <option value="name">Tên A → Z</option>
+        </select>
+
+        <div class="ml-auto flex items-center gap-3 flex-shrink-0">
+            <span style="font-size:.82rem;color:var(--text-muted);">
+                <b style="color:var(--text-sec);">@FilteredBooks.Count()</b> kết quả
+            </span>
+            <div class="view-toggle">
+                <button class="view-btn @(isGridView?"on":"")" @onclick="@(()=>isGridView=true)" title="Lưới">
+                    <i class="bi bi-grid-3x3-gap-fill"></i>
+                </button>
+                <button class="view-btn @(!isGridView?"on":"")" @onclick="@(()=>isGridView=false)" title="Danh sách">
+                    <i class="bi bi-list-ul"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<section style="padding:40px 0 64px;background:var(--bg);">
+    <div class="max-w-7xl mx-auto px-5">
+
+        @if (isLoading)
+        {
+            <div class="book-grid">
+                @for (int s = 0; s < 8; s++)
+                {
+                    <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden;">
+                        <div class="skel" style="height:220px;border-radius:0;"></div>
+                        <div style="padding:14px 16px;">
+                            <div class="skel" style="height:11px;width:40%;margin-bottom:8px;"></div>
+                            <div class="skel" style="height:16px;width:85%;margin-bottom:5px;"></div>
+                            <div class="skel" style="height:16px;width:60%;margin-bottom:10px;"></div>
+                            <div class="skel" style="height:12px;width:50%;margin-bottom:14px;"></div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                                <div class="skel" style="height:22px;width:80px;"></div>
+                                <div class="skel" style="height:14px;width:60px;"></div>
+                            </div>
+                            <div class="skel" style="height:38px;border-radius:12px;margin-top:12px;"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else if (!FilteredBooks.Any())
+        {
+            <div class="empty-state">
+                <div style="font-size:4rem;opacity:.45;margin-bottom:16px;">📭</div>
+                <h3>@(string.IsNullOrEmpty(searchText) ? "Chưa có sách nào" : "Không tìm thấy kết quả")</h3>
+                <p>@(string.IsNullOrEmpty(searchText) ? "Hệ thống chưa có sách mới nào." : $"Không có sách nào khớp với \"{searchText}\".")</p>
+            </div>
+        }
+        else if (isGridView)
+        {
+            <div class="book-grid">
+                @foreach (var (book, idx) in FilteredBooks.Select((b, i) => (b, i)))
+                {
+                    <div class="book-card" style="animation-delay:@(idx * 0.05)s;">
+                        <div class="book-cover">
+                            <img src="@book.ImageUrl" alt="@book.Title" loading="lazy" />
+                            <div class="cover-gradient"></div>
+                            <span class="book-badge-new">Mới</span>
+                            @if (book.IsBestSeller)
+                            {
+                                <span class="book-badge-bs"><i class="bi bi-trophy-fill" style="font-size:.55rem;"></i>Best Seller</span>
+                            }
+                            <div class="book-actions">
+                                <button class="action-btn @(wishlist.Contains(book.BookId)?"wishlisted":"")"
+                                        @onclick="()=>ToggleWishlist(book.BookId)" title="Yêu thích">
+                                    <i class="bi @(wishlist.Contains(book.BookId)?"bi-heart-fill":"bi-heart")"></i>
+                                </button>
+                                <a href="/book/@book.BookId" class="action-btn" title="Xem chi tiết">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="book-body">
+                            <div class="book-cat">@book.CategoryName</div>
+                            <div class="book-title">@book.Title</div>
+                            <div class="book-author">
+                                <i class="bi bi-person" style="font-size:.7rem;"></i>@book.AuthorName
+                            </div>
+                            <div class="book-footer">
+                                <div class="book-price">@book.Price.ToString("#,##0")<sub>đ</sub></div>
+                                <div class="book-stars">
+                                    @for (int r = 0; r < 5; r++)
+                                    {
+                                        <i class="bi bi-star-fill"></i>
+                                    }
+                                </div>
+                            </div>
+                            <button class="btn-cart" @onclick="()=>AddToCart(book.BookId, book.Title)">
+                                <i class="bi bi-bag-plus"></i> Thêm vào giỏ
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="book-list">
+                @foreach (var (book, idx) in FilteredBooks.Select((b, i) => (b, i)))
+                {
+                    <div class="book-list-item" style="animation-delay:@(idx * 0.04)s;">
+                        <div class="list-cover">
+                            <img src="@book.ImageUrl" alt="@book.Title" loading="lazy" />
+                        </div>
+                        <div class="list-body">
+                            <div class="list-title">@book.Title</div>
+                            <div class="list-author"><i class="bi bi-person me-1" style="font-size:.72rem;"></i>@book.AuthorName</div>
+                            <span class="list-cat">@book.CategoryName</span>
+                        </div>
+                        <div class="list-right">
+                            <div class="list-price">@book.Price.ToString("#,##0")đ</div>
+                            <div style="display:flex;gap:8px;justify-content:flex-end;">
+                                <button class="action-btn" style="width:34px;height:34px;border-radius:9px;background:var(--bg);border:1.5px solid var(--border);"
+                                        @onclick="()=>ToggleWishlist(book.BookId)">
+                                    <i class="bi @(wishlist.Contains(book.BookId)?"bi-heart-fill":"bi-heart")"
+                                       style="@(wishlist.Contains(book.BookId)?"color:var(--red)":"")"></i>
+                                </button>
+                                <button class="list-btn" @onclick="()=>AddToCart(book.BookId, book.Title)">
+                                    <i class="bi bi-bag-plus"></i> Thêm giỏ
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+<!-- ══ FOOTER ══ -->
+<footer style="background:#1A1208;" id="footer">
+    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(212,134,11,.4),transparent);"></div>
+    <div class="max-w-7xl mx-auto px-5 pt-12">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-12">
+
+            <!-- Brand -->
+            <div>
+                <a href="/" class="flex items-center gap-2.5 no-underline mb-5"
+                   style="font-family:'Playfair Display',serif;font-size:1.45rem;color:#fff;">
+                    <div class="w-9 h-9 rounded-[10px] flex items-center justify-center text-white text-sm flex-shrink-0"
+                         style="background:linear-gradient(135deg,var(--amber),var(--amber-lt));">
+                        <i class="bi bi-book-half"></i>
+                    </div>BookStore
+                </a>
+                <p class="text-xs leading-loose mb-5" style="color:rgba(255,255,255,.3);">
+                    Nơi quy tụ kho tàng tri thức nhân loại. Kết nối bạn với hàng chục nghìn đầu sách chất lượng.
+                </p>
+                @foreach (var (ico, txt) in new[] {
+                ("geo-alt-fill",   "123 Nguyễn Huệ, Quận 1, TP.HCM"),
+                ("telephone-fill", "0901 234 567"),
+                ("envelope-fill",  "bookstore@@gmail.com")
+                })
+                {
+                    <div class="flex items-start gap-3 mb-2" style="font-size:.82rem;color:rgba(255,255,255,.35);">
+                        <i class="bi bi-@ico mt-0.5 flex-shrink-0" style="color:var(--amber);font-size:.65rem;"></i><span>@txt</span>
+                    </div>
+                }
+            </div>
+
+            <!-- Danh mục -->
+            <div>
+                <div class="text-xs font-bold uppercase tracking-widest mb-5 pb-3"
+                     style="color:#fff;border-bottom:1px solid rgba(212,134,11,.3);">
+                    Khám phá
+                </div>
+                @foreach (var (lbl, href) in new[] {
+                ("Trang chủ",        "/"),
+                ("Tất cả danh mục",  "/categories"),
+                ("Sách mới về kho",  "/books/new"),
+                ("Sách bán chạy",    "/books/bestseller"),
+                ("Giỏ hàng",         "/cart"),
+                ("Hồ sơ của tôi",    "/profile"),
+                })
+                {
+                    <a href="@href" class="ft-a"><i class="bi bi-chevron-right"></i>@lbl</a>
+                }
+            </div>
+
+            <!-- Hỗ trợ -->
+            <div>
+                <div class="text-xs font-bold uppercase tracking-widest mb-5 pb-3"
+                     style="color:#fff;border-bottom:1px solid rgba(212,134,11,.3);">
+                    Hỗ trợ khách hàng
+                </div>
+                @foreach (var l in new[] { "Hướng dẫn mua hàng", "Chính sách đổi trả", "Vận chuyển", "Thanh toán", "Câu hỏi thường gặp", "Liên hệ chúng tôi" })
+                {
+                    <a href="#" class="ft-a"><i class="bi bi-chevron-right"></i>@l</a>
+                }
+            </div>
+
+            <!-- Kết nối & Newsletter -->
+            <div>
+                <div class="text-xs font-bold uppercase tracking-widest mb-5 pb-3"
+                     style="color:#fff;border-bottom:1px solid rgba(212,134,11,.3);">
+                    Kết nối với chúng tôi
+                </div>
+                <div class="flex gap-2.5 flex-wrap mb-7">
+                    @foreach (var ic in new[] { "facebook", "instagram", "youtube", "tiktok" })
+                    {
+                        <a href="#" class="w-9 h-9 rounded-full flex items-center justify-center text-sm no-underline transition-all"
+                           style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);"
+                           onmouseover="this.style.background='var(--amber)';this.style.color='#fff'"
+                           onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.color='rgba(255,255,255,.5)'">
+                            <i class="bi bi-@ic"></i>
+                        </a>
+                    }
+                </div>
+                <div class="font-bold text-sm mb-2" style="color:#fff;font-family:'Playfair Display',serif;">Nhận thông báo mới</div>
+                <p class="text-xs mb-4 leading-relaxed" style="color:rgba(255,255,255,.35);">Đăng ký để nhận ưu đãi và sách mới mỗi tuần.</p>
+                <div class="flex rounded-xl overflow-hidden" style="border:1px solid rgba(255,255,255,.12);">
+                    <input type="email" @bind="newsletterEmail" placeholder="Email của bạn..."
+                           class="flex-1 border-0 outline-none text-white text-xs px-4 py-2.5 transition-colors"
+                           style="background:rgba(255,255,255,.06);font-family:'Plus Jakarta Sans',sans-serif;"
+                           onfocus="this.style.background='rgba(255,255,255,.1)'"
+                           onblur="this.style.background='rgba(255,255,255,.06)'" />
+                    <button @onclick="SubscribeNewsletter"
+                            class="px-4 text-white text-sm border-0 cursor-pointer flex-shrink-0 transition-opacity hover:opacity-85"
+                            style="background:linear-gradient(135deg,var(--amber),var(--amber-lt));">
+                        <i class="bi bi-send-fill"></i>
+                    </button>
+                </div>
+                @if (!string.IsNullOrEmpty(newsletterMsg))
+                {
+                    <p class="mt-2 text-xs flex items-center gap-1.5" style="color:#6EE7B7;">
+                        <i class="bi bi-check-circle-fill"></i>@newsletterMsg
+                    </p>
+                }
+            </div>
+        </div>
+
+        <!-- Bottom bar -->
+        <div class="flex flex-wrap justify-between items-center py-5 border-t gap-3"
+             style="border-color:rgba(255,255,255,.06);">
+            <p class="text-xs m-0" style="color:rgba(255,255,255,.2);">&copy; @DateTime.Now.Year BookStore. Tất cả quyền được bảo lưu.</p>
+            <div class="flex gap-5">
+                <a href="/terms" class="no-underline text-xs" style="color:rgba(255,255,255,.2);">Điều khoản</a>
+                <span style="color:rgba(255,255,255,.1);">|</span>
+                <a href="/privacy" class="no-underline text-xs" style="color:rgba(255,255,255,.2);">Bảo mật</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- TOAST -->
+@if (showToast)
+{
+    <div class="toast-wrap">
+        <div class="toast">
+            <i class="bi bi-check-circle-fill" style="color:#6EE7B7;font-size:1rem;"></i>
+            @toastMessage
+        </div>
+    </div>
+}
+
+@code {
+    private List<BookVm> books = new();
+    private List<string> categoryOptions = new();
+    private HashSet<int> wishlist = new();
+    private int cartCount = 0;
+
+    private bool isLoading = true;
+    private bool isGridView = true;
+    private string searchText = "";
+    private string globalSearch = "";
+    private string filterCategory = "";
+    private string sortBy = "newest";
+
+    private bool showToast = false;
+    private string toastMessage = "";
+    private string newsletterEmail = "";
+    private string newsletterMsg = "";
+
+    protected override void OnInitialized() => isLoading = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        await LoadBooks();
+        StateHasChanged();
+    }
+
+    private async Task LoadBooks()
+    {
+        isLoading = true;
+        try
+        {
+            var result = await Http.GetFromJsonAsync<List<ApiBookDto>>("api/book");
+            if (result != null)
+            {
+                books = result
+                    .OrderByDescending(b => b.BookId)
+                    .Select(b => new BookVm
+                        {
+                            BookId = b.BookId,
+                            Title = b.BookTitle ?? "Không rõ tên",
+                            AuthorName = b.AuthorName ?? "Không rõ tác giả",
+                            CategoryName = b.CategoryName ?? "Chưa phân loại",
+                            Price = b.Price,
+                            ImageUrl = !string.IsNullOrEmpty(b.ImageUrl)
+                                            ? b.ImageUrl
+                                            : "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300&h=400&fit=crop",
+                            IsBestSeller = b.IsBestSeller,
+                        }).ToList();
+
+                categoryOptions = books.Select(b => b.CategoryName).Distinct().OrderBy(c => c).ToList();
+            }
+        }
+        catch { }
+        finally { isLoading = false; }
+    }
+
+    private IEnumerable<BookVm> FilteredBooks
+    {
+        get
+        {
+            var q = books.AsEnumerable();
+            var kw = !string.IsNullOrWhiteSpace(globalSearch) ? globalSearch.Trim()
+                   : !string.IsNullOrWhiteSpace(searchText) ? searchText.Trim() : "";
+
+            if (!string.IsNullOrEmpty(kw))
+                q = q.Where(b =>
+                    b.Title.Contains(kw, StringComparison.OrdinalIgnoreCase) ||
+                    b.AuthorName.Contains(kw, StringComparison.OrdinalIgnoreCase) ||
+                    b.CategoryName.Contains(kw, StringComparison.OrdinalIgnoreCase));
+
+            if (!string.IsNullOrEmpty(filterCategory))
+                q = q.Where(b => b.CategoryName == filterCategory);
+
+            return sortBy switch
+            {
+                "oldest" => q.OrderBy(b => b.BookId),
+                "price_asc" => q.OrderBy(b => b.Price),
+                "price_desc" => q.OrderByDescending(b => b.Price),
+                "name" => q.OrderBy(b => b.Title),
+                _ => q.OrderByDescending(b => b.BookId),
+            };
+        }
+    }
+
+    private void ToggleWishlist(int bookId)
+    {
+        if (wishlist.Contains(bookId)) wishlist.Remove(bookId);
+        else wishlist.Add(bookId);
+    }
+
+    private async Task AddToCart(int bookId, string title)
+    {
+        cartCount++;
+        await ShowToast($"Đã thêm \"{(title.Length > 30 ? title[..30] + "…" : title)}\" vào giỏ hàng");
+    }
+
+    private async Task ShowToast(string msg)
+    {
+        toastMessage = msg; showToast = true; StateHasChanged();
+        await Task.Delay(3000);
+        showToast = false; StateHasChanged();
+    }
+
+    private async Task SubscribeNewsletter()
+    {
+        if (string.IsNullOrWhiteSpace(newsletterEmail)) return;
+        newsletterMsg = "Đăng ký thành công! Cảm ơn bạn.";
+        newsletterEmail = "";
+        await Task.CompletedTask;
+    }
+
+    private class BookVm
+    {
+        public int BookId { get; set; }
+        public string Title { get; set; } = "";
+        public string AuthorName { get; set; } = "";
+        public string CategoryName { get; set; } = "";
+        public decimal Price { get; set; }
+        public string ImageUrl { get; set; } = "";
+        public bool IsBestSeller { get; set; }
+    }
+
+    private class ApiBookDto
+    {
+        public int BookId { get; set; }
+        public string? BookTitle { get; set; }
+        public string? AuthorName { get; set; }
+        public string? CategoryName { get; set; }
+        public decimal Price { get; set; }
+        public string? ImageUrl { get; set; }
+        public bool IsBestSeller { get; set; }
+    }
+}

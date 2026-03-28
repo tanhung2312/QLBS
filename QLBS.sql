@@ -342,11 +342,55 @@ CREATE INDEX IDX_BestSellingBookReport_MonthYear ON BestSellingBookReport(Month,
 CREATE INDEX IDX_InventoryReport_Date ON InventoryReport(UpdateDate);
 
 
-SELECT * FROM NguoiDung;
-SELECT * FROM TaiKhoan;
-SELECT * FROM Sach;
-SELECT * FROM DonHang;
-SELECT * FROM Author;
-SELECT * FROM TheLoai;
-SELECT * FROM DanhGia_NhanXet;
 
+select * from Account;
+select * from Role;
+select * from Cart;
+SELECT * FROM PaymentMethod;
+select * from OrderDetail;
+select * from OrderTable;
+select * from Book;
+select * from Category;
+select * from Author;
+
+SELECT * FROM Category WHERE IsDeleted = 0;
+
+INSERT INTO PaymentMethod (MethodName) VALUES ('VNPay')
+INSERT INTO PaymentMethod (MethodName) VALUES ('COD')
+
+
+DELETE FROM Account
+WHERE AccountId = 2;
+
+UPDATE Account 
+SET RoleId = 1 
+WHERE Email = 'admin@gmail.com';
+
+-- Tạo account
+INSERT INTO Account (
+    Email, Password, RoleId,
+    IsActive, IsEmailVerified,
+    CreatedAt, UpdatedAt
+)
+VALUES (
+    'admin@gmail.com',
+    '$2b$10$wJwZ8Qp9VQYQz1X6z0FQ0eYp1c9zJ1vY6Kz8wF7Q9Z3n1k5rL0p9K',
+    (SELECT RoleId FROM Role WHERE RoleName = 'Admin'),
+    1, 1,
+    GETDATE(), GETDATE()
+);
+
+-- ❗ KHÔNG có GO ở đây
+DECLARE @AccountId INT = SCOPE_IDENTITY();
+
+-- Tạo profile
+INSERT INTO UserProfile (
+    FullName,
+    AccountId,
+    IsDeleted
+)
+VALUES (
+    N'Administrator',
+    @AccountId,
+    0
+);

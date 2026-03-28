@@ -508,23 +508,39 @@ namespace QLBS.Migrations
                     b.Property<int?>("DiscountCodeId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("DistrictID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("GhnOrderCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2");
 
                     b.Property<byte>("OrderStatus")
                         .HasColumnType("tinyint");
 
+                    b.Property<int?>("ProvinceID")
+                        .HasColumnType("int");
+
                     b.Property<string>("ReceiverName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("ReceiverPhone")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("ShippingAddress")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<decimal>("ShippingFee")
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("decimal(18,2)");
@@ -534,6 +550,10 @@ namespace QLBS.Migrations
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
+
+                    b.Property<string>("WardCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("OrderId");
 
@@ -703,6 +723,23 @@ namespace QLBS.Migrations
                     b.HasKey("RoleId");
 
                     b.ToTable("Role");
+
+                    b.HasData(
+                        new
+                        {
+                            RoleId = 1,
+                            RoleName = "Admin"
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            RoleName = "Customer"
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            RoleName = "Staff"
+                        });
                 });
 
             modelBuilder.Entity("QLBS.Models.Role_Permission", b =>

@@ -53,6 +53,12 @@ namespace QLBS.Models
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<Role>().HasData(
+                new Role { RoleId = 1, RoleName = "Admin" },
+                new Role { RoleId = 2, RoleName = "Customer" },
+                new Role { RoleId = 3, RoleName = "Staff" }
+            );
+
             modelBuilder.Entity<Role_Permission>()
                 .HasKey(rp => new { rp.RoleId, rp.PermissionId });
 

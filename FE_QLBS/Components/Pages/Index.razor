@@ -1,0 +1,1189 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@using System.Net.Http.Json
+@using System.Net.Http.Headers
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+
+<PageTitle>Trang Chủ - BookStore</PageTitle>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    cream:    '#FAF7F2',
+                    'warm-white': '#FFFDF8',
+                    ink:      '#1A1208',
+                    brown:    '#6B4C2A',
+                    amber:    '#D4860B',
+                    'amber-lt':'#F5A623',
+                    sand:     '#EDE8DF',
+                    muted:    '#9B8B7A',
+                    pale:     '#C4B8A8',
+                    sage:     '#7A9E7E',
+                    rust:     '#C0392B',
+                },
+                fontFamily: {
+                    serif: ['"Playfair Display"', 'Georgia', 'serif'],
+                    sans:  ['"Plus Jakarta Sans"', 'sans-serif'],
+                },
+            }
+        }
+    }
+</script>
+
+<style>
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background: #FAF7F2;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    ::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #FAF7F2;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #EDE8DF;
+        border-radius: 10px;
+    }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #D4860B;
+        }
+
+    @@keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0)
+        }
+    }
+
+    @@keyframes float {
+        0%, 100% {
+            transform: translateY(0)
+        }
+
+        50% {
+            transform: translateY(-12px)
+        }
+    }
+
+    @@keyframes floatR1 {
+        0%, 100% {
+            transform: translateY(0) rotate(-9deg)
+        }
+
+        50% {
+            transform: translateY(-12px) rotate(-9deg)
+        }
+    }
+
+    @@keyframes floatR2 {
+        0%, 100% {
+            transform: translateY(0) rotate(7deg)
+        }
+
+        50% {
+            transform: translateY(-12px) rotate(7deg)
+        }
+    }
+
+    @@keyframes shimmer {
+        to {
+            background-position: -200% 0
+        }
+    }
+
+    @@keyframes toastUp {
+        from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(16px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0)
+        }
+    }
+
+    @@keyframes pulse-dot {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 1
+        }
+
+        50% {
+            transform: scale(1.5);
+            opacity: .6
+        }
+    }
+
+    @@keyframes dropIn {
+        from {
+            opacity: 0;
+            transform: translateY(-8px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0)
+        }
+    }
+
+    .anim-fade-up {
+        animation: fadeUp .5s ease both;
+    }
+
+    .float-main {
+        animation: float 6s ease-in-out infinite;
+    }
+
+    .float-r1 {
+        animation: floatR1 7s ease-in-out .5s infinite;
+    }
+
+    .float-r2 {
+        animation: floatR2 8s ease-in-out 1s infinite;
+    }
+
+    .toast-anim {
+        animation: toastUp .35s ease both;
+    }
+
+    .drop-in {
+        animation: dropIn .18s ease both;
+    }
+
+    .skel {
+        background: linear-gradient(90deg,#EDE8DF 25%,#F5F1EC 50%,#EDE8DF 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.4s infinite;
+        border-radius: 8px;
+    }
+
+    .hero-carousel-item {
+        display: none;
+    }
+
+        .hero-carousel-item.active {
+            display: flex;
+        }
+
+    .nav-u {
+        position: relative;
+    }
+
+        .nav-u::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #D4860B;
+            border-radius: 2px;
+            transform: scaleX(0);
+            transition: transform .2s ease;
+        }
+
+        .nav-u:hover::after, .nav-u.active::after {
+            transform: scaleX(1);
+        }
+
+    /* Book card — dùng div thay a để stopPropagation hoạt động đúng */
+    .book-card-div {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        position: relative;
+        border-radius: 16px;
+        overflow: hidden;
+        transition: transform .3s, box-shadow .3s;
+        background: rgba(255,255,255,.6);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(237,232,223,.8);
+        box-shadow: 0 4px 24px rgba(107,76,42,.07);
+        cursor: pointer;
+    }
+
+        .book-card-div:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 16px 48px rgba(107,76,42,.16) !important;
+        }
+
+    .footer-lnk {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: rgba(255,255,255,.4);
+        text-decoration: none;
+        font-size: .84rem;
+        margin-bottom: 9px;
+        transition: color .15s;
+    }
+
+        .footer-lnk:hover {
+            color: #F5A623;
+        }
+
+        .footer-lnk i {
+            font-size: .65rem;
+            color: rgba(212,134,11,.5);
+        }
+
+        .footer-lnk:hover i {
+            color: #D4860B;
+        }
+</style>
+
+<!-- TOP BAR -->
+<div style="background:linear-gradient(90deg,#5A3D20,#6B4C2A,#7A5A34);" class="text-white/75 text-[0.78rem] py-1.5">
+    <div class="max-w-7xl mx-auto px-5 flex justify-between items-center flex-wrap gap-2">
+        <div class="flex items-center gap-4">
+            <span class="flex items-center gap-1.5"><i class="bi bi-telephone-fill text-[#F5A623] text-[0.7rem]"></i>0901 234 567</span>
+            <span class="hidden sm:inline opacity-50">|</span>
+            <span class="hidden sm:flex items-center gap-1.5"><i class="bi bi-envelope-fill text-[#F5A623] text-[0.7rem]"></i>bookstore@gmail.com</span>
+        </div>
+        <div class="flex items-center gap-5">
+            <a href="#" class="text-white/70 no-underline hover:text-[#F5A623] transition-colors flex items-center gap-1"><i class="bi bi-box-seam text-[0.7rem]"></i> Theo dõi đơn hàng</a>
+            <a href="#" class="hidden sm:flex items-center gap-1 text-white/70 no-underline hover:text-[#F5A623] transition-colors"><i class="bi bi-book text-[0.7rem]"></i> Cẩm nang đọc sách</a>
+        </div>
+    </div>
+</div>
+
+<!-- NAVBAR -->
+<nav class="bg-[#FFFDF8]/95 border-b border-[#EDE8DF] py-3 sticky top-0 z-50"
+     style="backdrop-filter:blur(20px);box-shadow:0 1px 0 rgba(107,76,42,.06),0 4px 24px rgba(107,76,42,.06);">
+    <div class="max-w-7xl mx-auto px-5 flex items-center gap-4">
+        <a href="/" class="font-serif font-bold text-[#6B4C2A] no-underline flex items-center gap-2.5 mr-auto lg:mr-0 flex-shrink-0"
+           style="font-family:'Playfair Display',serif;font-size:1.55rem;letter-spacing:-.5px;">
+            <div class="w-9 h-9 rounded-[10px] flex items-center justify-center text-white text-[1rem] flex-shrink-0"
+                 style="background:linear-gradient(135deg,#D4860B,#F5A623);box-shadow:0 4px 12px rgba(212,134,11,.35);">
+                <i class="bi bi-book-half"></i>
+            </div>
+            Book<span style="color:#D4860B;">Store</span>
+        </a>
+        <div class="hidden lg:flex items-center gap-0.5 mx-auto">
+            <a href="/" class="nav-u active text-[#D4860B] font-medium text-[.88rem] px-3 py-2 rounded-lg no-underline whitespace-nowrap">Trang Chủ</a>
+            <a href="#categories" class="nav-u text-[#1A1208]/65 hover:text-[#1A1208] font-medium text-[.88rem] px-3 py-2 rounded-lg no-underline transition-colors whitespace-nowrap">Danh Mục</a>
+            <a href="#new-books" class="nav-u text-[#1A1208]/65 hover:text-[#1A1208] font-medium text-[.88rem] px-3 py-2 rounded-lg no-underline transition-colors whitespace-nowrap">Sách Mới</a>
+            <a href="#best-sellers" class="nav-u text-[#1A1208]/65 hover:text-[#1A1208] font-medium text-[.88rem] px-3 py-2 rounded-lg no-underline transition-colors whitespace-nowrap">Bán Chạy</a>
+            <a href="#contact" class="nav-u text-[#1A1208]/65 hover:text-[#1A1208] font-medium text-[.88rem] px-3 py-2 rounded-lg no-underline transition-colors whitespace-nowrap">Liên Hệ</a>
+        </div>
+        <div class="relative hidden md:block flex-shrink-0">
+            <i class="bi bi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-[#C4B8A8] text-sm pointer-events-none"></i>
+            <input type="text" @bind="searchKeyword" @bind:event="oninput"
+                   placeholder="Tìm sách, tác giả..."
+                   class="border border-[#EDE8DF] rounded-full py-2 pr-4 pl-9 text-[.84rem] bg-[#FAF7F2] outline-none w-[220px] text-[#1A1208]"
+                   style="transition:width .3s,border-color .2s,box-shadow .2s;"
+                   onfocus="this.style.width='270px';this.style.borderColor='#D4860B';this.style.boxShadow='0 0 0 3px rgba(212,134,11,.12)';this.style.background='#fff'"
+                   onblur="this.style.width='220px';this.style.borderColor='';this.style.boxShadow='';this.style.background=''" />
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+            <a href="/wishlist" class="w-9 h-9 rounded-[10px] bg-[#FAF7F2] border border-[#EDE8DF] flex items-center justify-center text-[#6B4C2A] text-sm no-underline hover:border-[#D4860B] hover:text-[#D4860B] hover:bg-[#D4860B]/10 transition-all">
+                <i class="bi bi-heart"></i>
+            </a>
+            <a href="/cart" class="relative w-9 h-9 rounded-[10px] bg-[#FAF7F2] border border-[#EDE8DF] flex items-center justify-center text-[#6B4C2A] text-sm no-underline hover:border-[#D4860B] hover:text-[#D4860B] hover:bg-[#D4860B]/10 transition-all">
+                <i class="bi bi-bag"></i>
+                @if (cartCount > 0)
+                {
+                    <span class="absolute -top-1.5 -right-1.5 bg-[#C0392B] text-white text-[.55rem] w-4 h-4 rounded-full flex items-center justify-center font-bold border border-white">@cartCount</span>
+                }
+            </a>
+            @if (!isLoggedIn)
+            {
+                <a href="/login" class="flex items-center gap-2 bg-[#1A1208] text-white rounded-full px-5 py-2 text-[.84rem] font-semibold no-underline hover:bg-[#D4860B] transition-colors ml-1"
+                   style="box-shadow:0 2px 10px rgba(26,18,8,.2);">
+                    <i class="bi bi-person text-sm"></i><span class="hidden sm:inline">Đăng nhập</span>
+                </a>
+            }
+            else
+            {
+                <div class="relative">
+                    <button class="w-9 h-9 rounded-full flex items-center justify-center text-white text-[.78rem] font-bold cursor-pointer border-0 transition-all"
+                            style="background:linear-gradient(135deg,#D4860B,#F5A623);box-shadow:0 2px 10px rgba(212,134,11,.3);"
+                            @onclick="ToggleDropdown">
+                        @GetInitials(userFullName)
+                    </button>
+                    @if (showDropdown)
+                    {
+                        <div class="drop-in absolute top-[calc(100%+10px)] right-0 bg-[#FFFDF8] border border-[#EDE8DF] rounded-2xl min-w-[210px] z-[9999] overflow-hidden"
+                             style="box-shadow:0 8px 32px rgba(107,76,42,.14);">
+                            <div class="px-4 py-3.5 border-b border-[#EDE8DF]" style="background:linear-gradient(135deg,rgba(212,134,11,.06),transparent);">
+                                <div class="text-[.88rem] font-bold text-[#1A1208] truncate max-w-[170px]">@userFullName</div>
+                                <div class="text-[.72rem] text-[#9B8B7A] truncate max-w-[170px]">@userEmail</div>
+                            </div>
+                            <a href="/profile" class="flex items-center gap-2.5 px-4 py-2.5 text-[.84rem] font-medium text-[#9B8B7A] no-underline hover:bg-[#D4860B]/10 hover:text-[#6B4C2A] transition-colors">
+                                <i class="bi bi-person-circle text-[#D4860B] text-[.88rem] w-4 text-center"></i> Hồ sơ của tôi
+                            </a>
+                            <a href="/orders" class="flex items-center gap-2.5 px-4 py-2.5 text-[.84rem] font-medium text-[#9B8B7A] no-underline hover:bg-[#D4860B]/10 hover:text-[#6B4C2A] transition-colors">
+                                <i class="bi bi-bag-check text-[#D4860B] text-[.88rem] w-4 text-center"></i> Đơn hàng
+                            </a>
+                            <a href="/wishlist" class="flex items-center gap-2.5 px-4 py-2.5 text-[.84rem] font-medium text-[#9B8B7A] no-underline hover:bg-[#D4860B]/10 hover:text-[#6B4C2A] transition-colors">
+                                <i class="bi bi-heart text-[#D4860B] text-[.88rem] w-4 text-center"></i> Yêu thích
+                            </a>
+                            <div class="h-px bg-[#EDE8DF] my-1"></div>
+                            <button class="flex items-center gap-2.5 px-4 py-2.5 w-full text-left text-[.84rem] font-medium text-[#9B8B7A] bg-transparent border-0 cursor-pointer hover:bg-red-50 hover:text-[#C0392B] transition-colors"
+                                    @onclick="Logout">
+                                <i class="bi bi-box-arrow-right text-[#C0392B] text-[.88rem] w-4 text-center"></i> Đăng xuất
+                            </button>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</nav>
+
+<!-- HERO CAROUSEL -->
+<section style="background:#1A1208;">
+    <div class="relative overflow-hidden">
+        @for (int si = 0; si < 3; si++)
+        {
+            var idx = si;
+            var slideBg = idx == 0 ? "linear-gradient(145deg,#1A1208 0%,#3D2B1F 45%,#6B4C2A 100%)"
+            : idx == 1 ? "linear-gradient(145deg,#0B1622 0%,#163350 45%,#2563A8 100%)"
+            : "linear-gradient(145deg,#180808 0%,#3D1010 45%,#7B2020 100%)";
+            <div class="hero-carousel-item @(idx==activeSlide?"active":"") min-h-[560px] lg:min-h-[620px] items-center relative overflow-hidden"
+                 style="background:@slideBg;">
+                <div class="absolute rounded-full pointer-events-none" style="width:500px;height:500px;top:-100px;right:-50px;background:rgba(212,134,11,.10);filter:blur(80px);z-index:1;"></div>
+                <div class="absolute rounded-full pointer-events-none" style="width:300px;height:300px;bottom:-80px;left:10%;background:rgba(212,134,11,.06);filter:blur(60px);z-index:1;"></div>
+                <div class="max-w-7xl mx-auto px-5 w-full py-16 relative" style="z-index:2;">
+                    <div class="flex items-center gap-8">
+                        <div class="w-full lg:w-[55%]">
+                            @if (idx == 0)
+                            {
+                                <div class="inline-flex items-center gap-1.5 text-[#F5A623] text-[.72rem] font-bold tracking-[.12em] uppercase px-4 py-1.5 rounded-full mb-5"
+                                     style="background:rgba(212,134,11,.18);border:1px solid rgba(212,134,11,.35);">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-[#F5A623]" style="animation:pulse-dot 2s ease-in-out infinite;display:inline-block;"></span>
+                                    Khuyến mãi đặc biệt
+                                </div>
+                                <h1 class="font-serif font-bold text-white leading-[1.1] mb-5" style="font-size:clamp(2.4rem,5.5vw,4rem);">
+                                    Khám phá thế giới<br />qua từng <em class="not-italic" style="background:linear-gradient(135deg,#F5A623,#D4860B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">trang sách</em>
+                                </h1>
+                                <p class="text-white/65 leading-relaxed mb-8 max-w-[480px] text-[1.05rem]">
+                                    Hơn 50.000 đầu sách từ khắp nơi trên thế giới.<br />
+                                    <span class="text-white/85 font-medium">Giảm đến 40%</span> cho đơn hàng đầu tiên.
+                                </p>
+                                <div class="flex flex-wrap gap-3 mb-10">
+                                    <a href="#new-books" class="flex items-center gap-2 text-white font-bold px-7 py-3 rounded-full no-underline text-[.92rem] transition-all hover:-translate-y-0.5"
+                                       style="background:linear-gradient(135deg,#D4860B,#F5A623);box-shadow:0 8px 28px rgba(212,134,11,.45);">
+                                        <i class="bi bi-bag-plus"></i>Mua ngay
+                                    </a>
+                                    <a href="#categories" class="text-white/85 px-7 py-3 rounded-full font-medium text-[.92rem] no-underline hover:text-white transition-all"
+                                       style="border:1.5px solid rgba(255,255,255,.25);background:rgba(255,255,255,.07);backdrop-filter:blur(10px);">
+                                        Khám phá
+                                    </a>
+                                </div>
+                                <div class="flex gap-4 flex-wrap">
+                                    @foreach (var (num, lbl) in new[] { ("50K+", "Đầu sách"), ("200K+", "Khách hàng"), ("4.9★", "Đánh giá") })
+                                    {
+                                        <div class="text-center px-5 py-3 rounded-xl min-w-[80px]"
+                                             style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(10px);">
+                                            <div class="font-serif text-[1.6rem] font-bold leading-none mb-1"
+                                                 style="background:linear-gradient(135deg,#F5A623,#D4860B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+                                                @num
+                                            </div>
+                                            <div class="text-white/45 text-[.68rem] tracking-wide uppercase">@lbl</div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else if (idx == 1)
+                            {
+                                <div class="inline-flex items-center gap-1.5 text-[#F5A623] text-[.72rem] font-bold tracking-[.12em] uppercase px-4 py-1.5 rounded-full mb-5"
+                                     style="background:rgba(212,134,11,.18);border:1px solid rgba(212,134,11,.35);">
+                                    Sách Công Nghệ
+                                </div>
+                                <h1 class="font-serif font-bold text-white leading-[1.1] mb-5" style="font-size:clamp(2.4rem,5.5vw,4rem);">
+                                    Nâng tầm kỹ năng<br />với <em class="not-italic" style="background:linear-gradient(135deg,#F5A623,#D4860B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">sách lập trình</em>
+                                </h1>
+                                <p class="text-white/65 leading-relaxed mb-8 max-w-[480px] text-[1.05rem]">Bộ sưu tập sách công nghệ chọn lọc. <span class="text-white/85 font-medium">Giảm 30%</span> toàn danh mục tuần này.</p>
+                                <a href="#" class="inline-flex items-center gap-2 text-white font-bold px-7 py-3 rounded-full no-underline text-[.92rem] hover:-translate-y-0.5 transition-all"
+                                   style="background:linear-gradient(135deg,#D4860B,#F5A623);box-shadow:0 8px 28px rgba(212,134,11,.45);">
+                                    <i class="bi bi-lightning-fill"></i>Xem ngay
+                                </a>
+                            }
+                            else
+                            {
+                                <div class="inline-flex items-center gap-1.5 text-[#F5A623] text-[.72rem] font-bold tracking-[.12em] uppercase px-4 py-1.5 rounded-full mb-5"
+                                     style="background:rgba(212,134,11,.18);border:1px solid rgba(212,134,11,.35);">
+                                    Sách bán chạy
+                                </div>
+                                <h1 class="font-serif font-bold text-white leading-[1.1] mb-5" style="font-size:clamp(2.4rem,5.5vw,4rem);">
+                                    Bestseller tháng<br /><em class="not-italic" style="background:linear-gradient(135deg,#F5A623,#D4860B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">vừa cập nhật</em>
+                                </h1>
+                                <p class="text-white/65 leading-relaxed mb-8 max-w-[480px] text-[1.05rem]">Những cuốn sách hay nhất được độc giả yêu thích. <span class="text-white/85 font-medium">Miễn phí vận chuyển</span> từ 150K.</p>
+                                <a href="#best-sellers" class="inline-flex items-center gap-2 text-white font-bold px-7 py-3 rounded-full no-underline text-[.92rem] hover:-translate-y-0.5 transition-all"
+                                   style="background:linear-gradient(135deg,#D4860B,#F5A623);box-shadow:0 8px 28px rgba(212,134,11,.45);">
+                                    <i class="bi bi-trophy-fill"></i>Xem bestseller
+                                </a>
+                            }
+                        </div>
+                        @if (idx == 0)
+                        {
+                            <div class="hidden lg:flex flex-1 justify-center items-center">
+                                <div class="relative" style="width:300px;height:360px;">
+                                    <img class="float-r1 absolute rounded-2xl object-cover opacity-55" src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300&h=400&fit=crop" style="width:165px;height:248px;top:22px;left:22px;z-index:1;box-shadow:0 24px 64px rgba(0,0,0,.55);" alt="" />
+                                    <img class="float-r2 absolute rounded-2xl object-cover opacity-65" src="https://images.unsplash.com/photo-1512820790803-83ca734da794?w=300&h=400&fit=crop" style="width:160px;height:244px;top:28px;left:96px;z-index:2;box-shadow:0 24px 64px rgba(0,0,0,.55);" alt="" />
+                                    <img class="float-main absolute rounded-2xl object-cover" src="https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=300&h=400&fit=crop" style="width:190px;height:270px;top:45px;left:55px;z-index:3;box-shadow:0 24px 64px rgba(0,0,0,.55);" alt="" />
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+        <button @onclick="PrevSlide" class="absolute left-5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center text-white border-0 cursor-pointer z-20 transition-all hover:bg-white/25"
+                style="background:rgba(255,255,255,.10);border:1.5px solid rgba(255,255,255,.2) !important;backdrop-filter:blur(10px);">
+            <i class="bi bi-chevron-left"></i>
+        </button>
+        <button @onclick="NextSlide" class="absolute right-5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center text-white border-0 cursor-pointer z-20 transition-all hover:bg-white/25"
+                style="background:rgba(255,255,255,.10);border:1.5px solid rgba(255,255,255,.2) !important;backdrop-filter:blur(10px);">
+            <i class="bi bi-chevron-right"></i>
+        </button>
+        <div class="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20">
+            @for (int d = 0; d < 3; d++)
+            {
+                var di = d;
+                <button @onclick="@(()=>GoSlide(di))"
+                        class="@(di==activeSlide?"w-7 h-2 bg-[#D4860B]":"w-2 h-2 bg-white/35 hover:bg-white/60") rounded-full border-0 cursor-pointer transition-all duration-300"></button>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- DANH MỤC -->
+<section class="py-20 bg-[#FFFDF8]" id="categories">
+    <div class="max-w-7xl mx-auto px-5">
+        <div class="flex items-end justify-between mb-8">
+            <div>
+                <div class="inline-flex items-center gap-1.5 text-[#D4860B] text-[.72rem] font-bold tracking-[.14em] uppercase px-3.5 py-1.5 rounded-full mb-3"
+                     style="background:rgba(212,134,11,.10);border:1px solid rgba(212,134,11,.2);">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#D4860B]" style="animation:pulse-dot 2s ease-in-out infinite;display:inline-block;"></span>
+                    Danh mục
+                </div>
+                <h2 class="font-serif font-bold text-[#1A1208] leading-tight" style="font-size:clamp(1.8rem,3vw,2.5rem);">Khám phá theo chủ đề</h2>
+                <div class="flex items-center gap-3 mt-3">
+                    <div class="w-12 h-[3px] bg-[#D4860B] rounded-full"></div>
+                    <div class="w-3 h-[3px] rounded-full opacity-50" style="background:#F5A623;"></div>
+                </div>
+            </div>
+            <a href="/categories" class="hidden sm:inline-flex items-center gap-2 text-[#D4860B] font-semibold text-[.88rem] no-underline px-5 py-2.5 rounded-full transition-all hover:bg-[#D4860B] hover:text-white"
+               style="border:2px solid rgba(212,134,11,.4);">
+                Xem tất cả <i class="bi bi-arrow-right text-sm"></i>
+            </a>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            @if (isLoadingCats)
+            {
+                @for (int s = 0; s < 12; s++)
+                {
+                    <div class="rounded-2xl overflow-hidden border border-[#EDE8DF] bg-white p-5">
+                        <div class="skel w-14 h-14 rounded-xl mx-auto mb-3"></div>
+                        <div class="skel h-3.5 w-3/4 mx-auto mb-1.5"></div>
+                    </div>
+                }
+            }
+            else
+            {
+                @foreach (var cat in categories)
+                {
+                    <a href="/category/@cat.Slug"
+                       class="group block bg-white border-2 border-[#EDE8DF] rounded-2xl p-5 text-center no-underline transition-all duration-300 hover:-translate-y-1.5 hover:border-[#D4860B] hover:shadow-lg">
+                        <div class="w-[60px] h-[60px] rounded-2xl mx-auto mb-3 flex items-center justify-center text-[1.7rem] transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"
+                             style="background:@cat.BgColor;">
+                            @cat.Icon
+                        </div>
+                        <div class="font-serif font-bold text-[#1A1208] text-[.95rem] leading-tight mb-1">@cat.Name</div>
+                    </a>
+                }
+            }
+        </div>
+    </div>
+</section>
+
+<!-- SÁCH MỚI -->
+<section class="py-20 bg-[#FAF7F2]" id="new-books">
+    <div class="max-w-7xl mx-auto px-5">
+        <div class="flex items-end justify-between mb-10">
+            <div>
+                <div class="inline-flex items-center gap-1.5 text-[#D4860B] text-[.72rem] font-bold tracking-[.14em] uppercase px-3.5 py-1.5 rounded-full mb-3"
+                     style="background:rgba(212,134,11,.10);border:1px solid rgba(212,134,11,.2);">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#D4860B]" style="animation:pulse-dot 2s ease-in-out infinite;display:inline-block;"></span>
+                    Mới nhất
+                </div>
+                <h2 class="font-serif font-bold text-[#1A1208] leading-tight" style="font-size:clamp(1.8rem,3vw,2.5rem);">Sách mới về kho</h2>
+                <div class="flex items-center gap-3 mt-3">
+                    <div class="w-12 h-[3px] bg-[#D4860B] rounded-full"></div>
+                    <div class="w-3 h-[3px] rounded-full opacity-50" style="background:#F5A623;"></div>
+                </div>
+                <p class="text-[#7A6A5A] text-[.9rem] mt-2">Cập nhật mới nhất từ các nhà xuất bản hàng đầu.</p>
+            </div>
+            <a href="/books/new" class="hidden sm:inline-flex items-center gap-2 text-[#D4860B] font-semibold text-[.88rem] no-underline px-5 py-2.5 rounded-full transition-all hover:bg-[#D4860B] hover:text-white"
+               style="border:2px solid rgba(212,134,11,.4);">
+                Xem tất cả <i class="bi bi-arrow-right text-sm"></i>
+            </a>
+        </div>
+
+        @if (isLoadingNew)
+        {
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+                @for (int s = 0; s < 8; s++)
+                {
+                    <div class="rounded-2xl overflow-hidden border border-[#EDE8DF] bg-white">
+                        <div class="skel h-[220px] w-full" style="border-radius:0;"></div>
+                        <div class="p-4 space-y-2.5">
+                            <div class="skel h-3 w-1/3 rounded"></div>
+                            <div class="skel h-4 w-3/4 rounded"></div>
+                            <div class="skel h-3 w-1/2 rounded"></div>
+                            <div class="skel h-9 rounded-xl mt-3"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else if (!newBooks.Any())
+        {
+            <div class="text-center py-20"><div class="text-6xl opacity-40 mb-4">📭</div><p class="text-[#9B8B7A] text-[.9rem]">Chưa có sách nào.</p></div>
+        }
+        else
+        {
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+                @foreach (var book in newBooks)
+                {
+                    var bookId = book.BookId;
+                    <div class="book-card-div" @onclick="() => GoToBook(bookId)">
+                        <div class="relative overflow-hidden" style="height:210px;">
+                            <img src="@book.ImageUrl" alt="@book.BookTitle" loading="lazy"
+                                 class="w-full h-full object-cover transition-transform duration-500" />
+                            <div class="absolute inset-0" style="background:linear-gradient(180deg,transparent 45%,rgba(26,18,8,.65) 100%);"></div>
+                            @if (book.IsBestSeller)
+                            {
+                                <span class="absolute top-2.5 left-2.5 text-white text-[.58rem] font-bold tracking-wide uppercase px-2 py-0.5 rounded-full"
+                                      style="background:rgba(192,57,43,.82);backdrop-filter:blur(8px);">Best Seller</span>
+                            }
+                            <span class="absolute top-2.5 right-2.5 text-white text-[.58rem] font-bold px-2 py-0.5 rounded-full"
+                                  style="background:rgba(122,158,126,.82);backdrop-filter:blur(8px);">Mới</span>
+                            <div class="absolute bottom-0 inset-x-0 px-3.5 pb-3 flex items-end justify-between">
+                                <div class="font-serif font-bold text-white text-[1.1rem]" style="text-shadow:0 1px 10px rgba(0,0,0,.6);">
+                                    @book.Price.ToString("#,##0")<span class="text-[.58em] font-normal ml-0.5">đ</span>
+                                </div>
+                                <button class="w-8 h-8 rounded-full flex items-center justify-center border-0 cursor-pointer transition-all text-[.8rem] text-white hover:scale-110"
+                                        style="background:rgba(255,255,255,.15);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.25) !important;"
+                                        @onclick="() => ToggleWishlist(bookId)"
+                                        @onclick:stopPropagation="true">
+                                    <i class="bi @(wishlist.Contains(bookId)?"bi-heart-fill text-red-300":"bi-heart")"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="px-4 pt-3.5 pb-4" style="background:rgba(255,255,255,.75);backdrop-filter:blur(12px);">
+                            <div class="text-[#D4860B] text-[.63rem] font-bold uppercase tracking-widest mb-1">@book.CategoryName</div>
+                            <div class="font-serif font-bold text-[#1A1208] text-[.97rem] leading-snug mb-1.5"
+                                 style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+                                @book.BookTitle
+                            </div>
+                            <div class="flex items-center gap-1 mb-3">
+                                <span style="color:#F5A623;font-size:.8rem;letter-spacing:-.5px;line-height:1;">★★★★</span><span style="color:#C4B8A8;font-size:.8rem;line-height:1;">★</span>
+                                <span class="text-[#9B8B7A] text-[.68rem] ml-1">4.2 (128)</span>
+                            </div>
+                            <button class="w-full flex items-center justify-center gap-1.5 text-white border-0 rounded-xl py-2.5 text-[.79rem] font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5"
+                                    style="background:linear-gradient(135deg,#6B4C2A,#9B6E3A);box-shadow:0 3px 14px rgba(107,76,42,.25);font-family:'Plus Jakarta Sans',sans-serif;"
+                                    @onclick="() => AddToCart(bookId)"
+                                    @onclick:stopPropagation="true">
+                                <i class="bi bi-bag-plus text-[.8rem]"></i> Thêm vào giỏ
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+<!-- SÁCH BÁN CHẠY -->
+<section class="py-20 bg-[#FFFDF8]" id="best-sellers">
+    <div class="max-w-7xl mx-auto px-5">
+        <div class="flex items-end justify-between mb-10">
+            <div>
+                <div class="inline-flex items-center gap-1.5 text-[#D4860B] text-[.72rem] font-bold tracking-[.14em] uppercase px-3.5 py-1.5 rounded-full mb-3"
+                     style="background:rgba(212,134,11,.10);border:1px solid rgba(212,134,11,.2);">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#D4860B]" style="animation:pulse-dot 2s ease-in-out infinite;display:inline-block;"></span>
+                    Nổi bật
+                </div>
+                <h2 class="font-serif font-bold text-[#1A1208] leading-tight" style="font-size:clamp(1.8rem,3vw,2.5rem);">Sách bán chạy nhất</h2>
+                <div class="flex items-center gap-3 mt-3">
+                    <div class="w-12 h-[3px] bg-[#D4860B] rounded-full"></div>
+                    <div class="w-3 h-[3px] rounded-full opacity-50" style="background:#F5A623;"></div>
+                </div>
+                <p class="text-[#7A6A5A] text-[.9rem] mt-2">Được yêu thích bởi hàng nghìn độc giả trên cả nước.</p>
+            </div>
+            <a href="/books/bestseller" class="hidden sm:inline-flex items-center gap-2 text-[#D4860B] font-semibold text-[.88rem] no-underline px-5 py-2.5 rounded-full transition-all hover:bg-[#D4860B] hover:text-white"
+               style="border:2px solid rgba(212,134,11,.4);">
+                Xem tất cả <i class="bi bi-arrow-right text-sm"></i>
+            </a>
+        </div>
+
+        @if (!bestSellerBooks.Any())
+        {
+            <div class="text-center py-20"><div class="text-6xl opacity-40 mb-4">📚</div><p class="text-[#9B8B7A] text-[.9rem]">Chưa có dữ liệu.</p></div>
+        }
+        else
+        {
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+                @foreach (var book in bestSellerBooks)
+                {
+                    var bookId = book.BookId;
+                    <div class="book-card-div" @onclick="() => GoToBook(bookId)">
+                        <div class="relative overflow-hidden" style="height:210px;">
+                            <img src="@book.ImageUrl" alt="@book.BookTitle" loading="lazy"
+                                 class="w-full h-full object-cover transition-transform duration-500" />
+                            <div class="absolute inset-0" style="background:linear-gradient(180deg,transparent 45%,rgba(26,18,8,.65) 100%);"></div>
+                            <span class="absolute top-2.5 left-2.5 text-white text-[.58rem] font-bold tracking-wide uppercase px-2 py-0.5 rounded-full"
+                                  style="background:rgba(192,57,43,.82);backdrop-filter:blur(8px);">Best Seller</span>
+                            <div class="absolute bottom-0 inset-x-0 px-3.5 pb-3 flex items-end justify-between">
+                                <div class="font-serif font-bold text-white text-[1.1rem]" style="text-shadow:0 1px 10px rgba(0,0,0,.6);">
+                                    @book.Price.ToString("#,##0")<span class="text-[.58em] font-normal ml-0.5">đ</span>
+                                </div>
+                                <button class="w-8 h-8 rounded-full flex items-center justify-center border-0 cursor-pointer transition-all text-[.8rem] text-white hover:scale-110"
+                                        style="background:rgba(255,255,255,.15);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.25) !important;"
+                                        @onclick="() => ToggleWishlist(bookId)"
+                                        @onclick:stopPropagation="true">
+                                    <i class="bi @(wishlist.Contains(bookId)?"bi-heart-fill text-red-300":"bi-heart")"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="px-4 pt-3.5 pb-4" style="background:rgba(255,255,255,.75);backdrop-filter:blur(12px);">
+                            <div class="text-[#D4860B] text-[.63rem] font-bold uppercase tracking-widest mb-1">@book.CategoryName</div>
+                            <div class="font-serif font-bold text-[#1A1208] text-[.97rem] leading-snug mb-1.5"
+                                 style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+                                @book.BookTitle
+                            </div>
+                            <div class="flex items-center gap-1 mb-3">
+                                <span style="color:#F5A623;font-size:.8rem;letter-spacing:-.5px;line-height:1;">★★★★</span><span style="color:#C4B8A8;font-size:.8rem;line-height:1;">★</span>
+                                <span class="text-[#9B8B7A] text-[.68rem] ml-1">4.2 (128)</span>
+                            </div>
+                            <button class="w-full flex items-center justify-center gap-1.5 text-white border-0 rounded-xl py-2.5 text-[.79rem] font-semibold cursor-pointer transition-all duration-300 hover:-translate-y-0.5"
+                                    style="background:linear-gradient(135deg,#6B4C2A,#9B6E3A);box-shadow:0 3px 14px rgba(107,76,42,.25);font-family:'Plus Jakarta Sans',sans-serif;"
+                                    @onclick="() => AddToCart(bookId)"
+                                    @onclick:stopPropagation="true">
+                                <i class="bi bi-bag-plus text-[.8rem]"></i> Thêm vào giỏ
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+<!-- TẠI SAO CHỌN CHÚNG TÔI -->
+<section class="py-20 bg-[#FAF7F2]">
+    <div class="max-w-7xl mx-auto px-5">
+        <div class="text-center mb-14">
+            <div class="inline-flex items-center gap-1.5 text-[#D4860B] text-[.72rem] font-bold tracking-[.14em] uppercase px-3.5 py-1.5 rounded-full mb-3"
+                 style="background:rgba(212,134,11,.10);border:1px solid rgba(212,134,11,.2);">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#D4860B]" style="animation:pulse-dot 2s ease-in-out infinite;display:inline-block;"></span>
+                Cam kết
+            </div>
+            <h2 class="font-serif font-bold text-[#1A1208] leading-tight" style="font-size:clamp(1.8rem,3vw,2.5rem);">Tại sao chọn BookStore?</h2>
+            <div class="flex items-center justify-center gap-3 mt-4 mb-4">
+                <div class="w-12 h-[3px] bg-[#D4860B] rounded-full"></div>
+                <div class="w-3 h-[3px] rounded-full opacity-50" style="background:#F5A623;"></div>
+            </div>
+            <p class="text-[#7A6A5A] text-[.9rem] max-w-lg mx-auto">Cam kết mang đến trải nghiệm mua sách tốt nhất — chất lượng, nhanh chóng, tin cậy.</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            @foreach (var (ico, title, desc, bg) in new[]{
+            ("bi-journals","50.000+ Đầu sách","Kho sách phong phú từ văn học, khoa học đến kỹ năng sống và công nghệ.","#FFF8F0"),
+            ("bi-truck","Giao hàng nhanh","Giao hàng toàn quốc trong 24–48h. Miễn phí vận chuyển cho đơn hàng từ 150K.","#F0FFF6"),
+            ("bi-shield-check","Cam kết chất lượng","100% sách chính hãng, nguồn gốc rõ ràng. Đổi trả dễ dàng trong 7 ngày.","#F0F8FF"),
+            ("bi-headset","Hỗ trợ 24/7","Đội ngũ tư vấn sẵn sàng hỗ trợ bạn bất cứ lúc nào, mọi ngày trong năm.","#FDF0FF"),
+            })
+            {
+                <div class="bg-white rounded-2xl p-7 border border-[#EDE8DF] transition-all duration-300 hover:-translate-y-2 hover:shadow-lg hover:border-[#D4860B]/40 group"
+                     style="box-shadow:0 2px 16px rgba(107,76,42,.07);">
+                    <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110" style="background:@bg;">
+                        <i class="bi @ico text-[#D4860B] text-[1.3rem]"></i>
+                    </div>
+                    <div class="font-serif font-bold text-[#1A1208] text-[1.05rem] mb-2">@title</div>
+                    <p class="text-[#9B8B7A] text-[.84rem] leading-[1.7] m-0">@desc</p>
+                </div>
+            }
+        </div>
+        <div class="mt-14 rounded-2xl p-8 grid grid-cols-2 lg:grid-cols-4 gap-6 text-center"
+             style="background:linear-gradient(135deg,#6B4C2A,#3D2B1F);">
+            @foreach (var (num, label, sub) in new[] { ("50K+", "Đầu sách", "Cập nhật hàng tuần"), ("200K+", "Khách hàng", "Tin tưởng sử dụng"), ("4.9", "Điểm đánh giá", "Trên 5 sao"), ("24h", "Giao hàng", "Toàn quốc") })
+            {
+                <div>
+                    <div class="font-serif font-bold text-[2.2rem] leading-none mb-1"
+                         style="background:linear-gradient(135deg,#F5A623,#D4860B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+                        @num
+                    </div>
+                    <div class="text-white font-semibold text-[.9rem] mb-0.5">@label</div>
+                    <div class="text-white/45 text-[.72rem]">@sub</div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- NEWSLETTER -->
+<section class="py-20 bg-[#FFFDF8]">
+    <div class="max-w-2xl mx-auto px-5 text-center">
+        <div class="inline-flex items-center gap-1.5 text-[#D4860B] text-[.72rem] font-bold tracking-[.14em] uppercase px-3.5 py-1.5 rounded-full mb-5"
+             style="background:rgba(212,134,11,.10);border:1px solid rgba(212,134,11,.2);">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#D4860B]" style="animation:pulse-dot 2s ease-in-out infinite;display:inline-block;"></span>
+            Bản tin sách
+        </div>
+        <h2 class="font-serif font-bold text-[#1A1208] leading-tight mb-4" style="font-size:clamp(1.8rem,3vw,2.4rem);">Nhận thông báo sách mới mỗi tuần</h2>
+        <p class="text-[#7A6A5A] text-[.95rem] leading-relaxed mb-8">Đăng ký để nhận thông báo về các đầu sách mới nhất, ưu đãi độc quyền và gợi ý đọc sách theo sở thích của bạn.</p>
+        <div class="flex gap-3 max-w-md mx-auto flex-wrap sm:flex-nowrap">
+            <input type="email" @bind="newsletterEmail" placeholder="Địa chỉ email của bạn..."
+                   class="flex-1 px-5 py-3.5 rounded-xl border border-[#EDE8DF] bg-white outline-none text-[.9rem] text-[#1A1208] transition-all"
+                   style="box-shadow:0 2px 12px rgba(107,76,42,.06);"
+                   onfocus="this.style.borderColor='#D4860B';this.style.boxShadow='0 0 0 3px rgba(212,134,11,.12)'"
+                   onblur="this.style.borderColor='';this.style.boxShadow='0 2px 12px rgba(107,76,42,.06)'" />
+            <button @onclick="SubscribeNewsletter"
+                    class="px-7 py-3.5 text-white font-semibold rounded-xl border-0 cursor-pointer text-[.9rem] transition-all hover:-translate-y-0.5 whitespace-nowrap flex-shrink-0"
+                    style="background:linear-gradient(135deg,#6B4C2A,#8B6040);box-shadow:0 4px 16px rgba(107,76,42,.3);font-family:'Plus Jakarta Sans',sans-serif;">
+                <i class="bi bi-send-fill mr-1.5 text-sm"></i> Đăng ký
+            </button>
+        </div>
+        @if (!string.IsNullOrEmpty(newsletterMessage))
+        {
+            <div class="mt-4 inline-flex items-center gap-2 text-[.84rem] font-medium text-green-700 bg-green-50 border border-green-200 px-4 py-2 rounded-full">
+                <i class="bi bi-check-circle-fill text-green-600"></i> @newsletterMessage
+            </div>
+        }
+        <p class="mt-4 text-[#C4B8A8] text-[.75rem]">Không có spam. Có thể hủy đăng ký bất cứ lúc nào.</p>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="bg-[#1A1208] text-white/60 pt-16" id="contact">
+    <div class="h-px" style="background:linear-gradient(90deg,transparent,rgba(212,134,11,.4),transparent);"></div>
+    <div class="max-w-7xl mx-auto px-5 pt-14">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 pb-12">
+            <div>
+                <a href="/" class="font-serif font-bold text-white flex items-center gap-2.5 no-underline mb-5 text-[1.6rem]">
+                    <div class="w-9 h-9 rounded-[10px] flex items-center justify-center text-white text-base flex-shrink-0"
+                         style="background:linear-gradient(135deg,#D4860B,#F5A623);">
+                        <i class="bi bi-book-half"></i>
+                    </div>BookStore
+                </a>
+                <p class="text-[.85rem] leading-[1.75] text-white/40 max-w-[230px] mb-6">Nơi quy tụ kho tàng tri thức nhân loại. Kết nối bạn với hàng chục nghìn đầu sách chất lượng.</p>
+                @foreach (var (ic, txt) in new[] { ("geo-alt-fill", "123 Nguyễn Huệ, Quận 1, TP.HCM"), ("telephone-fill", "0901 234 567"), ("envelope-fill", "bookstore@gmail.com") })
+                {
+                    <div class="flex items-start gap-3 text-[.82rem] text-white/45 mb-2">
+                        <i class="bi bi-@ic text-[#D4860B] mt-0.5 flex-shrink-0"></i><span>@txt</span>
+                    </div>
+                }
+            </div>
+            <div>
+                <div class="font-serif font-bold text-white text-[1rem] mb-5 pb-3 border-b" style="border-color:rgba(212,134,11,.3);">Danh mục sách</div>
+                @foreach (var cat in categories)
+                {
+                    <a href="/category/@cat.Slug" class="footer-lnk"><i class="bi bi-chevron-right"></i>@cat.Name</a>
+                }
+            </div>
+            <div>
+                <div class="font-serif font-bold text-white text-[1rem] mb-5 pb-3 border-b" style="border-color:rgba(212,134,11,.3);">Hỗ trợ khách hàng</div>
+                @foreach (var (href, lbl) in new[] { ("/guide", "Hướng dẫn mua hàng"), ("/return-policy", "Chính sách đổi trả"), ("/shipping", "Vận chuyển"), ("/payment", "Thanh toán"), ("/faq", "Câu hỏi thường gặp"), ("/contact", "Liên hệ chúng tôi") })
+                {
+                    <a href="@href" class="footer-lnk"><i class="bi bi-chevron-right"></i>@lbl</a>
+                }
+            </div>
+            <div>
+                <div class="font-serif font-bold text-white text-[1rem] mb-5 pb-3 border-b" style="border-color:rgba(212,134,11,.3);">Kết nối với chúng tôi</div>
+                <div class="flex gap-2.5 flex-wrap mb-7">
+                    @foreach (var ic in new[] { "facebook", "instagram", "youtube", "tiktok" })
+                    {
+                        <a href="#" class="w-9 h-9 rounded-full flex items-center justify-center text-white/55 text-sm no-underline hover:text-white hover:bg-[#D4860B] transition-all"
+                           style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);">
+                            <i class="bi bi-@ic"></i>
+                        </a>
+                    }
+                </div>
+                <div class="font-serif font-bold text-white text-[.95rem] mb-3">Nhận thông báo mới</div>
+                <p class="text-white/40 text-[.8rem] mb-4 leading-relaxed">Đăng ký để nhận ưu đãi và sách mới mỗi tuần.</p>
+                <div class="flex rounded-xl overflow-hidden" style="border:1px solid rgba(255,255,255,.12);">
+                    <input type="email" @bind="newsletterEmail" placeholder="Email của bạn..."
+                           class="flex-1 bg-white/[0.06] text-white text-[.82rem] px-4 py-2.5 border-0 outline-none placeholder-white/30 focus:bg-white/10 transition-colors" />
+                    <button @onclick="SubscribeNewsletter" class="px-4 text-white text-sm border-0 cursor-pointer flex-shrink-0 transition-opacity hover:opacity-85"
+                            style="background:linear-gradient(135deg,#D4860B,#F5A623);">
+                        <i class="bi bi-send-fill"></i>
+                    </button>
+                </div>
+                @if (!string.IsNullOrEmpty(newsletterMessage))
+                {
+                    <p class="mt-2.5 text-[.78rem] text-[#96CEB4] flex items-center gap-1.5">
+                        <i class="bi bi-check-circle-fill"></i>@newsletterMessage
+                    </p>
+                }
+            </div>
+        </div>
+        <div class="border-t py-6 flex flex-col md:flex-row items-center justify-between gap-3" style="border-color:rgba(255,255,255,.06);">
+            <p class="text-[.78rem] text-white/28 m-0">&copy; @DateTime.Now.Year BookStore. Tất cả quyền được bảo lưu.</p>
+            <div class="flex items-center gap-4">
+                <a href="/terms" class="text-white/28 no-underline text-[.78rem] hover:text-white/55 transition-colors">Điều khoản</a>
+                <span class="text-white/15">|</span>
+                <a href="/privacy" class="text-white/28 no-underline text-[.78rem] hover:text-white/55 transition-colors">Bảo mật</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+@if (showToast)
+{
+    <div class="toast-anim fixed bottom-6 left-1/2 text-white px-6 py-3.5 rounded-2xl text-[.86rem] font-medium z-[9999] flex items-center gap-2.5 whitespace-nowrap"
+         style="transform:translateX(-50%);background:rgba(26,18,8,.95);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.08);box-shadow:0 12px 40px rgba(0,0,0,.4);">
+        <i class="bi bi-check-circle-fill text-[#96CEB4]"></i>
+        @toastMessage
+    </div>
+}
+
+@code {
+    private bool isLoggedIn = false;
+    private string userFullName = "";
+    private string userEmail = "";
+    private string accessToken = "";
+    private bool showDropdown = false;
+    private string searchKeyword = "";
+    private int cartCount = 0;
+    private bool isLoadingNew = true;
+    private bool isLoadingCats = true;
+    private string newsletterEmail = "";
+    private string newsletterMessage = "";
+    private bool showToast = false;
+    private string toastMessage = "";
+    private HashSet<int> wishlist = new();
+    private int activeSlide = 0;
+    private System.Threading.Timer? carouselTimer;
+    private int currentUserId = 0;
+
+    private record BookViewModel(int BookId, string BookTitle, string AuthorName, string CategoryName, decimal Price, string ImageUrl, bool IsBestSeller);
+    private record CategoryViewModel(int CategoryId, string Name, string Icon, string BgColor, string Slug, int BookCount, string? Description);
+
+    private List<BookViewModel> newBooks = new();
+    private List<BookViewModel> bestSellerBooks = new();
+    private List<CategoryViewModel> categories = new();
+
+    protected override void OnInitialized()
+    {
+        carouselTimer = new System.Threading.Timer(async _ =>
+        {
+            activeSlide = (activeSlide + 1) % 3;
+            await InvokeAsync(StateHasChanged);
+        }, null, 5000, 5000);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        var token = await JS.InvokeAsync<string?>("localStorage.getItem", "accessToken");
+        var fullName = await JS.InvokeAsync<string?>("localStorage.getItem", "userFullName");
+        var email = await JS.InvokeAsync<string?>("localStorage.getItem", "userEmail");
+        var userIdStr = await JS.InvokeAsync<string?>("localStorage.getItem", "userId");
+
+        if (!string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(fullName))
+        {
+            if (!IsTokenExpired(token))
+            {
+                isLoggedIn = true;
+                userFullName = fullName;
+                userEmail = email ?? "";
+                accessToken = token;
+                if (int.TryParse(userIdStr, out var uid))
+                    currentUserId = uid;
+            }
+            else
+            {
+                foreach (var k in new[] { "accessToken", "userFullName", "userEmail", "userId" })
+                    await JS.InvokeVoidAsync("localStorage.removeItem", k);
+            }
+        }
+
+        await Task.WhenAll(LoadCategoriesFromApi(), LoadNewBooks(), LoadBestSellerBooks());
+
+        if (isLoggedIn && currentUserId > 0)
+            await LoadWishlist();
+
+        StateHasChanged();
+    }
+
+    private async Task LoadWishlist()
+    {
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"api/FavoriteBook/{currentUserId}");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            var resp = await Http.SendAsync(request);
+            if (resp.IsSuccessStatusCode)
+            {
+                var result = await resp.Content.ReadFromJsonAsync<FavoriteBookListApiDto>();
+                if (result?.Items != null)
+                    wishlist = result.Items.Select(i => i.BookId).ToHashSet();
+            }
+        }
+        catch { }
+    }
+
+    private static bool IsTokenExpired(string token)
+    {
+        try
+        {
+            var parts = token.Split('.');
+            if (parts.Length != 3) return true;
+            var payload = parts[1];
+            payload = payload.PadRight(payload.Length + (4 - payload.Length % 4) % 4, '=');
+            var json = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(payload));
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            if (doc.RootElement.TryGetProperty("exp", out var exp))
+                return DateTimeOffset.FromUnixTimeSeconds(exp.GetInt64()) <= DateTimeOffset.UtcNow;
+            return true;
+        }
+        catch { return true; }
+    }
+
+    public void Dispose() { carouselTimer?.Dispose(); }
+
+    private void PrevSlide() { activeSlide = (activeSlide + 2) % 3; carouselTimer?.Change(5000, 5000); }
+    private void NextSlide() { activeSlide = (activeSlide + 1) % 3; carouselTimer?.Change(5000, 5000); }
+    private void GoSlide(int i) { activeSlide = i; carouselTimer?.Change(5000, 5000); }
+
+    private async Task LoadCategoriesFromApi()
+    {
+        isLoadingCats = true;
+        try
+        {
+            var result = await Http.GetFromJsonAsync<List<ApiCategoryDto>>("api/Category");
+            if (result != null)
+            {
+                var icons = new[] { "📖", "📈", "💻", "🧠", "🌟", "🏛️", "🎨", "🔬", "⚖️", "🍳", "🏃", "🌍" };
+                var bgs = new[] { "#FFF0F0", "#F0FFFD", "#F0FAFF", "#F0FFF6", "#FFFDF0", "#FDF0FF", "#FFF8F0", "#F0F8FF", "#FFF0F8", "#F5FFF0", "#FFF5F0", "#F0FFFF" };
+                categories = result.Select((c, i) => new CategoryViewModel(c.CategoryId, c.CategoryName, icons[i % icons.Length], bgs[i % bgs.Length], Slugify(c.CategoryName), 0, c.Description)).ToList();
+            }
+        }
+        catch { }
+        finally { isLoadingCats = false; }
+    }
+
+    private async Task LoadNewBooks()
+    {
+        isLoadingNew = true;
+        try
+        {
+            var result = await Http.GetFromJsonAsync<List<ApiBookDto>>("api/book");
+            if (result != null)
+                newBooks = result.OrderByDescending(b => b.BookId).Take(8)
+                    .Select(b => new BookViewModel(b.BookId, b.BookTitle ?? "Không rõ", b.AuthorName ?? "Không rõ", b.CategoryName ?? "Khác", b.Price,
+                        !string.IsNullOrEmpty(b.ImageUrl) ? b.ImageUrl : "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300&h=400&fit=crop", b.IsBestSeller)).ToList();
+        }
+        catch { }
+        finally { isLoadingNew = false; }
+    }
+
+    private async Task LoadBestSellerBooks()
+    {
+        try
+        {
+            var result = await Http.GetFromJsonAsync<List<ApiBookDto>>("api/book/top-selling?top=8");
+            if (result != null && result.Any())
+                bestSellerBooks = result.Select(b => new BookViewModel(b.BookId, b.BookTitle ?? "Không rõ", b.AuthorName ?? "Không rõ", b.CategoryName ?? "Khác", b.Price,
+                    !string.IsNullOrEmpty(b.ImageUrl) ? b.ImageUrl : "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=300&h=400&fit=crop", true)).ToList();
+        }
+        catch { }
+    }
+
+    private class ApiBookDto { public int BookId { get; set; } public string? BookTitle { get; set; } public string? AuthorName { get; set; } public string? CategoryName { get; set; } public decimal Price { get; set; } public string? ImageUrl { get; set; } public bool IsBestSeller { get; set; } }
+    private class ApiCategoryDto { public int CategoryId { get; set; } public string CategoryName { get; set; } = ""; public string? Description { get; set; } }
+    private class ApiErrorDto { public string? Message { get; set; } }
+
+    private static string Slugify(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return "";
+        return name.ToLower()
+            .Replace("đ", "d").Replace("à", "a").Replace("á", "a").Replace("ả", "a").Replace("ã", "a").Replace("ạ", "a")
+            .Replace("ă", "a").Replace("ằ", "a").Replace("ắ", "a").Replace("ẳ", "a").Replace("ẵ", "a").Replace("ặ", "a")
+            .Replace("â", "a").Replace("ầ", "a").Replace("ấ", "a").Replace("ẩ", "a").Replace("ẫ", "a").Replace("ậ", "a")
+            .Replace("è", "e").Replace("é", "e").Replace("ẻ", "e").Replace("ẽ", "e").Replace("ẹ", "e")
+            .Replace("ê", "e").Replace("ề", "e").Replace("ế", "e").Replace("ể", "e").Replace("ễ", "e").Replace("ệ", "e")
+            .Replace("ì", "i").Replace("í", "i").Replace("ỉ", "i").Replace("ĩ", "i").Replace("ị", "i")
+            .Replace("ò", "o").Replace("ó", "o").Replace("ỏ", "o").Replace("õ", "o").Replace("ọ", "o")
+            .Replace("ô", "o").Replace("ồ", "o").Replace("ố", "o").Replace("ổ", "o").Replace("ỗ", "o").Replace("ộ", "o")
+            .Replace("ơ", "o").Replace("ờ", "o").Replace("ớ", "o").Replace("ở", "o").Replace("ỡ", "o").Replace("ợ", "o")
+            .Replace("ù", "u").Replace("ú", "u").Replace("ủ", "u").Replace("ũ", "u").Replace("ụ", "u")
+            .Replace("ư", "u").Replace("ừ", "u").Replace("ứ", "u").Replace("ử", "u").Replace("ữ", "u").Replace("ự", "u")
+            .Replace("ỳ", "y").Replace("ý", "y").Replace("ỷ", "y").Replace("ỹ", "y").Replace("ỵ", "y")
+            .Replace(" ", "-").Replace("--", "-");
+    }
+
+    private async Task AddToCart(int bookId)
+    {
+        if (!isLoggedIn || string.IsNullOrEmpty(accessToken)) { Navigation.NavigateTo("/login"); return; }
+        var book = newBooks.FirstOrDefault(b => b.BookId == bookId) ?? bestSellerBooks.FirstOrDefault(b => b.BookId == bookId);
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, "api/cart/add");
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+            request.Content = JsonContent.Create(new { bookId, quantity = 1 });
+            var resp = await Http.SendAsync(request);
+            if (resp.IsSuccessStatusCode) { cartCount++; await ShowToast($"Đã thêm '{book?.BookTitle}' vào giỏ hàng!"); }
+            else
+            {
+                var raw = await resp.Content.ReadAsStringAsync();
+                string errorMsg = $"Lỗi {(int)resp.StatusCode}";
+                if (!string.IsNullOrWhiteSpace(raw))
+                {
+                    try { var err = System.Text.Json.JsonSerializer.Deserialize<ApiErrorDto>(raw, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }); errorMsg = err?.Message ?? errorMsg; }
+                    catch { errorMsg = raw[..Math.Min(raw.Length, 80)]; }
+                }
+                await ShowToast(errorMsg);
+            }
+        }
+        catch (Exception ex) { await ShowToast($"Lỗi kết nối: {ex.Message}"); }
+    }
+
+    private void GoToBook(int bookId) { Navigation.NavigateTo("/book/" + bookId); }
+
+    private async Task ToggleWishlist(int bookId)
+    {
+        if (!isLoggedIn || string.IsNullOrEmpty(accessToken))
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        if (wishlist.Contains(bookId))
+        {
+            // Xóa khỏi yêu thích
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Delete,
+                    $"api/FavoriteBook/{currentUserId}/{bookId}");
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                var resp = await Http.SendAsync(request);
+                if (resp.IsSuccessStatusCode)
+                {
+                    wishlist.Remove(bookId);
+                    await ShowToast("Đã xóa khỏi danh sách yêu thích.");
+                }
+                else
+                {
+                    var err = await ReadErrorAsync(resp);
+                    await ShowToast(err);
+                }
+            }
+            catch (Exception ex) { await ShowToast($"Lỗi kết nối: {ex.Message}"); }
+        }
+        else
+        {
+            // Thêm vào yêu thích
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Post, "api/FavoriteBook");
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                request.Content = JsonContent.Create(new { userId = currentUserId, bookId });
+                var resp = await Http.SendAsync(request);
+                if (resp.IsSuccessStatusCode)
+                {
+                    wishlist.Add(bookId);
+                    await ShowToast("Đã thêm vào danh sách yêu thích! ❤️");
+                }
+                else
+                {
+                    var err = await ReadErrorAsync(resp);
+                    await ShowToast(err);
+                }
+            }
+            catch (Exception ex) { await ShowToast($"Lỗi kết nối: {ex.Message}"); }
+        }
+    }
+
+    private async Task SubscribeNewsletter()
+    {
+        if (string.IsNullOrWhiteSpace(newsletterEmail)) return;
+        newsletterMessage = "Đăng ký thành công! Cảm ơn bạn.";
+        newsletterEmail = "";
+        await Task.CompletedTask;
+    }
+
+    private async Task ShowToast(string message) { toastMessage = message; showToast = true; StateHasChanged(); await Task.Delay(3000); showToast = false; StateHasChanged(); }
+    private void ToggleDropdown() => showDropdown = !showDropdown;
+
+    private async Task Logout()
+    {
+        foreach (var k in new[] { "accessToken", "refreshToken", "userEmail", "userFullName", "userId" })
+            await JS.InvokeVoidAsync("localStorage.removeItem", k);
+        isLoggedIn = false; userFullName = ""; userEmail = ""; accessToken = "";
+        currentUserId = 0; wishlist.Clear(); showDropdown = false;
+        Navigation.NavigateTo("/", forceLoad: true);
+    }
+
+    private static string GetInitials(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return "?";
+        var parts = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length == 1 ? parts[0][..1].ToUpper() : $"{parts[0][..1]}{parts[^1][..1]}".ToUpper();
+    }
+
+    private async Task<string> ReadErrorAsync(HttpResponseMessage resp)
+    {
+        try
+        {
+            var raw = await resp.Content.ReadAsStringAsync();
+            if (!string.IsNullOrWhiteSpace(raw))
+            {
+                var err = System.Text.Json.JsonSerializer.Deserialize<ApiErrorDto>(raw,
+                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                return err?.Message ?? $"Lỗi {(int)resp.StatusCode}";
+            }
+        }
+        catch { }
+        return $"Lỗi {(int)resp.StatusCode}";
+    }
+
+    // Thêm DTO cho wishlist response
+    private class FavoriteBookListApiDto
+    {
+        public int TotalCount { get; set; }
+        public List<FavoriteBookItemApiDto>? Items { get; set; }
+    }
+    private class FavoriteBookItemApiDto
+    {
+        public int BookId { get; set; }
+        public string? BookTitle { get; set; }
+        public string? AuthorName { get; set; }
+        public string? CategoryName { get; set; }
+        public decimal Price { get; set; }
+        public string? CoverImageUrl { get; set; }
+        public DateTime MarkedDate { get; set; }
+    }
+}
