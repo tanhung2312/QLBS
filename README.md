@@ -70,11 +70,19 @@ Mở file appsettings.json trong thư mục QLBS.
     "Issuer": " ",
     "Audience": " "
 },
+
+
+
+
 "CloudinarySettings": {
     "CloudName": " ",
     "ApiKey": " ",
     "ApiSecret": " "
 },
+
+
+
+
 "Vnpay": {
     "TmnCode": " ",
     "HashSecret": " ",
@@ -82,6 +90,10 @@ Mở file appsettings.json trong thư mục QLBS.
     "Version": "2.1.0",
     "ReturnUrl": " "
 },
+
+
+
+
 "GhnSettings": {
     "ApiBaseUrl": "https://dev-online-gateway.ghn.vn/shiip/public-api",
     "ApiToken": " ",
@@ -91,6 +103,11 @@ Mở file appsettings.json trong thư mục QLBS.
     "ServiceTypeId": 2,
     "DefaultWeight": 200
 },
+
+
+
+
+
 "EmailSettings": {
     "SmtpServer": "smtp.gmail.com",
     "SmtpPort": ,
@@ -98,6 +115,10 @@ Mở file appsettings.json trong thư mục QLBS.
     "SenderName": " ",
     "Password": " "
 },
+
+
+
+
 "GoogleAuth": {
     "ClientId": " ",
     "ClientSecret": " "
@@ -111,5 +132,4 @@ Mở QLBS.sln bằng Visual Studio.
 
 Thiết lập chạy đồng thời cả project Backend API và Frontend (FE_QLBS).
 
-Ghi Chú Phát Triển
-Dự án hiện đang trong quá trình hoàn thiện với các chức năng cốt lõi về quản lý bán hàng và tích hợp thanh toán.
+
