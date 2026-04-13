@@ -28,4 +28,11 @@ public class ReviewController : ControllerBase
 
         return Ok(new { message = "Đánh giá thành công!" });
     }
+
+    [HttpGet("{bookId}")]
+    public async Task<IActionResult> GetBookReviews(int bookId)
+    {
+        var reviews = await _reviewService.GetBookReviewsAsync(bookId);
+        return Ok(reviews);
+    }
 }

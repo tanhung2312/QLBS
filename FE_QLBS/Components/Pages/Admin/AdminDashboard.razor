@@ -1,5 +1,11 @@
 ﻿@page "/admin"
 @page "/admin/dashboard"
+@using System.Net.Http.Json
+@using System.Net.Http.Headers
+@using System.Text.Json
+@inject HttpClient Http
+@inject NavigationManager Nav
+@inject IJSRuntime JS
 
 <PageTitle>Dashboard - BookStore Admin</PageTitle>
 
@@ -388,6 +394,46 @@
             color: var(--amber);
         }
 
+    /* Loading / Error */
+    .loading-overlay {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 60px 20px;
+        gap: 16px;
+        color: var(--text-muted);
+        font-size: .9rem;
+    }
+
+    .spinner {
+        width: 36px;
+        height: 36px;
+        border: 3px solid var(--border);
+        border-top-color: var(--amber);
+        border-radius: 50%;
+        animation: spin .7s linear infinite;
+    }
+
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .error-box {
+        background: var(--red-dim);
+        border: 1px solid rgba(192,57,43,.2);
+        border-radius: var(--radius);
+        padding: 16px 20px;
+        color: var(--red);
+        font-size: .85rem;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
     /* ══ STATS ══ */
     .adm-stats {
         display: grid;
@@ -511,6 +557,11 @@
             color: var(--red);
         }
 
+        .stat-badge.neutral {
+            background: var(--bg);
+            color: var(--text-muted);
+        }
+
     .stat-value {
         font-family: 'Playfair Display', serif;
         font-size: 1.9rem;
@@ -538,6 +589,19 @@
             color: var(--text-sec);
             font-weight: 600;
         }
+
+    .skeleton {
+        background: linear-gradient(90deg, var(--border) 25%, var(--bg) 50%, var(--border) 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.2s infinite;
+        border-radius: 6px;
+    }
+
+    @@keyframes shimmer {
+        to {
+            background-position: -200% 0;
+        }
+    }
 
     /* ══ MID ROW ══ */
     .adm-mid {
@@ -578,35 +642,6 @@
         color: var(--text-muted);
         margin-top: 2px;
     }
-
-    .tab-row {
-        display: flex;
-        gap: 3px;
-    }
-
-    .tab-btn {
-        padding: 4px 11px;
-        border-radius: 7px;
-        font-size: .75rem;
-        font-weight: 600;
-        cursor: pointer;
-        color: var(--text-muted);
-        background: transparent;
-        border: 1px solid transparent;
-        font-family: 'DM Sans', sans-serif;
-        transition: all .15s;
-    }
-
-        .tab-btn.on {
-            background: var(--amber-dim);
-            color: var(--amber);
-            border-color: rgba(212,134,11,0.2);
-        }
-
-        .tab-btn:hover:not(.on) {
-            background: var(--bg);
-            color: var(--text-sec);
-        }
 
     /* Bar chart */
     .bar-chart {
@@ -826,25 +861,6 @@
         color: var(--text-pri);
     }
 
-    .tbl-cust {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .mini-av {
-        width: 26px;
-        height: 26px;
-        border-radius: 50%;
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: .65rem;
-        font-weight: 800;
-        color: #fff;
-    }
-
     .tbl-amt {
         font-weight: 700;
         color: var(--ink);
@@ -885,7 +901,58 @@
         color: var(--blue);
     }
 
-    /* Activity */
+    .rev-date {
+        font-weight: 600;
+        color: var(--text-pri);
+    }
+
+    .rev-orders {
+        color: var(--blue);
+        font-weight: 600;
+    }
+
+    .rev-books {
+        color: var(--green);
+        font-weight: 600;
+    }
+
+    /* Summary pills */
+    .summary-strip {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+        padding: 12px 16px;
+        background: var(--surface2);
+        border-radius: 10px;
+        border: 1px solid var(--border);
+    }
+
+    .sum-pill {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 6px 12px;
+        border-radius: 8px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        min-width: 80px;
+    }
+
+    .sum-pill-val {
+        font-family: 'Playfair Display', serif;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--ink);
+    }
+
+    .sum-pill-lbl {
+        font-size: .65rem;
+        color: var(--text-muted);
+        margin-top: 1px;
+    }
+
+    /* Activity / Inventory */
     .adm-act-card {
         background: var(--surface);
         border: 1px solid var(--border);
@@ -954,6 +1021,30 @@
         gap: 3px;
     }
 
+    /* Month selector */
+    .month-selector {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--bg);
+        border: 1px solid var(--border2);
+        border-radius: 9px;
+        padding: 5px 10px;
+        font-size: .8rem;
+        color: var(--text-sec);
+    }
+
+        .month-selector select {
+            background: none;
+            border: none;
+            outline: none;
+            font-family: 'DM Sans', sans-serif;
+            font-size: .8rem;
+            color: var(--text-pri);
+            font-weight: 500;
+            cursor: pointer;
+        }
+
     /* Buttons */
     .btn {
         padding: 6px 13px;
@@ -989,6 +1080,11 @@
             border-color: var(--amber);
             color: var(--amber);
         }
+
+    .btn-sm {
+        padding: 4px 10px;
+        font-size: .72rem;
+    }
 
     @@keyframes fadeUp {
         from {
@@ -1039,7 +1135,11 @@
                 <div class="adm-nav-label">Quản lý</div>
                 <a href="/admin/orders" class="adm-nav-item">
                     <span class="adm-nav-icon"><i class="bi bi-bag-fill"></i></span>
-                    Đơn hàng <span class="adm-nav-badge">12</span>
+                    Đơn hàng
+                    @if (_dashboard != null)
+                    {
+                        <span class="adm-nav-badge">@_dashboard.TotalOrdersThisMonth</span>
+                    }
                 </a>
                 <a href="/admin/books" class="adm-nav-item">
                     <span class="adm-nav-icon"><i class="bi bi-journals"></i></span> Sách
@@ -1054,8 +1154,7 @@
                     <span class="adm-nav-icon"><i class="bi bi-people-fill"></i></span> Khách hàng
                 </a>
                 <a href="/admin/reviews" class="adm-nav-item">
-                    <span class="adm-nav-icon"><i class="bi bi-star-fill"></i></span>
-                    Đánh giá <span class="adm-nav-badge">3</span>
+                    <span class="adm-nav-icon"><i class="bi bi-star-fill"></i></span> Đánh giá
                 </a>
             </div>
             <div class="adm-nav-section">
@@ -1093,6 +1192,9 @@
                 <input type="text" placeholder="Tìm kiếm sách, đơn hàng..." />
             </div>
             <div class="adm-topbar-actions">
+                <button class="adm-icon-btn" title="Làm mới dữ liệu" @onclick="RefreshDashboard" disabled="@_loading">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
                 <div class="adm-icon-btn">
                     <i class="bi bi-bell"></i><span class="adm-notif-dot"></span>
                 </div>
@@ -1106,220 +1208,573 @@
             <!-- Welcome -->
             <div class="adm-welcome">
                 <div>
-                    <h2>Chào buổi sáng, Admin 👋</h2>
-                    <p>Tổng quan hoạt động của BookStore hôm nay.</p>
+                    <h2>Chào buổi @GetGreeting(), Admin 👋</h2>
+                    <p>Tổng quan hoạt động của BookStore hôm nay — @(DateTime.Now.ToString("dd/MM/yyyy")).</p>
                 </div>
-                <div class="adm-date-chip">
-                    <i class="bi bi-calendar3"></i> Thứ Tư, 11 tháng 3, 2026
+                <div style="display:flex;gap:10px;align-items:center">
+                    <div class="adm-date-chip">
+                        <i class="bi bi-calendar3"></i>
+                        @DateTime.Now.ToString("dddd, dd MMMM yyyy", new System.Globalization.CultureInfo("vi-VN"))
+                    </div>
+                    <button class="btn btn-primary btn-sm" @onclick="GenerateTodayReport" disabled="@_generating">
+                        <i class="bi bi-lightning-fill"></i> @(_generating ? "Đang tạo..." : "Tạo báo cáo hôm nay")
+                    </button>
                 </div>
             </div>
 
-            <!-- Stats -->
-            <div class="adm-stats">
-                <div class="stat-card s-amber">
-                    <div class="stat-top">
-                        <div class="stat-icon"><i class="bi bi-wallet2"></i></div>
-                        <span class="stat-badge up"><i class="bi bi-arrow-up-short"></i>+18.4%</span>
-                    </div>
-                    <div class="stat-value">142.5tr</div>
-                    <div class="stat-label">Doanh thu tháng này</div>
-                    <div class="stat-sub">So với tháng trước: <b>120.4tr</b></div>
+            @if (_error != null)
+            {
+                <div class="error-box">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span>
+                        @_error
+                        <button class="btn btn-outline btn-sm" style="margin-left:8px" @onclick="RefreshDashboard">Thử lại</button>
+                    </span>
                 </div>
-                <div class="stat-card s-green">
-                    <div class="stat-top">
-                        <div class="stat-icon"><i class="bi bi-bag-check-fill"></i></div>
-                        <span class="stat-badge up"><i class="bi bi-arrow-up-short"></i>+12.1%</span>
-                    </div>
-                    <div class="stat-value">1,284</div>
-                    <div class="stat-label">Đơn hàng tháng này</div>
-                    <div class="stat-sub">Đang xử lý: <b>47 đơn</b></div>
-                </div>
-                <div class="stat-card s-blue">
-                    <div class="stat-top">
-                        <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
-                        <span class="stat-badge up"><i class="bi bi-arrow-up-short"></i>+8.6%</span>
-                    </div>
-                    <div class="stat-value">8,941</div>
-                    <div class="stat-label">Khách hàng</div>
-                    <div class="stat-sub">Mới tháng này: <b>+342</b></div>
-                </div>
-                <div class="stat-card s-red">
-                    <div class="stat-top">
-                        <div class="stat-icon"><i class="bi bi-journals"></i></div>
-                        <span class="stat-badge down"><i class="bi bi-arrow-down-short"></i>-5.2%</span>
-                    </div>
-                    <div class="stat-value">3,672</div>
-                    <div class="stat-label">Sách tồn kho</div>
-                    <div class="stat-sub">Sắp hết hàng: <b>14 đầu sách</b></div>
-                </div>
-            </div>
+            }
 
-            <!-- Mid -->
-            <div class="adm-mid">
-                <!-- Chart -->
-                <div class="adm-card" style="animation-delay:.20s">
-                    <div class="adm-card-body">
-                        <div class="card-hd">
-                            <div>
-                                <div class="card-title">Doanh thu theo tháng</div>
-                                <div class="card-sub">Năm 2025 — đơn vị: triệu đồng</div>
-                            </div>
-                            <div class="tab-row">
-                                <button class="tab-btn on">Năm</button>
-                                <button class="tab-btn">Quý</button>
-                                <button class="tab-btn">Tháng</button>
-                            </div>
-                        </div>
-                        <div class="bar-chart">
-                            @{
-                                var months = new[] { "T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12" };
-                                var vals = new[] { 68, 82, 74, 95, 88, 110, 102, 120, 108, 130, 118, 143 };
-                                var maxV = vals.Max();
-                            }
-                            @for (int i = 0; i < 12; i++)
-                            {
-                                var pct = (int)((double)vals[i] / maxV * 100);
-                                <div class="bar-col">
-                                    <div class="bar @(i == 11 ? "hi" : "lo")" style="height:@(pct)%" title="@months[i]: @vals[i]tr đ"></div>
-                                    <span class="bar-lbl">@months[i]</span>
-                                </div>
-                            }
-                        </div>
-                        <div class="chart-leg">
-                            <div class="leg-item"><div class="leg-dot" style="background:var(--amber)"></div>Tháng hiện tại</div>
-                            <div class="leg-item"><div class="leg-dot" style="background:var(--border2)"></div>Các tháng trước</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Top books -->
-                <div class="adm-card" style="animation-delay:.25s">
-                    <div class="adm-card-body">
-                        <div class="card-hd">
-                            <div>
-                                <div class="card-title">Sách bán chạy</div>
-                                <div class="card-sub">Tháng 3/2026</div>
-                            </div>
-                            <button class="btn btn-outline" style="font-size:.72rem;padding:4px 10px">Tất cả</button>
-                        </div>
-                        @{
-                            var books = new[] {
-                        ("Đắc Nhân Tâm","Kỹ năng sống","482","#D4860B"),
-                        ("Nhà Giả Kim","Văn học","391","#2563A8"),
-                        ("Atomic Habits","Phát triển bản thân","337","#2E7D52"),
-                        ("Sapiens","Lịch sử","284","#7B3F7B"),
-                        ("Tư Duy Nhanh & Chậm","Tâm lý học","241","#C0392B"),
-                        };
-                            var rkCls = new[] { "rk1", "rk2", "rk3", "rkn", "rkn" };
-                        }
-                        @for (int i = 0; i < books.Length; i++)
-                        {
-                            var (bname, bcat, bsold, bcol) = books[i];
-                            <div class="top-item">
-                                <div class="top-rank @rkCls[i]">@(i + 1)</div>
-                                <div class="top-cover" style="background:@(bcol)18;">📖</div>
-                                <div style="flex:1;min-width:0">
-                                    <div class="top-name">@bname</div>
-                                    <div class="top-cat">@bcat</div>
-                                </div>
-                                <div class="top-sold">@bsold</div>
-                            </div>
-                        }
-                    </div>
-                </div>
-            </div>
-
-            <!-- Bottom -->
-            <div class="adm-bottom">
-
-                <!-- Table -->
-                <div class="adm-tbl-card">
-                    <div class="tbl-hd">
-                        <div>
-                            <div class="card-title">Đơn hàng gần đây</div>
-                            <div class="card-sub">12 đơn đang chờ xử lý</div>
-                        </div>
-                        <div style="display:flex;gap:7px">
-                            <button class="btn btn-outline"><i class="bi bi-funnel"></i> Lọc</button>
-                            <button class="btn btn-primary"><i class="bi bi-arrow-right"></i> Xem tất cả</button>
-                        </div>
-                    </div>
-                    <table class="adm-tbl">
-                        <thead>
-                            <tr>
-                                <th>Mã đơn</th>
-                                <th>Khách hàng</th>
-                                <th>Sản phẩm</th>
-                                <th>Tổng tiền</th>
-                                <th>Trạng thái</th>
-                                <th>Ngày đặt</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @{
-                                var orders = new[] {
-                            ("#DH-8821","Nguyễn Văn A","NA","3 cuốn","680.000đ","ok","Hoàn thành","10/03","#D4860B"),
-                            ("#DH-8820","Trần Thị B",  "TB","1 cuốn","149.000đ","pnd","Chờ xử lý","10/03","#2563A8"),
-                            ("#DH-8819","Lê Minh C",   "LM","5 cuốn","1.250.000đ","shp","Đang giao","09/03","#2E7D52"),
-                            ("#DH-8818","Phạm Thu D",  "PT","2 cuốn","390.000đ","ok","Hoàn thành","09/03","#7B3F7B"),
-                            ("#DH-8817","Hoàng Văn E", "HV","4 cuốn","820.000đ","x","Đã huỷ","08/03","#C0392B"),
-                            ("#DH-8816","Vũ Thị F",    "VT","1 cuốn","220.000đ","pnd","Chờ xử lý","08/03","#D4860B"),
-                            };
-                            }
-                            @foreach (var (oid, oname, oinit, oitem, oamt, ost, ostxt, odate, ocol) in orders)
-                            {
-                                var bc = ost switch { "ok" => "bg-ok", "pnd" => "bg-pnd", "x" => "bg-x", _ => "bg-shp" };
-                                <tr>
-                                    <td><span class="tbl-id">@oid</span></td>
-                                    <td>
-                                        <div class="tbl-cust">
-                                            <div class="mini-av" style="background:@ocol">@oinit</div>
-                                            @oname
-                                        </div>
-                                    </td>
-                                    <td>@oitem</td>
-                                    <td><span class="tbl-amt">@oamt</span></td>
-                                    <td><span class="badge @bc">@ostxt</span></td>
-                                    <td>@odate</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Activity -->
-                <div class="adm-act-card">
-                    <div class="card-hd" style="margin-bottom:16px">
-                        <div>
-                            <div class="card-title">Hoạt động</div>
-                            <div class="card-sub">Cập nhật gần nhất</div>
-                        </div>
-                    </div>
-                    @{
-                        var acts = new[] {
-                    ("act-order","🛍️","Đơn hàng mới","#DH-8821 từ Nguyễn Văn A","2 phút trước"),
-                    ("act-user","👤","Khách hàng mới","Trần Thị B vừa đăng ký","15 phút trước"),
-                    ("act-review","⭐","Đánh giá 5★","Cho cuốn Đắc Nhân Tâm","1 giờ trước"),
-                    ("act-stock","⚠️","Cảnh báo kho","Nhà Giả Kim còn 3 cuốn","2 giờ trước"),
-                    ("act-order","🛍️","Giao thành công","#DH-8815 đã hoàn tất","3 giờ trước"),
-                    ("act-user","💬","Phản hồi mới","Hỏi về chính sách đổi trả","5 giờ trước"),
-                    };
-                    }
-                    @foreach (var (atype, aemo, atitle, adesc, atime) in acts)
+            @if (_loading)
+            {
+                <div class="adm-stats">
+                    @for (int s = 0; s < 4; s++)
                     {
-                        <div class="act-item">
-                            <div class="act-dot @atype">@aemo</div>
-                            <div>
-                                <div class="act-text"><b>@atitle</b> — @adesc</div>
-                                <div class="act-time"><i class="bi bi-clock"></i> @atime</div>
+                        <div class="stat-card s-amber">
+                            <div class="stat-top">
+                                <div class="skeleton" style="width:42px;height:42px;border-radius:11px;"></div>
+                                <div class="skeleton" style="width:60px;height:22px;"></div>
                             </div>
+                            <div class="skeleton" style="width:80px;height:32px;margin-bottom:6px;"></div>
+                            <div class="skeleton" style="width:120px;height:14px;"></div>
                         </div>
                     }
                 </div>
+                <div class="loading-overlay">
+                    <div class="spinner"></div>
+                    <span>Đang tải dữ liệu dashboard...</span>
+                </div>
+            }
+            else if (_dashboard != null)
+            {
+                <!-- ══ STATS ══ -->
+                <div class="adm-stats">
+                    <div class="stat-card s-amber">
+                        <div class="stat-top">
+                            <div class="stat-icon"><i class="bi bi-wallet2"></i></div>
+                            @{
+                                var growth = _dashboard.RevenueGrowthPercent;
+                                var growthClass = growth >= 0 ? "up" : "down";
+                                var growthIcon = growth >= 0 ? "bi-arrow-up-short" : "bi-arrow-down-short";
+                            }
+                            <span class="stat-badge @growthClass">
+                                <i class="bi @growthIcon"></i>@(growth >= 0 ? "+" : "")@growth%
+                            </span>
+                        </div>
+                        <div class="stat-value">@FormatRevenue(_dashboard.TotalRevenueThisMonth)</div>
+                        <div class="stat-label">Doanh thu tháng này</div>
+                        <div class="stat-sub">Tháng trước: <b>@FormatRevenue(_dashboard.TotalRevenueLastMonth)</b></div>
+                    </div>
 
-            </div>
+                    <div class="stat-card s-green">
+                        <div class="stat-top">
+                            <div class="stat-icon"><i class="bi bi-bag-check-fill"></i></div>
+                            <span class="stat-badge up"><i class="bi bi-check-circle"></i>Tháng này</span>
+                        </div>
+                        <div class="stat-value">@_dashboard.TotalOrdersThisMonth.ToString("N0")</div>
+                        <div class="stat-label">Đơn hàng tháng này</div>
+                        <div class="stat-sub">Sách đã bán: <b>@_dashboard.TotalBooksSoldThisMonth.ToString("N0") cuốn</b></div>
+                    </div>
+
+                    <div class="stat-card s-blue">
+                        <div class="stat-top">
+                            <div class="stat-icon"><i class="bi bi-box-seam-fill"></i></div>
+                            <span class="stat-badge @(_dashboard.LowStockBooks > 0 ? "down" : "up")">
+                                <i class="bi @(_dashboard.LowStockBooks > 0 ? "bi-exclamation-triangle" : "bi-check-circle")"></i>
+                                @(_dashboard.LowStockBooks > 0 ? "Cảnh báo" : "Tốt")
+                            </span>
+                        </div>
+                        <div class="stat-value">@_dashboard.LowStockBooks</div>
+                        <div class="stat-label">Sách sắp hết hàng</div>
+                        <div class="stat-sub">Hết hàng hoàn toàn: <b>@_dashboard.OutOfStockBooks đầu sách</b></div>
+                    </div>
+
+                    <div class="stat-card s-red">
+                        <div class="stat-top">
+                            <div class="stat-icon"><i class="bi bi-journals"></i></div>
+                            <span class="stat-badge neutral"><i class="bi bi-book"></i>Tháng này</span>
+                        </div>
+                        <div class="stat-value">@_dashboard.TotalBooksSoldThisMonth.ToString("N0")</div>
+                        <div class="stat-label">Sách bán ra tháng này</div>
+                        <div class="stat-sub">TB/ngày: <b>@FormatRevenue(_dashboard.TotalRevenueThisMonth / Math.Max(1, DateTime.Now.Day))</b></div>
+                    </div>
+                </div>
+
+                <!-- ══ MID ROW ══ -->
+                <div class="adm-mid">
+
+                    <!-- Revenue chart -->
+                    <div class="adm-card" style="animation-delay:.20s">
+                        <div class="adm-card-body">
+                            <div class="card-hd">
+                                <div>
+                                    <div class="card-title">Doanh thu theo ngày</div>
+                                    <div class="card-sub">
+                                        Tháng @_selectedMonth/@_selectedYear
+                                        @if (_monthSummary != null)
+                                        {
+                                            <span> — Tổng: <b style="color:var(--amber)">@FormatRevenue(_monthSummary.TotalRevenue)</b></span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="month-selector">
+                                    <i class="bi bi-calendar2-month" style="color:var(--amber)"></i>
+                                    <select @bind="_selectedMonth" @bind:after="OnMonthChanged">
+                                        @for (int m = 1; m <= 12; m++)
+                                        {
+                                            <option value="@m">T@m</option>
+                                        }
+                                    </select>
+                                    <select @bind="_selectedYear" @bind:after="OnMonthChanged">
+                                        @for (int y = DateTime.Now.Year - 2; y <= DateTime.Now.Year; y++)
+                                        {
+                                            <option value="@y">@y</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+
+                            @if (_monthSummary?.Details != null && _monthSummary.Details.Any())
+                            {
+                                var details = _monthSummary.Details.OrderBy(d => d.ReportDate).ToList();
+                                var maxRev = details.Max(d => (double)d.TotalRevenue);
+
+                                <div class="summary-strip">
+                                    <div class="sum-pill">
+                                        <div class="sum-pill-val">@_monthSummary.TotalOrders.ToString("N0")</div>
+                                        <div class="sum-pill-lbl">Đơn hàng</div>
+                                    </div>
+                                    <div class="sum-pill">
+                                        <div class="sum-pill-val">@_monthSummary.TotalBooksSold.ToString("N0")</div>
+                                        <div class="sum-pill-lbl">Sách bán</div>
+                                    </div>
+                                    <div class="sum-pill">
+                                        <div class="sum-pill-val">@FormatRevenue(_monthSummary.AverageRevenuePerDay)</div>
+                                        <div class="sum-pill-lbl">TB/ngày</div>
+                                    </div>
+                                    <div class="sum-pill">
+                                        <div class="sum-pill-val">@details.Count</div>
+                                        <div class="sum-pill-lbl">Ngày có DT</div>
+                                    </div>
+                                </div>
+
+                                <div class="bar-chart">
+                                    @foreach (var d in details)
+                                    {
+                                        var pct = maxRev > 0 ? (int)((double)d.TotalRevenue / maxRev * 100) : 0;
+                                        var isToday = d.ReportDate.Date == DateTime.Today;
+                                        <div class="bar-col">
+                                            <div class="bar @(isToday ? "hi" : "lo")"
+                                                 style="height:@(pct)%"
+                                                 title="@d.ReportDate.ToString("dd/MM"): @FormatRevenue(d.TotalRevenue) | @d.OrderCount đơn"></div>
+                                            <span class="bar-lbl">@d.ReportDate.Day</span>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="chart-leg">
+                                    <div class="leg-item"><div class="leg-dot" style="background:var(--amber)"></div>Hôm nay</div>
+                                    <div class="leg-item"><div class="leg-dot" style="background:var(--border2)"></div>Các ngày khác</div>
+                                </div>
+                            }
+                            else if (_loadingChart)
+                            {
+                                <div class="loading-overlay" style="padding:30px">
+                                    <div class="spinner"></div>
+                                    <span>Đang tải biểu đồ...</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <div style="text-align:center;padding:40px;color:var(--text-muted);font-size:.85rem">
+                                    <i class="bi bi-bar-chart" style="font-size:2rem;display:block;margin-bottom:8px"></i>
+                                    Chưa có dữ liệu doanh thu cho tháng này.
+                                    <br />
+                                    <button class="btn btn-primary btn-sm" style="margin-top:10px" @onclick="GenerateTodayReport">
+                                        <i class="bi bi-lightning-fill"></i> Tạo báo cáo hôm nay
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Top selling books -->
+                    <div class="adm-card" style="animation-delay:.25s">
+                        <div class="adm-card-body">
+                            <div class="card-hd">
+                                <div>
+                                    <div class="card-title">Sách bán chạy</div>
+                                    <div class="card-sub">Tháng @DateTime.Now.Month/@DateTime.Now.Year</div>
+                                </div>
+                                <button class="btn btn-outline" style="font-size:.72rem;padding:4px 10px">Tất cả</button>
+                            </div>
+                            @{
+                                var rkCls = new[] { "rk1", "rk2", "rk3", "rkn", "rkn" };
+                                var coverColors = new[] { "#D4860B", "#2563A8", "#2E7D52", "#7B3F7B", "#C0392B" };
+                            }
+                            @if (_dashboard.TopSellingBooks != null && _dashboard.TopSellingBooks.Any())
+                            {
+                                @for (int i = 0; i < Math.Min(5, _dashboard.TopSellingBooks.Count); i++)
+                                {
+                                    var book = _dashboard.TopSellingBooks[i];
+                                    <div class="top-item">
+                                        <div class="top-rank @rkCls[i]">@(i + 1)</div>
+                                        <div class="top-cover" style="background:@(coverColors[i % coverColors.Length])18;">📖</div>
+                                        <div style="flex:1;min-width:0">
+                                            <div class="top-name" title="@book.BookTitle">@book.BookTitle</div>
+                                            <div class="top-cat">@(book.CategoryName ?? "—")</div>
+                                        </div>
+                                        <div class="top-sold">@book.TotalSold</div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div style="text-align:center;padding:30px;color:var(--text-muted);font-size:.82rem">
+                                    <i class="bi bi-book" style="font-size:1.5rem;display:block;margin-bottom:6px"></i>
+                                    Chưa có dữ liệu sách bán chạy.
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══ BOTTOM ROW ══ -->
+                <div class="adm-bottom">
+
+                    <!-- Revenue reports table -->
+                    <div class="adm-tbl-card">
+                        <div class="tbl-hd">
+                            <div>
+                                <div class="card-title">Báo cáo doanh thu gần đây</div>
+                                <div class="card-sub">
+                                    @if (_monthSummary != null)
+                                    {
+                                        <span>@_monthSummary.Details?.Count báo cáo trong tháng</span>
+                                    }
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:7px">
+                                <a href="/admin/analytics" class="btn btn-outline">
+                                    <i class="bi bi-bar-chart-line"></i> Thống kê đầy đủ
+                                </a>
+                                <button class="btn btn-primary" @onclick="GenerateTodayReport" disabled="@_generating">
+                                    <i class="bi bi-lightning-fill"></i> @(_generating ? "Đang tạo..." : "Tạo hôm nay")
+                                </button>
+                            </div>
+                        </div>
+                        @if (_dashboard.RecentRevenueReports != null && _dashboard.RecentRevenueReports.Any())
+                        {
+                            <table class="adm-tbl">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Ngày báo cáo</th>
+                                        <th>Số đơn hàng</th>
+                                        <th>Sách bán ra</th>
+                                        <th>Doanh thu</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var r in _dashboard.RecentRevenueReports.OrderByDescending(x => x.ReportDate))
+                                    {
+                                        var isToday = r.ReportDate.Date == DateTime.Today;
+                                        <tr>
+                                            <td><span class="tbl-id">#@r.RevenueReportId</span></td>
+                                            <td>
+                                                <span class="rev-date">
+                                                    @r.ReportDate.ToString("dd/MM/yyyy")
+                                                    @if (isToday)
+                                                    {
+                                                        <span class="badge bg-ok" style="margin-left:4px;font-size:.62rem">Hôm nay</span>
+                                                    }
+                                                </span>
+                                            </td>
+                                            <td><span class="rev-orders">@r.OrderCount.ToString("N0")</span></td>
+                                            <td><span class="rev-books">@r.SoldBookCount.ToString("N0")</span></td>
+                                            <td><span class="tbl-amt">@FormatRevenue(r.TotalRevenue)</span></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+                            <div style="text-align:center;padding:40px;color:var(--text-muted);font-size:.85rem">
+                                <i class="bi bi-file-earmark-bar-graph" style="font-size:2rem;display:block;margin-bottom:8px"></i>
+                                Chưa có báo cáo doanh thu nào.
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Inventory & quick stats -->
+                    <div class="adm-act-card">
+                        <div class="card-hd" style="margin-bottom:16px">
+                            <div>
+                                <div class="card-title">Tình trạng kho</div>
+                                <div class="card-sub">Cập nhật tự động</div>
+                            </div>
+                        </div>
+
+                        <div class="act-item">
+                            <div class="act-dot act-stock">📦</div>
+                            <div>
+                                <div class="act-text"><b>Hết hàng</b> — @_dashboard.OutOfStockBooks đầu sách</div>
+                                <div class="act-time">
+                                    <span class="badge @(_dashboard.OutOfStockBooks > 0 ? "bg-x" : "bg-ok")">
+                                        @(_dashboard.OutOfStockBooks > 0 ? "Cần nhập thêm" : "Không có")
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="act-item">
+                            <div class="act-dot act-order">⚠️</div>
+                            <div>
+                                <div class="act-text"><b>Sắp hết hàng</b> — @_dashboard.LowStockBooks đầu sách</div>
+                                <div class="act-time">
+                                    <span class="badge @(_dashboard.LowStockBooks > 5 ? "bg-pnd" : "bg-ok")">
+                                        @(_dashboard.LowStockBooks > 5 ? "Cảnh báo" : "Bình thường")
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="act-item">
+                            <div class="act-dot act-user">📈</div>
+                            <div>
+                                <div class="act-text">
+                                    <b>Tăng trưởng doanh thu</b>
+                                    @if (_dashboard.RevenueGrowthPercent > 0)
+                                    {
+                                        <span style="color:var(--green)"> +@_dashboard.RevenueGrowthPercent%</span>
+                                    }
+                                    else if (_dashboard.RevenueGrowthPercent < 0)
+                                    {
+                                        <span style="color:var(--red)"> @_dashboard.RevenueGrowthPercent%</span>
+                                    }
+                                    else
+                                    {
+                                        <span style="color:var(--text-muted)"> Không đổi</span>
+                                    }
+                                </div>
+                                <div class="act-time"><i class="bi bi-calendar-month"></i> So với tháng trước</div>
+                            </div>
+                        </div>
+                        <div class="act-item">
+                            <div class="act-dot act-review">💰</div>
+                            <div>
+                                <div class="act-text"><b>Tháng trước</b> — @FormatRevenue(_dashboard.TotalRevenueLastMonth)</div>
+                                <div class="act-time">
+                                    <i class="bi bi-clock"></i>
+                                    Tháng @DateTime.Now.AddMonths(-1).Month/@DateTime.Now.AddMonths(-1).Year
+                                </div>
+                            </div>
+                        </div>
+                        <div class="act-item" style="border-bottom:none">
+                            <div class="act-dot act-order">📚</div>
+                            <div>
+                                <div class="act-text"><b>Sách bán tháng này</b> — @_dashboard.TotalBooksSoldThisMonth.ToString("N0") cuốn</div>
+                                <div class="act-time"><i class="bi bi-graph-up"></i> @_dashboard.TotalOrdersThisMonth.ToString("N0") đơn hàng</div>
+                            </div>
+                        </div>
+
+                        @if (_generateMessage != null)
+                        {
+                            <div style="margin-top:12px;padding:10px 12px;background:var(--green-dim);border-radius:8px;font-size:.78rem;color:var(--green);display:flex;align-items:center;gap:6px">
+                                <i class="bi bi-check-circle-fill"></i> @_generateMessage
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
         </div>
     </div>
 </div>
 
-@code { }
+@code {
+    // ── Models ───────────────────────────────────────────────
+    private class DashboardSummaryDto
+    {
+        public decimal TotalRevenueThisMonth { get; set; }
+        public decimal TotalRevenueLastMonth { get; set; }
+        public decimal RevenueGrowthPercent { get; set; }
+        public int TotalOrdersThisMonth { get; set; }
+        public int TotalBooksSoldThisMonth { get; set; }
+        public int OutOfStockBooks { get; set; }
+        public int LowStockBooks { get; set; }
+        public List<BestSellingBookDto> TopSellingBooks { get; set; } = new();
+        public List<RevenueReportDto> RecentRevenueReports { get; set; } = new();
+    }
+
+    private class RevenueSummaryDto
+    {
+        public DateTime FromDate { get; set; }
+        public DateTime ToDate { get; set; }
+        public int TotalOrders { get; set; }
+        public int TotalBooksSold { get; set; }
+        public decimal TotalRevenue { get; set; }
+        public decimal AverageRevenuePerDay { get; set; }
+        public List<RevenueReportDto> Details { get; set; } = new();
+    }
+
+    private class RevenueReportDto
+    {
+        public int RevenueReportId { get; set; }
+        public DateTime ReportDate { get; set; }
+        public int OrderCount { get; set; }
+        public int SoldBookCount { get; set; }
+        public decimal TotalRevenue { get; set; }
+    }
+
+    private class BestSellingBookDto
+    {
+        public int BookId { get; set; }
+        public string BookTitle { get; set; } = "";
+        public string? CategoryName { get; set; }
+        public int TotalSold { get; set; }
+    }
+
+    // ── State ────────────────────────────────────────────────
+    private DashboardSummaryDto? _dashboard;
+    private RevenueSummaryDto? _monthSummary;
+    private bool _loading = true;
+    private bool _loadingChart = false;
+    private bool _generating = false;
+    private string? _error;
+    private string? _generateMessage;
+    private int _selectedMonth = DateTime.Now.Month;
+    private int _selectedYear = DateTime.Now.Year;
+    private string _accessToken = "";
+
+    // ── Lifecycle ────────────────────────────────────────────
+
+    // KHÔNG dùng OnInitializedAsync vì JS chưa sẵn sàng lúc prerender
+    protected override Task OnInitializedAsync() => Task.CompletedTask;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        // 1. Đọc token từ localStorage
+        _accessToken = await JS.InvokeAsync<string?>("localStorage.getItem", "accessToken") ?? "";
+
+        // 2. Nếu chưa login → redirect về trang login
+        if (string.IsNullOrEmpty(_accessToken))
+        {
+            await JS.InvokeVoidAsync("eval", "window.location.href='/admin/login'");
+            return;
+        }
+
+        // 3. Gắn Bearer token vào tất cả request của HttpClient
+        Http.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", _accessToken);
+
+        // 4. Load dữ liệu dashboard
+        await LoadDashboard();
+    }
+
+    // ── Data loading ─────────────────────────────────────────
+    private async Task LoadDashboard()
+    {
+        _loading = true;
+        _error = null;
+        StateHasChanged();
+        try
+        {
+            _dashboard = await Http.GetFromJsonAsync<DashboardSummaryDto>("api/ReportDashboard");
+            await LoadMonthSummary(_selectedMonth, _selectedYear);
+        }
+        catch (Exception ex)
+        {
+            _error = $"Không thể tải dữ liệu dashboard: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    // Nút refresh — token đã được set sẵn trong DefaultRequestHeaders
+    private async Task RefreshDashboard() => await LoadDashboard();
+
+    private async Task LoadMonthSummary(int month, int year)
+    {
+        _loadingChart = true;
+        StateHasChanged();
+        try
+        {
+            _monthSummary = await Http.GetFromJsonAsync<RevenueSummaryDto>(
+                $"api/RevenueReport/summary/month?month={month}&year={year}");
+        }
+        catch
+        {
+            _monthSummary = null;
+        }
+        finally
+        {
+            _loadingChart = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnMonthChanged()
+    {
+        await LoadMonthSummary(_selectedMonth, _selectedYear);
+    }
+
+    private async Task GenerateTodayReport()
+    {
+        _generating = true;
+        _generateMessage = null;
+        StateHasChanged();
+        try
+        {
+            var result = await Http.PostAsync(
+                $"api/RevenueReport/generate?date={DateTime.Today:yyyy-MM-dd}", null);
+            if (result.IsSuccessStatusCode)
+            {
+                _generateMessage = "Đã tạo/cập nhật báo cáo hôm nay thành công!";
+                await LoadDashboard();
+            }
+            else
+            {
+                _error = $"Không thể tạo báo cáo. (HTTP {(int)result.StatusCode})";
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = $"Lỗi tạo báo cáo: {ex.Message}";
+        }
+        finally
+        {
+            _generating = false;
+            StateHasChanged();
+            await Task.Delay(4000);
+            _generateMessage = null;
+            StateHasChanged();
+        }
+    }
+
+    // ── Helpers ──────────────────────────────────────────────
+    private static string FormatRevenue(decimal value)
+    {
+        if (value >= 1_000_000_000) return $"{value / 1_000_000_000:0.##}tỷ";
+        if (value >= 1_000_000) return $"{value / 1_000_000:0.##}tr";
+        if (value >= 1_000) return $"{value / 1_000:0.##}k";
+        return value.ToString("N0") + "đ";
+    }
+
+    private static string GetGreeting()
+    {
+        var h = DateTime.Now.Hour;
+        return h < 12 ? "sáng" : h < 18 ? "chiều" : "tối";
+    }
+}

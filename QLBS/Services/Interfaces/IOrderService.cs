@@ -5,12 +5,12 @@ namespace QLBS.Services.Interfaces
 {
     public interface IOrderService
     {
-        // User
+
         Task<OrderResultDto?> CreateOrderAsync(int accountId, CreateOrderDto dto, HttpContext context);
         Task<IEnumerable<OrderHistoryDto>> GetOrderHistoryAsync(int accountId);
         Task<OrderDetailResponseDto?> GetOrderDetailAsync(int accountId, int orderId);
 
-        // Admin
+
         Task<IEnumerable<AdminOrderSummaryDto>> GetAllOrdersForAdminAsync();
         Task<AdminOrderDetailDto?> GetOrderDetailForAdminAsync(int orderId);
     }

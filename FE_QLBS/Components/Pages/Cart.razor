@@ -90,18 +90,6 @@
         }
     }
 
-    @@keyframes slideUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px)
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0)
-        }
-    }
-
     @@keyframes panelExpand {
         from {
             max-height: 0;
@@ -109,7 +97,7 @@
         }
 
         to {
-            max-height: 800px;
+            max-height: 900px;
             opacity: 1;
         }
     }
@@ -160,24 +148,11 @@
             cursor: not-allowed;
         }
 
-    .cart-row {
-        transition: background .15s;
-    }
-
-        .cart-row:hover {
-            background: #FFFDF8;
-        }
-
-        .cart-row.sel {
-            background: rgba(212,134,11,.05);
-        }
-
     input[type="checkbox"] {
         accent-color: #D4860B;
         cursor: pointer;
     }
 
-    /* ── BOTTOM CHECKOUT PANEL ───────────────────────────────── */
     .checkout-panel {
         background: #FFFDF8;
         border: 2px solid #EDE8DF;
@@ -244,7 +219,7 @@
         outline: none;
         background: #FAF7F2;
         color: #1A1208;
-        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-family: 'Plus Jakarta Sans',sans-serif;
         cursor: pointer;
         transition: border-color .2s, box-shadow .2s;
         appearance: none;
@@ -274,7 +249,7 @@
         outline: none;
         background: #FAF7F2;
         color: #1A1208;
-        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-family: 'Plus Jakarta Sans',sans-serif;
         transition: border-color .2s, box-shadow .2s;
         margin-bottom: 6px;
     }
@@ -300,7 +275,7 @@
         transition: border-color .2s, background .2s;
         font-size: .82rem;
         color: #1A1208;
-        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-family: 'Plus Jakarta Sans',sans-serif;
         margin-bottom: 6px;
     }
 
@@ -327,7 +302,7 @@
         outline: none;
         background: #FAF7F2;
         color: #1A1208;
-        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-family: 'Plus Jakarta Sans',sans-serif;
         transition: border-color .2s;
     }
 
@@ -345,12 +320,17 @@
         font-weight: 600;
         cursor: pointer;
         white-space: nowrap;
-        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-family: 'Plus Jakarta Sans',sans-serif;
         transition: background .2s;
     }
 
         .coupon-btn:hover {
             background: #5A3D20;
+        }
+
+        .coupon-btn:disabled {
+            opacity: .6;
+            cursor: not-allowed;
         }
 
     .checkout-btn-main {
@@ -365,7 +345,7 @@
         font-weight: 700;
         cursor: pointer;
         width: 100%;
-        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-family: 'Plus Jakarta Sans',sans-serif;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -405,16 +385,6 @@
         display: inline-block;
     }
 
-    /* page bottom padding so content isn't hidden behind panel */
-    .page-bottom-pad {
-        padding-bottom: 80px;
-    }
-
-    .page-bottom-pad-expanded {
-        padding-bottom: 440px;
-    }
-
-    /* Cart items table */
     .cart-table-header {
         display: grid;
         grid-template-columns: 40px 80px 1fr 120px 100px 80px 40px;
@@ -459,7 +429,6 @@
             transform: rotate(180deg);
         }
 
-    /* Book cards */
     .bk-card {
         transition: transform .22s, box-shadow .22s;
     }
@@ -539,6 +508,50 @@
         .footer-lnk:hover {
             color: #F5A623;
         }
+
+    .discount-hints {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+    }
+
+    .discount-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: rgba(212,134,11,.08);
+        border: 1px solid rgba(212,134,11,.25);
+        border-radius: 20px;
+        padding: 3px 10px;
+        font-size: .72rem;
+        font-weight: 600;
+        color: #8B5E0A;
+        cursor: pointer;
+        transition: all .18s;
+        white-space: nowrap;
+        font-family: 'Plus Jakarta Sans',sans-serif;
+    }
+
+        .discount-tag:hover {
+            background: rgba(212,134,11,.18);
+            border-color: #D4860B;
+            color: #6B4C2A;
+        }
+
+        .discount-tag .dc-pct {
+            font-weight: 800;
+            color: #D4860B;
+        }
+
+    .discount-loading {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: .75rem;
+        color: #9B8B7A;
+        margin-top: 8px;
+    }
 
     @@media(max-width:900px) {
         .panel-grid {
@@ -677,35 +690,27 @@
     <div class="max-w-7xl mx-auto px-5">
 
         <div class="flex items-center flex-wrap gap-3 mb-6">
-            <h1 class="m-0 flex items-center gap-2 text-3xl font-black"
-                style="font-family:'Playfair Display',serif;color:#1A1208;">
+            <h1 class="m-0 flex items-center gap-2 text-3xl font-black" style="font-family:'Playfair Display',serif;color:#1A1208;">
                 <i class="bi bi-bag" style="color:#D4860B;"></i>Giỏ hàng của bạn
             </h1>
-            <span class="rounded-full text-white font-bold px-4 py-1"
-                  style="background:#D4860B;font-size:.75rem;">
-                @cartItems.Count sản phẩm
-            </span>
+            <span class="rounded-full text-white font-bold px-4 py-1" style="background:#D4860B;font-size:.75rem;">@cartItems.Count sản phẩm</span>
         </div>
 
         @if (isLoading)
         {
             <div class="flex items-center justify-center py-24">
                 <div class="flex flex-col items-center gap-4">
-                    <div class="w-12 h-12 rounded-full border-4 border-[#EDE8DF] border-t-[#D4860B]"
-                         style="animation:spin 1s linear infinite;"></div>
+                    <div class="w-12 h-12 rounded-full border-4 border-[#EDE8DF] border-t-[#D4860B]" style="animation:spin 1s linear infinite;"></div>
                     <p style="color:#9B8B7A;font-size:.9rem;">Đang tải giỏ hàng...</p>
                 </div>
             </div>
         }
         else if (cartItems.Count == 0)
         {
-            <div class="text-center py-24 rounded-2xl border-2 border-dashed"
-                 style="background:#fff;border-color:#EDE8DF;">
+            <div class="text-center py-24 rounded-2xl border-2 border-dashed" style="background:#fff;border-color:#EDE8DF;">
                 <div class="text-6xl mb-5">🛒</div>
                 <h3 class="text-2xl font-black mb-3" style="font-family:'Playfair Display',serif;color:#1A1208;">Giỏ hàng trống</h3>
-                <p class="text-sm leading-loose mb-7" style="color:#9B8B7A;">
-                    Bạn chưa có sản phẩm nào trong giỏ hàng.<br />Khám phá kho sách của chúng tôi nhé!
-                </p>
+                <p class="text-sm leading-loose mb-7" style="color:#9B8B7A;">Bạn chưa có sản phẩm nào trong giỏ hàng.<br />Khám phá kho sách của chúng tôi nhé!</p>
                 <a href="/" class="inline-flex items-center gap-2 no-underline rounded-full px-7 py-3 font-semibold text-sm text-white" style="background:#6B4C2A;">
                     <i class="bi bi-arrow-left"></i>Tiếp tục mua sắm
                 </a>
@@ -715,12 +720,8 @@
         {
             <!-- CART TABLE -->
             <div class="rounded-2xl border overflow-hidden mb-4" style="background:#fff;border-color:#EDE8DF;box-shadow:0 2px 16px rgba(107,76,42,.07);">
-
-                <!-- Table header -->
                 <div class="cart-table-header">
-                    <div>
-                        <input type="checkbox" class="w-4 h-4" @bind="selectAll" @bind:after="ToggleSelectAll" />
-                    </div>
+                    <div><input type="checkbox" class="w-4 h-4" @bind="selectAll" @bind:after="ToggleSelectAll" /></div>
                     <div></div>
                     <div>Sản phẩm</div>
                     <div class="col-price-each text-center">Đơn giá</div>
@@ -728,21 +729,17 @@
                     <div class="col-subtotal text-right">Thành tiền</div>
                     <div></div>
                 </div>
-
                 @foreach (var item in cartItems)
                 {
-                    <div class="cart-table-row @(selectedItems.Contains(item.CartItemId)?"sel":"")">
-                        <!-- Checkbox -->
+                    <div class="cart-table-row @(selectedItems.Contains(item.CartItemId) ? "sel" : "")">
                         <div>
                             <input type="checkbox" class="w-4 h-4"
                                    checked="@selectedItems.Contains(item.CartItemId)"
-                                   @onchange="(e) => ToggleItem(item.CartItemId,(bool)(e.Value??false))" />
+                                   @onchange="(e) => ToggleItem(item.CartItemId, (bool)(e.Value ?? false))" />
                         </div>
-                        <!-- Image -->
                         <div>
                             <div class="relative">
-                                <img src="@item.ImageUrl" alt="@item.BookTitle"
-                                     class="rounded-xl object-cover"
+                                <img src="@item.ImageUrl" alt="@item.BookTitle" class="rounded-xl object-cover"
                                      style="width:60px;height:80px;box-shadow:0 3px 12px rgba(107,76,42,.15);" />
                                 @if (item.IsBestSeller)
                                 {
@@ -750,20 +747,16 @@
                                 }
                             </div>
                         </div>
-                        <!-- Info -->
                         <div class="min-w-0">
                             <div class="font-bold uppercase tracking-wider mb-0.5" style="font-size:.65rem;color:#D4860B;">@item.CategoryName</div>
                             <a href="/book/@item.BookId" class="no-underline block font-bold leading-snug mb-0.5"
                                style="font-family:'Playfair Display',serif;font-size:.92rem;color:#1A1208;">@item.BookTitle</a>
-                            <div class="text-xs flex items-center gap-1" style="color:#9B8B7A;">
-                                <i class="bi bi-person"></i>@item.AuthorName
-                            </div>
+                            <div class="text-xs flex items-center gap-1" style="color:#9B8B7A;"><i class="bi bi-person"></i>@item.AuthorName</div>
                             <div class="flex gap-2 mt-1 flex-wrap">
                                 <span class="text-xs flex items-center gap-1" style="color:#9B8B7A;"><i class="bi bi-book"></i>Bìa mềm</span>
                                 <span class="text-xs flex items-center gap-1 font-semibold" style="color:#2E7D32;"><i class="bi bi-check-circle-fill"></i>Còn hàng</span>
                             </div>
                         </div>
-                        <!-- Unit price -->
                         <div class="col-price-each text-center">
                             @if (item.OriginalPrice > item.Price)
                             {
@@ -771,21 +764,18 @@
                             }
                             <div class="font-bold text-sm" style="color:#D4860B;">@item.Price.ToString("#,##0")đ</div>
                         </div>
-                        <!-- Qty -->
                         <div class="flex items-center justify-center gap-1.5 rounded-full border px-1 py-0.5" style="background:#FAF7F2;border-color:#EDE8DF;">
-                            <button class="qty-btn" @onclick="()=>DecreaseQty(item)" disabled="@(item.Quantity<=1)"><i class="bi bi-dash"></i></button>
+                            <button class="qty-btn" @onclick="() => DecreaseQty(item)" disabled="@(item.Quantity <= 1)"><i class="bi bi-dash"></i></button>
                             <span class="font-bold text-sm" style="min-width:22px;text-align:center;color:#1A1208;">@item.Quantity</span>
-                            <button class="qty-btn" @onclick="()=>IncreaseQty(item)"><i class="bi bi-plus"></i></button>
+                            <button class="qty-btn" @onclick="() => IncreaseQty(item)"><i class="bi bi-plus"></i></button>
                         </div>
-                        <!-- Subtotal -->
                         <div class="col-subtotal text-right">
                             <div class="font-black" style="font-family:'Playfair Display',serif;font-size:1rem;color:#1A1208;">
                                 @((item.Price * item.Quantity).ToString("#,##0"))đ
                             </div>
                         </div>
-                        <!-- Remove -->
                         <div class="flex justify-center">
-                            <button @onclick="()=>RemoveItem(item.CartItemId)"
+                            <button @onclick="() => RemoveItem(item.CartItemId)"
                                     class="border-none p-1.5 cursor-pointer flex items-center rounded-lg"
                                     style="background:none;color:#C4B8A8;font-size:.9rem;transition:color .15s;"
                                     onmouseover="this.style.color='#C0392B'" onmouseout="this.style.color='#C4B8A8'">
@@ -821,10 +811,7 @@
 
             <!-- CHECKOUT PANEL -->
             <div class="checkout-panel">
-
-                <!-- SUMMARY BAR (luôn hiện, click để mở/đóng panel) -->
                 <div class="panel-summary-bar" @onclick="TogglePanel">
-                    <!-- Tổng tiền -->
                     <div class="flex items-center gap-3 mr-auto">
                         <div class="flex items-center gap-2">
                             <span class="text-xs font-semibold" style="color:#9B8B7A;">Tạm tính</span>
@@ -852,29 +839,18 @@
                             }
                         </div>
                     </div>
-
-                    <!-- Trust mini -->
                     <div class="hidden md:flex items-center gap-4 mr-6">
-                        <div class="flex items-center gap-1.5 text-xs" style="color:#9B8B7A;">
-                            <i class="bi bi-shield-check" style="color:#D4860B;"></i>Bảo mật SSL
-                        </div>
-                        <div class="flex items-center gap-1.5 text-xs" style="color:#9B8B7A;">
-                            <i class="bi bi-arrow-repeat" style="color:#D4860B;"></i>Đổi trả 7 ngày
-                        </div>
+                        <div class="flex items-center gap-1.5 text-xs" style="color:#9B8B7A;"><i class="bi bi-shield-check" style="color:#D4860B;"></i>Bảo mật SSL</div>
+                        <div class="flex items-center gap-1.5 text-xs" style="color:#9B8B7A;"><i class="bi bi-arrow-repeat" style="color:#D4860B;"></i>Đổi trả 7 ngày</div>
                     </div>
-
-                    <!-- Toggle arrow -->
                     <div class="flex items-center gap-2">
-                        <span class="text-xs font-semibold hidden sm:inline" style="color:#6B4C2A;">
-                            @(isPanelOpen ? "Thu gọn" : "Thanh toán")
-                        </span>
+                        <span class="text-xs font-semibold hidden sm:inline" style="color:#6B4C2A;">@(isPanelOpen ? "Thu gọn" : "Thanh toán")</span>
                         <div class="w-8 h-8 rounded-full flex items-center justify-center" style="background:rgba(212,134,11,.12);">
                             <i class="bi bi-chevron-up toggle-chevron @(isPanelOpen ? "open" : "")" style="color:#D4860B;font-size:.75rem;"></i>
                         </div>
                     </div>
                 </div>
 
-                <!-- EXPANDED PANEL -->
                 @if (isPanelOpen)
                 {
                     <div class="panel-expanded-content">
@@ -882,9 +858,7 @@
 
                             <!-- Col 1: Địa chỉ -->
                             <div class="panel-section">
-                                <div class="panel-section-title">
-                                    <i class="bi bi-geo-alt-fill" style="color:#D4860B;"></i>Địa chỉ giao hàng
-                                </div>
+                                <div class="panel-section-title"><i class="bi bi-geo-alt-fill" style="color:#D4860B;"></i>Địa chỉ giao hàng</div>
                                 <select class="addr-select" @onchange="OnProvinceChanged">
                                     <option value="">@ProvinceLabel</option>
                                     @foreach (var p in provinces)
@@ -892,75 +866,140 @@
                                         <option value="@p.ProvinceId">@p.ProvinceName</option>
                                     }
                                 </select>
-                                <select class="addr-select" @onchange="OnDistrictChanged"
-                                        disabled="@(!districts.Any() && !isLoadingDistricts)">
+                                <select class="addr-select" @onchange="OnDistrictChanged" disabled="@(!districts.Any() && !isLoadingDistricts)">
                                     <option value="">@DistrictLabel</option>
                                     @foreach (var d in districts)
                                     {
                                         <option value="@d.DistrictId">@d.DistrictName</option>
                                     }
                                 </select>
-                                <select class="addr-select" @onchange="OnWardChanged"
-                                        disabled="@(!wards.Any() && !isLoadingWards)">
+                                <select class="addr-select" @onchange="OnWardChanged" disabled="@(!wards.Any() && !isLoadingWards)">
                                     <option value="">@WardLabel</option>
                                     @foreach (var w in wards)
                                     {
                                         <option value="@w.WardCode">@w.WardName</option>
                                     }
                                 </select>
-                                <input type="text" class="form-input @(formErrors.ContainsKey("address")?"error":"")"
-                                       placeholder="Số nhà, tên đường..."
-                                       @bind="receiverAddress" @bind:event="oninput" />
+                                <input type="text" class="form-input @(formErrors.ContainsKey("address") ? "error" : "")"
+                                       placeholder="Số nhà, tên đường..." @bind="receiverAddress" @bind:event="oninput" />
                             </div>
 
                             <!-- Col 2: Người nhận + Coupon -->
                             <div class="panel-section">
-                                <div class="panel-section-title">
-                                    <i class="bi bi-person-fill" style="color:#D4860B;"></i>Thông tin người nhận
-                                </div>
-                                <input type="text" class="form-input @(formErrors.ContainsKey("name")?"error":"")"
-                                       placeholder="Họ tên người nhận"
-                                       @bind="receiverName" @bind:event="oninput" />
-                                <input type="tel" class="form-input @(formErrors.ContainsKey("phone")?"error":"")"
-                                       placeholder="Số điện thoại"
-                                       @bind="receiverPhone" @bind:event="oninput" />
+                                <div class="panel-section-title"><i class="bi bi-person-fill" style="color:#D4860B;"></i>Thông tin người nhận</div>
+                                <input type="text" class="form-input @(formErrors.ContainsKey("name") ? "error" : "")"
+                                       placeholder="Họ tên người nhận" @bind="receiverName" @bind:event="oninput" />
+                                <input type="tel" class="form-input @(formErrors.ContainsKey("phone") ? "error" : "")"
+                                       placeholder="Số điện thoại" @bind="receiverPhone" @bind:event="oninput" />
 
-                                <div class="panel-section-title mt-3">
-                                    <i class="bi bi-tag-fill" style="color:#D4860B;"></i>Mã giảm giá
-                                </div>
-                                <div class="coupon-row">
-                                    <input type="text" @bind="couponCode" placeholder="Nhập mã coupon..." class="coupon-input" />
-                                    <button @onclick="ApplyCoupon" class="coupon-btn">Áp dụng</button>
-                                </div>
-                                @if (!string.IsNullOrEmpty(couponMessage))
+                                <div class="panel-section-title mt-3"><i class="bi bi-tag-fill" style="color:#D4860B;"></i>Mã giảm giá</div>
+
+                                @if (couponApplied)
                                 {
-                                    <div class="mt-1.5 text-xs font-semibold rounded-lg px-3 py-1.5 flex items-center gap-1.5"
-                                         style="background:@(couponApplied?"#E8F5E9":"#FCE8E6");color:@(couponApplied?"#2E7D32":"#B71C1C");">
-                                        <i class="bi @(couponApplied?"bi-check-circle":"bi-x-circle")"></i>@couponMessage
+                                    <!-- Mã đang áp dụng + nút hủy -->
+                                    <div class="flex items-center justify-between rounded-lg px-3 py-2 mb-2"
+                                         style="background:#E8F5E9;border:1.5px solid #A5D6A7;">
+                                        <div class="flex items-center gap-2 text-xs font-semibold" style="color:#2E7D32;">
+                                            <i class="bi bi-check-circle-fill"></i>
+                                            <div>
+                                                <div>@appliedDiscount?.Code đã được áp dụng</div>
+                                                <div class="font-normal" style="color:#388E3C;">
+                                                    @if (appliedDiscount?.DiscountType == 0)
+                                                    {
+                                                        <text>Giảm @appliedDiscount.DiscountValue% = -@DiscountAmount.ToString("#,##0")đ</text>
+                                                    }
+                                                    else
+                                                    {
+                                                        <text>Giảm @DiscountAmount.ToString("#,##0")đ</text>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button @onclick="RemoveCoupon"
+                                                class="text-xs font-bold border-none cursor-pointer rounded-lg px-2 py-1 flex items-center gap-1"
+                                                style="background:rgba(192,57,43,.1);color:#C0392B;font-family:'Plus Jakarta Sans',sans-serif;transition:background .15s;"
+                                                onmouseover="this.style.background='rgba(192,57,43,.2)'"
+                                                onmouseout="this.style.background='rgba(192,57,43,.1)'">
+                                            <i class="bi bi-x-lg"></i>Hủy
+                                        </button>
                                     </div>
                                 }
-                                <p class="mt-1 text-xs" style="color:#9B8B7A;">Thử: <strong>BOOK20</strong> (−20%) · <strong>NEWBOOK</strong> (−10%)</p>
+                                else
+                                {
+                                    <div class="coupon-row">
+                                        <input type="text" @bind="couponCode" @bind:event="oninput" placeholder="Nhập mã coupon..." class="coupon-input" />
+                                        <button @onclick="ApplyCoupon" class="coupon-btn" disabled="@isApplyingCoupon">
+                                            @if (isApplyingCoupon)
+                                            {
+                                                <i class="bi bi-arrow-repeat spin-icon"></i>
+                                            }
+                                            else
+                                            {
+                                                <span>Áp dụng</span>
+                                            }
+                                        </button>
+                                    </div>
+
+                                    @if (!string.IsNullOrEmpty(couponMessage))
+                                    {
+                                        <div class="mt-1.5 text-xs font-semibold rounded-lg px-3 py-1.5 flex items-center gap-1.5"
+                                             style="background:#FCE8E6;color:#B71C1C;">
+                                            <i class="bi bi-x-circle"></i>@couponMessage
+                                        </div>
+                                    }
+                                }
+
+                                @if (isLoadingDiscounts)
+                                {
+                                    <div class="discount-loading">
+                                        <i class="bi bi-arrow-repeat spin-icon" style="color:#D4860B;"></i>
+                                        <span>Đang tải mã giảm giá...</span>
+                                    </div>
+                                }
+                                else if (availableDiscounts.Any())
+                                {
+                                    <div class="mt-2">
+                                        <div class="text-xs font-semibold mb-1.5" style="color:#9B8B7A;">Mã có thể dùng:</div>
+                                        <div class="discount-hints">
+                                            @foreach (var dc in availableDiscounts)
+                                            {
+                                                <button class="discount-tag" @onclick="() => QuickApplyDiscount(dc)" title="@dc.Description">
+                                                    <i class="bi bi-ticket-perforated"></i>
+                                                    <span>@dc.Code</span>
+                                                    <span class="dc-pct">
+                                                        @if (dc.DiscountType == 0)
+                                                        {
+                                                            <text>−@dc.DiscountValue%</text>
+                                                        }
+                                                        else
+                                                        {
+                                                            <text>−@dc.DiscountValue.ToString("#,##0")đ</text>
+                                                        }
+                                                    </span>
+                                                </button>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                                else if (!string.IsNullOrEmpty(discountLoadError))
+                                {
+                                    <p class="mt-1 text-xs" style="color:#C0392B;">@discountLoadError</p>
+                                }
                             </div>
 
                             <!-- Col 3: Thanh toán + Chi tiết giá -->
                             <div class="panel-section">
-                                <div class="panel-section-title">
-                                    <i class="bi bi-credit-card" style="color:#D4860B;"></i>Phương thức thanh toán
-                                </div>
-                                <label class="pay-option @(selectedPaymentMethod==1?"active":"")">
-                                    <input type="radio" name="payment" value="1"
-                                           checked="@(selectedPaymentMethod==1)"
-                                           @onchange="()=>selectedPaymentMethod=1" />
+                                <div class="panel-section-title"><i class="bi bi-credit-card" style="color:#D4860B;"></i>Phương thức thanh toán</div>
+                                <label class="pay-option @(selectedPaymentMethod == 1 ? "active" : "")">
+                                    <input type="radio" name="payment" value="1" checked="@(selectedPaymentMethod == 1)" @onchange="() => selectedPaymentMethod = 1" />
                                     <i class="bi bi-credit-card-2-front" style="color:#1a73e8;font-size:1rem;"></i>
                                     <div>
                                         <div class="font-semibold" style="font-size:.82rem;">VNPay</div>
                                         <div class="text-xs" style="color:#9B8B7A;">Thanh toán qua cổng VNPay</div>
                                     </div>
                                 </label>
-                                <label class="pay-option @(selectedPaymentMethod==2?"active":"")">
-                                    <input type="radio" name="payment" value="2"
-                                           checked="@(selectedPaymentMethod==2)"
-                                           @onchange="()=>selectedPaymentMethod=2" />
+                                <label class="pay-option @(selectedPaymentMethod == 2 ? "active" : "")">
+                                    <input type="radio" name="payment" value="2" checked="@(selectedPaymentMethod == 2)" @onchange="() => selectedPaymentMethod = 2" />
                                     <i class="bi bi-cash-coin" style="color:#2E7D32;font-size:1rem;"></i>
                                     <div>
                                         <div class="font-semibold" style="font-size:.82rem;">Thanh toán khi nhận (COD)</div>
@@ -968,7 +1007,6 @@
                                     </div>
                                 </label>
 
-                                <!-- Price breakdown mini -->
                                 <div class="mt-3 pt-3" style="border-top:1px dashed #EDE8DF;">
                                     <div class="flex justify-between text-xs mb-1" style="color:#7A6A5A;">
                                         <span>Tạm tính</span><span>@SubTotal.ToString("#,##0")đ</span>
@@ -976,7 +1014,8 @@
                                     @if (DiscountAmount > 0)
                                     {
                                         <div class="flex justify-between text-xs mb-1 font-semibold" style="color:#2E7D32;">
-                                            <span>Giảm giá</span><span>-@DiscountAmount.ToString("#,##0")đ</span>
+                                            <span>Giảm giá (@appliedDiscount?.Code)</span>
+                                            <span>-@DiscountAmount.ToString("#,##0")đ</span>
                                         </div>
                                     }
                                     <div class="flex justify-between text-xs mb-1" style="color:#7A6A5A;">
@@ -1003,9 +1042,7 @@
                             <div class="panel-section" style="min-width:220px;display:flex;flex-direction:column;justify-content:center;gap:12px;">
                                 <div class="text-center">
                                     <div class="text-xs font-semibold mb-1" style="color:#9B8B7A;">Tổng thanh toán</div>
-                                    <div class="font-black" style="font-family:'Playfair Display',serif;font-size:2rem;color:#D4860B;line-height:1.1;">
-                                        @Total.ToString("#,##0")đ
-                                    </div>
+                                    <div class="font-black" style="font-family:'Playfair Display',serif;font-size:2rem;color:#D4860B;line-height:1.1;">@Total.ToString("#,##0")đ</div>
                                     @if (!shippingFeeFromApi.HasValue)
                                     {
                                         <div class="text-xs mt-1" style="color:#9B8B7A;font-style:italic;">*Chưa bao gồm phí ship</div>
@@ -1082,9 +1119,7 @@
                         <div style="width:48px;height:3px;background:linear-gradient(90deg,#D4860B,#F5A623);border-radius:2px;margin-top:8px;"></div>
                     </div>
                     <a href="/" class="flex items-center gap-2 no-underline rounded-full border-2 px-5 py-2 text-sm font-semibold"
-                       style="color:#6B4C2A;border-color:#EDE8DF;background:#fff;">
-                        Xem tất cả <i class="bi bi-arrow-right"></i>
-                    </a>
+                       style="color:#6B4C2A;border-color:#EDE8DF;background:#fff;">Xem tất cả <i class="bi bi-arrow-right"></i></a>
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
                     @foreach (var book in suggestedBooks)
@@ -1094,7 +1129,7 @@
                             <div class="bk-cover-wrap">
                                 <img src="@book.ImageUrl" alt="@book.Title" loading="lazy" />
                                 <div class="bk-overlay">
-                                    <button @onclick="()=>AddSuggestedToCart(book.BookId)" class="bk-act"><i class="bi bi-bag-plus"></i></button>
+                                    <button @onclick="() => AddSuggestedToCart(book.BookId)" class="bk-act"><i class="bi bi-bag-plus"></i></button>
                                     <a href="/book/@book.BookId" class="bk-act"><i class="bi bi-eye"></i></a>
                                 </div>
                             </div>
@@ -1105,7 +1140,7 @@
                                 <div class="font-black" style="font-family:'Playfair Display',serif;font-size:1.05rem;color:#D4860B;">@book.Price.ToString("#,##0")đ</div>
                             </div>
                             <div class="px-4 pb-4 flex gap-2">
-                                <button @onclick="()=>AddSuggestedToCart(book.BookId)"
+                                <button @onclick="() => AddSuggestedToCart(book.BookId)"
                                         class="flex-1 flex items-center justify-center gap-1.5 rounded-full py-2 text-xs font-semibold border-none cursor-pointer"
                                         style="background:#6B4C2A;color:#fff;font-family:'Plus Jakarta Sans',sans-serif;">
                                     <i class="bi bi-bag-plus"></i>Thêm vào giỏ
@@ -1124,15 +1159,12 @@
 </section>
 
 <!-- FOOTER -->
-<footer style="background:#1A1208;" class="pt-14 @(cartItems.Count > 0 ? "mb-0" : "")">
+<footer style="background:#1A1208;" class="pt-14">
     <div class="container mx-auto px-4">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
             <div>
                 <a href="/" class="flex items-center gap-2.5 no-underline mb-4">
-                    <div style="width:38px;height:38px;background:#D4860B;border-radius:10px;"
-                         class="flex items-center justify-center text-white text-lg flex-shrink-0">
-                        <i class="bi bi-book-half"></i>
-                    </div>
+                    <div style="width:38px;height:38px;background:#D4860B;border-radius:10px;" class="flex items-center justify-center text-white text-lg flex-shrink-0"><i class="bi bi-book-half"></i></div>
                     <span style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:800;color:#fff;">BookStore</span>
                 </a>
                 <p class="text-xs leading-loose mb-4" style="color:rgba(255,255,255,.45);">Nơi quy tụ kho tàng tri thức nhân loại.</p>
@@ -1163,22 +1195,17 @@
                     @foreach (var (ico, clr) in new[] { ("bi-facebook", "#1877F2"), ("bi-instagram", "#E4405F"), ("bi-youtube", "#FF0000"), ("bi-tiktok", "#fff") })
                     {
                         <a href="#" class="flex items-center justify-center rounded-xl no-underline text-base"
-                           style="width:38px;height:38px;background:rgba(255,255,255,.07);color:@clr;">
-                            <i class="bi @ico"></i>
-                        </a>
+                           style="width:38px;height:38px;background:rgba(255,255,255,.07);color:@clr;"><i class="bi @ico"></i></a>
                     }
                 </div>
             </div>
         </div>
-        <div class="flex flex-wrap justify-between items-center py-5 mt-10 border-t gap-3"
-             style="border-color:rgba(255,255,255,.07);">
+        <div class="flex flex-wrap justify-between items-center py-5 mt-10 border-t gap-3" style="border-color:rgba(255,255,255,.07);">
             <p class="text-xs m-0" style="color:rgba(255,255,255,.28);">&copy; @DateTime.Now.Year BookStore. Tất cả quyền được bảo lưu.</p>
         </div>
     </div>
 </footer>
 
-
-<!-- TOAST -->
 @if (showToast)
 {
     <div class="toast-wrap">
@@ -1188,6 +1215,14 @@
 }
 
 @code {
+    // ── Cấu hình API base URL - sửa đúng port của bạn ────────────────────────
+    private const string ApiBaseUrl = "https://localhost:7213";
+
+    private static readonly System.Text.Json.JsonSerializerOptions JsonOpts = new()
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
     // ── Auth ──────────────────────────────────────────────────────────────────
     private bool isLoggedIn = false;
     private string accessToken = "";
@@ -1198,14 +1233,14 @@
     // ── UI State ──────────────────────────────────────────────────────────────
     private bool isLoading = false;
     private bool isProcessingCheckout = false;
-    private bool isPanelOpen = false;   // ← NEW: toggle panel
+    private bool isPanelOpen = false;
     private string toastMessage = "";
     private bool showToast = false;
     private bool selectAll = false;
     private string couponCode = "";
     private string couponMessage = "";
     private bool couponApplied = false;
-    private decimal discountPercent = 0;
+    private bool isApplyingCoupon = false;
     private HashSet<int> selectedItems = new();
     private string checkoutError = "";
 
@@ -1232,6 +1267,13 @@
     private bool isCalculatingFee = false;
     private string shippingError = "";
 
+    // ── Discounts ─────────────────────────────────────────────────────────────
+    private List<DiscountDto> availableDiscounts = new();
+    private bool isLoadingDiscounts = false;
+    private string discountLoadError = "";
+    private DiscountDto? appliedDiscount = null;
+
+    // ── Labels ────────────────────────────────────────────────────────────────
     private string ProvinceLabel => isLoadingProvinces ? "Đang tải..." : !provinces.Any() ? "Không tải được dữ liệu" : "-- Chọn Tỉnh/Thành --";
     private string DistrictLabel => isLoadingDistricts ? "Đang tải..." : !districts.Any() ? "-- Chọn Tỉnh trước --" : "-- Chọn Quận/Huyện --";
     private string WardLabel => isLoadingWards ? "Đang tải..." : !wards.Any() ? "-- Chọn Quận trước --" : "-- Chọn Phường/Xã --";
@@ -1248,20 +1290,54 @@
     private List<CartItem> cartItems = new();
     private List<SuggestedBook> suggestedBooks = new()
     {
-        new(4,"Atomic Habits","James Clear","Tâm lý học",119000m,"https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=300&h=400&fit=crop"),
-        new(5,"Nhà Giả Kim","Paulo Coelho","Tiểu thuyết",79000m,"https://images.unsplash.com/photo-1512820790803-83ca734da794?w=300&h=400&fit=crop"),
-        new(6,"Người Đua Diều","Khaled Hosseini","Tiểu thuyết",110000m,"https://images.unsplash.com/photo-1519681393784-d120267933ba?w=300&h=400&fit=crop"),
-        new(7,"1984","George Orwell","Tiểu thuyết",99000m,"https://images.unsplash.com/photo-1592496431122-2349e0fbc666?w=300&h=400&fit=crop"),
+        new(4, "Atomic Habits", "James Clear", "Tâm lý học", 119000m, "https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=300&h=400&fit=crop"),
+        new(5, "Nhà Giả Kim", "Paulo Coelho", "Tiểu thuyết", 79000m, "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=300&h=400&fit=crop"),
+        new(6, "Người Đua Diều", "Khaled Hosseini", "Tiểu thuyết", 110000m, "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=300&h=400&fit=crop"),
+        new(7, "1984", "George Orwell", "Tiểu thuyết", 99000m, "https://images.unsplash.com/photo-1592496431122-2349e0fbc666?w=300&h=400&fit=crop"),
     };
 
     // ── Computed ──────────────────────────────────────────────────────────────
     private decimal SubTotal => cartItems.Sum(x => x.Price * x.Quantity);
-    private decimal DiscountAmount => couponApplied ? Math.Round(SubTotal * discountPercent) : 0;
+
+    private decimal DiscountAmount
+    {
+        get
+        {
+            if (!couponApplied || appliedDiscount is null) return 0;
+            // DiscountType 0 = Percentage (%)
+            if (appliedDiscount.DiscountType == 0)
+            {
+                var raw = Math.Round(SubTotal * (appliedDiscount.DiscountValue / 100m));
+                return appliedDiscount.MaxDiscountAmount.HasValue
+                    ? Math.Min(raw, appliedDiscount.MaxDiscountAmount.Value)
+                    : raw;
+            }
+            // DiscountType 1 hoặc 2 = Fixed Amount (tiền cố định)
+            return Math.Min(appliedDiscount.DiscountValue, SubTotal);
+        }
+    }
+
     private decimal ShippingFee => shippingFeeFromApi ?? 0;
     private decimal Total => SubTotal - DiscountAmount + ShippingFee;
 
+    // ── Helper: build HttpRequestMessage với absolute URL + token ─────────────
+    private HttpRequestMessage BuildRequest(HttpMethod method, string path)
+    {
+        // Nếu path đã là URL tuyệt đối thì dùng luôn, ngược lại ghép với ApiBaseUrl
+        var url = path.StartsWith("http") ? path : $"{ApiBaseUrl}/{path.TrimStart('/')}";
+        var req = new HttpRequestMessage(method, url);
+        if (!string.IsNullOrEmpty(accessToken))
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        return req;
+    }
+
     // ── Panel toggle ──────────────────────────────────────────────────────────
-    private void TogglePanel() => isPanelOpen = !isPanelOpen;
+    private async Task TogglePanel()
+    {
+        isPanelOpen = !isPanelOpen;
+        if (isPanelOpen && !availableDiscounts.Any() && !isLoadingDiscounts)
+            await LoadDiscounts();
+    }
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
     protected override async Task OnInitializedAsync()
@@ -1283,14 +1359,7 @@
         StateHasChanged();
     }
 
-    private HttpRequestMessage BuildRequest(HttpMethod method, string url)
-    {
-        var req = new HttpRequestMessage(method, url);
-        if (!string.IsNullOrEmpty(accessToken))
-            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-        return req;
-    }
-
+    // ── Load cart ─────────────────────────────────────────────────────────────
     private async Task LoadCartFromApi()
     {
         isLoading = true; StateHasChanged();
@@ -1300,7 +1369,7 @@
             if (resp.StatusCode == System.Net.HttpStatusCode.Unauthorized) { await HandleUnauthorized(); return; }
             if (resp.IsSuccessStatusCode)
             {
-                var dto = await resp.Content.ReadFromJsonAsync<CartResponseDto>();
+                var dto = await resp.Content.ReadFromJsonAsync<CartResponseDto>(JsonOpts);
                 if (dto?.Items != null)
                 {
                     cartItems = dto.Items.Select(i => new CartItem(
@@ -1312,17 +1381,154 @@
                 }
             }
         }
-        catch { }
+        catch (Exception ex) { Console.WriteLine($"[Cart] Load error: {ex.Message}"); }
         finally { isLoading = false; StateHasChanged(); }
     }
 
+    // ── Load discounts ────────────────────────────────────────────────────────
+    private async Task LoadDiscounts()
+    {
+        isLoadingDiscounts = true; discountLoadError = ""; StateHasChanged();
+        try
+        {
+            // Dùng URL tuyệt đối + kèm token (nếu có)
+            var resp = await Http.SendAsync(BuildRequest(HttpMethod.Get, "api/Discount"));
+            var body = await resp.Content.ReadAsStringAsync();
+            Console.WriteLine($"[Discount] Status: {(int)resp.StatusCode}, Body: {body}");
+
+            if (resp.IsSuccessStatusCode)
+            {
+                var list = System.Text.Json.JsonSerializer.Deserialize<List<DiscountDto>>(body, JsonOpts);
+                if (list != null)
+                {
+                    var now = DateTime.Now;
+                    availableDiscounts = list
+                        .Where(d => d.IsActive
+                                 && d.StartDate <= now
+                                 && d.EndDate >= now
+                                 && d.Quantity > 0)
+                        .ToList();
+                    Console.WriteLine($"[Discount] Hợp lệ: {availableDiscounts.Count}/{list.Count}");
+                }
+            }
+            else
+            {
+                discountLoadError = $"Lỗi {(int)resp.StatusCode}: Không thể tải mã giảm giá.";
+            }
+        }
+        catch (Exception ex)
+        {
+            discountLoadError = $"Lỗi kết nối: {ex.Message}";
+            Console.WriteLine($"[Discount] Exception: {ex}");
+        }
+        finally { isLoadingDiscounts = false; StateHasChanged(); }
+    }
+
+    // ── Remove coupon ─────────────────────────────────────────────────────────
+    private void RemoveCoupon()
+    {
+        couponApplied = false;
+        appliedDiscount = null;
+        couponCode = "";
+        couponMessage = "";
+        StateHasChanged();
+    }
+
+    // ── Quick apply discount tag ───────────────────────────────────────────────
+    private async Task QuickApplyDiscount(DiscountDto dc)
+    {
+        couponCode = dc.Code;
+        await ApplyCoupon();
+    }
+
+    // ── Apply coupon ──────────────────────────────────────────────────────────
+    private async Task ApplyCoupon()
+    {
+        if (string.IsNullOrWhiteSpace(couponCode))
+        {
+            couponMessage = "Vui lòng nhập mã giảm giá.";
+            StateHasChanged();
+            return;
+        }
+
+        isApplyingCoupon = true; couponMessage = ""; StateHasChanged();
+
+        try
+        {
+            // Load lại nếu chưa có
+            if (!availableDiscounts.Any() && !isLoadingDiscounts)
+                await LoadDiscounts();
+
+            var code = couponCode.Trim().ToUpper();
+            var now = DateTime.Now;
+
+            var match = availableDiscounts.FirstOrDefault(d =>
+                string.Equals(d.Code, code, StringComparison.OrdinalIgnoreCase));
+
+            // Nếu vẫn không tìm thấy → fetch lại API một lần nữa
+            if (match is null)
+            {
+                var resp = await Http.SendAsync(BuildRequest(HttpMethod.Get, "api/Discount"));
+                if (resp.IsSuccessStatusCode)
+                {
+                    var body = await resp.Content.ReadAsStringAsync();
+                    var all = System.Text.Json.JsonSerializer.Deserialize<List<DiscountDto>>(body, JsonOpts);
+                    if (all != null)
+                    {
+                        availableDiscounts = all
+                            .Where(d => d.IsActive && d.StartDate <= now && d.EndDate >= now && d.Quantity > 0)
+                            .ToList();
+                        match = availableDiscounts.FirstOrDefault(d =>
+                            string.Equals(d.Code, code, StringComparison.OrdinalIgnoreCase));
+                    }
+                }
+            }
+
+            if (match is null)
+            {
+                couponApplied = false; appliedDiscount = null;
+                couponMessage = "Mã giảm giá không hợp lệ hoặc đã hết hạn.";
+            }
+            else if (match.MinOrderAmount.HasValue && SubTotal < match.MinOrderAmount.Value)
+            {
+                couponApplied = false; appliedDiscount = null;
+                couponMessage = $"Đơn hàng cần tối thiểu {match.MinOrderAmount.Value.ToString("#,##0")}đ để dùng mã này.";
+            }
+            else
+            {
+                couponApplied = true;
+                appliedDiscount = match;
+                var desc = match.DiscountType == 0
+                    ? $"Giảm {match.DiscountValue}%"
+                    : $"Giảm {match.DiscountValue.ToString("#,##0")}đ";
+                couponMessage = $"Áp dụng thành công! {desc}.";
+                await ShowToast($"Mã {match.Code} đã được áp dụng!");
+            }
+        }
+        catch (Exception ex)
+        {
+            couponMessage = $"Không thể kiểm tra mã: {ex.Message}";
+        }
+        finally
+        {
+            isApplyingCoupon = false;
+            if (!string.IsNullOrEmpty(selectedWardCode)) await CalculateShippingFee();
+            StateHasChanged();
+        }
+    }
+
+    // ── GHN Provinces / Districts / Wards ────────────────────────────────────
     private async Task LoadProvinces()
     {
         isLoadingProvinces = true;
         try
         {
-            var result = await Http.GetFromJsonAsync<List<ProvinceDto>>("api/ghn/provinces");
-            if (result != null) provinces = result;
+            var resp = await Http.SendAsync(BuildRequest(HttpMethod.Get, "api/ghn/provinces"));
+            if (resp.IsSuccessStatusCode)
+            {
+                var result = await resp.Content.ReadFromJsonAsync<List<ProvinceDto>>(JsonOpts);
+                if (result != null) provinces = result;
+            }
         }
         catch { shippingError = "Không thể tải danh sách tỉnh/thành."; }
         finally { isLoadingProvinces = false; StateHasChanged(); }
@@ -1338,8 +1544,12 @@
         isLoadingDistricts = true; StateHasChanged();
         try
         {
-            var result = await Http.GetFromJsonAsync<List<DistrictDto>>($"api/ghn/districts/{pid}");
-            if (result != null) districts = result;
+            var resp = await Http.SendAsync(BuildRequest(HttpMethod.Get, $"api/ghn/districts/{pid}"));
+            if (resp.IsSuccessStatusCode)
+            {
+                var result = await resp.Content.ReadFromJsonAsync<List<DistrictDto>>(JsonOpts);
+                if (result != null) districts = result;
+            }
         }
         catch { shippingError = "Không thể tải danh sách quận/huyện."; }
         finally { isLoadingDistricts = false; StateHasChanged(); }
@@ -1354,8 +1564,12 @@
         isLoadingWards = true; StateHasChanged();
         try
         {
-            var result = await Http.GetFromJsonAsync<List<WardDto>>($"api/ghn/wards/{did}");
-            if (result != null) wards = result;
+            var resp = await Http.SendAsync(BuildRequest(HttpMethod.Get, $"api/ghn/wards/{did}"));
+            if (resp.IsSuccessStatusCode)
+            {
+                var result = await resp.Content.ReadFromJsonAsync<List<WardDto>>(JsonOpts);
+                if (result != null) wards = result;
+            }
         }
         catch { shippingError = "Không thể tải danh sách phường/xã."; }
         finally { isLoadingWards = false; StateHasChanged(); }
@@ -1378,22 +1592,17 @@
         try
         {
             int weight = Math.Max(200, cartItems.Sum(x => x.Quantity) * 200);
-            var url = $"api/ghn/calculate-fee?districtId={selectedDistrictId}&wardCode={Uri.EscapeDataString(selectedWardCode)}&totalWeight={weight}";
-            var resp = await Http.GetAsync(url);
+            var path = $"api/ghn/calculate-fee?districtId={selectedDistrictId}&wardCode={Uri.EscapeDataString(selectedWardCode)}&totalWeight={weight}";
+            var resp = await Http.SendAsync(BuildRequest(HttpMethod.Get, path));
             if (resp.IsSuccessStatusCode)
             {
-                var result = await resp.Content.ReadFromJsonAsync<ShippingFeeResponseDto>();
+                var result = await resp.Content.ReadFromJsonAsync<ShippingFeeResponseDto>(JsonOpts);
                 shippingFeeFromApi = result?.ShippingFee;
             }
             else
             {
                 var raw = await resp.Content.ReadAsStringAsync();
-                try
-                {
-                    var err = System.Text.Json.JsonSerializer.Deserialize<ApiErrorDto>(raw,
-                        new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                    shippingError = err?.Message ?? "Không thể tính phí vận chuyển.";
-                }
+                try { var err = System.Text.Json.JsonSerializer.Deserialize<ApiErrorDto>(raw, JsonOpts); shippingError = err?.Message ?? "Không thể tính phí vận chuyển."; }
                 catch { shippingError = "Không thể tính phí vận chuyển."; }
             }
         }
@@ -1401,6 +1610,7 @@
         finally { isCalculatingFee = false; StateHasChanged(); }
     }
 
+    // ── Validate & Checkout ───────────────────────────────────────────────────
     private bool ValidateForm()
     {
         formErrors.Clear(); checkoutError = "";
@@ -1433,7 +1643,6 @@
                 paymentMethodId = selectedPaymentMethod,
                 discountCode = couponApplied ? couponCode.Trim() : (string?)null
             };
-
             var orderReq = BuildRequest(HttpMethod.Post, "api/order/checkout");
             orderReq.Content = JsonContent.Create(payload);
             var orderResp = await Http.SendAsync(orderReq);
@@ -1442,30 +1651,25 @@
             if (!orderResp.IsSuccessStatusCode)
             {
                 var raw = await orderResp.Content.ReadAsStringAsync();
-                try
-                {
-                    var err = System.Text.Json.JsonSerializer.Deserialize<ApiErrorDto>(raw, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                    checkoutError = err?.Message ?? "Tạo đơn hàng thất bại. Vui lòng thử lại.";
-                }
+                try { var err = System.Text.Json.JsonSerializer.Deserialize<ApiErrorDto>(raw, JsonOpts); checkoutError = err?.Message ?? "Tạo đơn hàng thất bại."; }
                 catch { checkoutError = "Tạo đơn hàng thất bại. Vui lòng thử lại."; }
                 return;
             }
 
-            var orderResult = await orderResp.Content.ReadFromJsonAsync<OrderResultResponseDto>();
+            var orderResult = await orderResp.Content.ReadFromJsonAsync<OrderResultResponseDto>(JsonOpts);
             if (orderResult == null) { checkoutError = "Lỗi xử lý đơn hàng."; return; }
 
             if (selectedPaymentMethod == 1)
             {
                 if (!string.IsNullOrEmpty(orderResult.PaymentUrl))
                 {
-                    await JS.InvokeVoidAsync("window.open", orderResult.PaymentUrl, "_self");
-                    return;
+                    await JS.InvokeVoidAsync("window.open", orderResult.PaymentUrl, "_self"); return;
                 }
                 var vnpayReq = BuildRequest(HttpMethod.Post, "api/vnpay/create-payment");
                 vnpayReq.Content = JsonContent.Create(new { orderId = orderResult.OrderId, amount = orderResult.TotalAmount });
                 var vnpayResp = await Http.SendAsync(vnpayReq);
-                if (!vnpayResp.IsSuccessStatusCode) { checkoutError = "Không thể tạo liên kết VNPay. Vui lòng thử lại."; return; }
-                var vnpayResult = await vnpayResp.Content.ReadFromJsonAsync<VnPayUrlDto>();
+                if (!vnpayResp.IsSuccessStatusCode) { checkoutError = "Không thể tạo liên kết VNPay."; return; }
+                var vnpayResult = await vnpayResp.Content.ReadFromJsonAsync<VnPayUrlDto>(JsonOpts);
                 if (string.IsNullOrEmpty(vnpayResult?.PaymentUrl)) { checkoutError = "Liên kết VNPay không hợp lệ."; return; }
                 await JS.InvokeVoidAsync("window.open", vnpayResult.PaymentUrl, "_self");
             }
@@ -1480,6 +1684,7 @@
         finally { isProcessingCheckout = false; StateHasChanged(); }
     }
 
+    // ── Cart actions ──────────────────────────────────────────────────────────
     private async Task IncreaseQty(CartItem item)
     {
         if (item.Quantity >= item.StockQuantity) { await ShowToast("Đã đạt giới hạn tồn kho!"); return; }
@@ -1564,26 +1769,6 @@
         await ShowToast("Đã cập nhật giỏ hàng!");
     }
 
-    private async Task ApplyCoupon()
-    {
-        if (string.IsNullOrWhiteSpace(couponCode)) { couponMessage = "Vui lòng nhập mã giảm giá."; return; }
-        switch (couponCode.Trim().ToUpper())
-        {
-            case "BOOK20":
-                discountPercent = .20m; couponApplied = true;
-                couponMessage = "Áp dụng thành công! Giảm 20%.";
-                await ShowToast("Mã BOOK20 đã được áp dụng!"); break;
-            case "NEWBOOK":
-                discountPercent = .10m; couponApplied = true;
-                couponMessage = "Áp dụng thành công! Giảm 10%.";
-                await ShowToast("Mã NEWBOOK đã được áp dụng!"); break;
-            default:
-                couponApplied = false; discountPercent = 0;
-                couponMessage = "Mã giảm giá không hợp lệ."; break;
-        }
-        if (!string.IsNullOrEmpty(selectedWardCode)) await CalculateShippingFee();
-    }
-
     private async Task AddSuggestedToCart(int bookId)
     {
         var book = suggestedBooks.FirstOrDefault(x => x.BookId == bookId);
@@ -1657,7 +1842,7 @@
         showToast = false; StateHasChanged();
     }
 
-    // ── DTOs ─────────────────────────────────────────────────────────────────
+    // ── DTOs ──────────────────────────────────────────────────────────────────
     private class CartResponseDto
     {
         public List<CartItemDto> Items { get; set; } = new();
@@ -1686,4 +1871,20 @@
         public string Message { get; set; } = "";
     }
     private class VnPayUrlDto { public string PaymentUrl { get; set; } = ""; }
+
+    private class DiscountDto
+    {
+        public int DiscountCodeId { get; set; }
+        public string Code { get; set; } = "";
+        public string Description { get; set; } = "";
+        // 0 = Percentage (%), 1 = Fixed, 2 = Fixed (theo API thực tế)
+        public byte DiscountType { get; set; }
+        public decimal DiscountValue { get; set; }
+        public decimal? MaxDiscountAmount { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public int Quantity { get; set; }
+        public decimal? MinOrderAmount { get; set; }
+        public bool IsActive { get; set; }
+    }
 }

@@ -1,0 +1,551 @@
+﻿@* Dùng trong trang /book/{id} — đặt vào tab "Đánh giá" *@
+@rendermode InteractiveServer
+@using System.Net.Http.Json
+@using System.Net.Http.Headers
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+<style>
+    .rv-wrap {
+        font-family: 'Plus Jakarta Sans',sans-serif;
+        color: #1A1208;
+    }
+
+    /* ── Star picker ── */
+    .star-input {
+        display: flex;
+        flex-direction: row-reverse;
+        gap: 3px;
+    }
+
+        .star-input input {
+            display: none;
+        }
+
+        .star-input label {
+            font-size: 1.7rem;
+            color: #DDD5C8;
+            cursor: pointer;
+            transition: color .12s,transform .12s;
+            line-height: 1;
+        }
+
+            .star-input input:checked ~ label,
+            .star-input label:hover,
+            .star-input label:hover ~ label {
+                color: #D4860B;
+            }
+
+            .star-input label:hover {
+                transform: scale(1.18);
+            }
+
+    /* ── Rating bar ── */
+    .rb-track {
+        height: 8px;
+        background: #EDE8DF;
+        border-radius: 50px;
+        overflow: hidden;
+        flex: 1;
+    }
+
+    .rb-fill {
+        height: 100%;
+        background: linear-gradient(90deg,#D4860B,#F5A623);
+        border-radius: 50px;
+        transition: width .5s ease;
+    }
+
+    /* ── Review card ── */
+    .rv-card {
+        background: #FFFDF8;
+        border: 1px solid #EDE8DF;
+        border-radius: 16px;
+        padding: 18px 20px;
+        transition: box-shadow .2s;
+        animation: rvFade .35s ease both;
+    }
+
+        .rv-card:hover {
+            box-shadow: 0 4px 20px rgba(107,76,42,.09);
+        }
+
+    @@keyframes rvFade {
+        from {
+            opacity: 0;
+            transform: translateY(10px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0)
+        }
+    }
+
+    /* ── Avatar ── */
+    .rv-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .88rem;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: .5px;
+    }
+
+    /* ── Write box ── */
+    .write-box {
+        background: #FFFDF8;
+        border: 1.5px solid #EDE8DF;
+        border-radius: 16px;
+        padding: 22px 24px;
+        margin-bottom: 20px;
+    }
+
+        .write-box textarea {
+            width: 100%;
+            border: 1.5px solid #EDE8DF;
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-family: inherit;
+            font-size: .88rem;
+            resize: vertical;
+            min-height: 88px;
+            outline: none;
+            transition: border-color .15s,box-shadow .15s;
+            background: #FAF7F2;
+            color: #1A1208;
+            box-sizing: border-box;
+        }
+
+            .write-box textarea:focus {
+                border-color: #D4860B;
+                background: #fff;
+                box-shadow: 0 0 0 3px rgba(212,134,11,.10);
+            }
+
+            .write-box textarea::placeholder {
+                color: #C4B8A8;
+            }
+
+    /* ── Submit button ── */
+    .btn-submit {
+        background: linear-gradient(135deg,#6B4C2A,#8B6040);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 22px;
+        font-family: inherit;
+        font-size: .84rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .2s;
+        box-shadow: 0 3px 12px rgba(107,76,42,.25);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+        .btn-submit:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(107,76,42,.35);
+        }
+
+        .btn-submit:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+    /* ── Pagination ── */
+    .pg-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        border: 1.5px solid #EDE8DF;
+        background: #FFFDF8;
+        color: #9B8B7A;
+        font-size: .8rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all .15s;
+        font-family: inherit;
+    }
+
+        .pg-btn:hover {
+            border-color: #D4860B;
+            color: #D4860B;
+            background: rgba(212,134,11,.07);
+        }
+
+        .pg-btn.pg-on {
+            border-color: #D4860B;
+            background: #D4860B;
+            color: #fff;
+        }
+
+        .pg-btn.pg-off {
+            opacity: .4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg)
+        }
+    }
+
+    .spin {
+        animation: spin .7s linear infinite;
+        display: inline-block;
+    }
+
+    /* ── Skeleton ── */
+    .skel {
+        background: linear-gradient(90deg,#EDE8DF 25%,#F5F0EA 50%,#EDE8DF 75%);
+        background-size: 600px 100%;
+        animation: sk 1.4s infinite;
+        border-radius: 10px;
+    }
+
+    @@keyframes sk {
+        0% {
+            background-position: -600px 0
+        }
+
+        100% {
+            background-position: 600px 0
+        }
+    }
+</style>
+
+<div class="rv-wrap">
+    @if (isLoading)
+    {
+        <div style="display:flex;flex-direction:column;gap:12px;">
+            @for (int i = 0; i < 3; i++)
+            {
+                <div class="skel" style="height:90px;"></div>
+            }
+        </div>
+    }
+    else
+    {
+        <!-- ══ SUMMARY ══ -->
+        <div style="background:#FFFDF8;border:1px solid #EDE8DF;border-radius:16px;padding:22px 24px;margin-bottom:20px;display:flex;gap:28px;flex-wrap:wrap;align-items:center;">
+            <div style="text-align:center;flex-shrink:0;min-width:90px;">
+                <div style="font-family:'Playfair Display',serif;font-size:3.2rem;font-weight:700;color:#1A1208;line-height:1;">@AvgRating.ToString("0.0")</div>
+                <div style="color:#D4860B;font-size:1rem;margin:5px 0 3px;">@StarsFilled(AvgRating)</div>
+                <div style="font-size:.72rem;color:#9B8B7A;">@reviews.Count đánh giá</div>
+            </div>
+            <div style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:7px;">
+                @for (int s = 5; s >= 1; s--)
+                {
+                    var cnt = reviews.Count(r => r.Rating == s);
+                    var pct = reviews.Count == 0 ? 0 : (int)Math.Round(cnt * 100.0 / reviews.Count);
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <span style="font-size:.72rem;color:#9B8B7A;width:18px;text-align:right;flex-shrink:0;">@s★</span>
+                        <div class="rb-track"><div class="rb-fill" style="width:@pct%;"></div></div>
+                        <span style="font-size:.7rem;color:#9B8B7A;width:28px;flex-shrink:0;">@pct%</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- ══ WRITE REVIEW ══ -->
+        @if (!isLoggedIn)
+        {
+            <div style="background:rgba(212,134,11,.06);border:1px dashed rgba(212,134,11,.3);border-radius:14px;padding:16px 20px;margin-bottom:20px;text-align:center;">
+                <i class="bi bi-lock" style="color:#D4860B;font-size:1.1rem;display:block;margin-bottom:8px;"></i>
+                <p style="font-size:.85rem;color:#9B8B7A;margin:0;">
+                    <a href="/login" style="color:#D4860B;font-weight:600;text-decoration:none;">Đăng nhập</a>
+                    để viết đánh giá cho cuốn sách này
+                </p>
+            </div>
+        }
+        else if (submitState == "success")
+        {
+            <div style="background:rgba(46,125,82,.07);border:1px solid rgba(46,125,82,.25);border-radius:14px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+                <i class="bi bi-check-circle-fill" style="color:#2E7D52;flex-shrink:0;font-size:1rem;"></i>
+                <span style="font-size:.86rem;color:#2E7D52;font-weight:600;">Cảm ơn bạn đã đánh giá! Đánh giá của bạn đã được ghi nhận.</span>
+            </div>
+        }
+        else
+        {
+            <!-- Form — server từ chối nếu chưa đủ điều kiện (chưa mua / đơn chưa hoàn thành / đã đánh giá) -->
+            <div class="write-box">
+                <div style="font-size:.92rem;font-weight:700;color:#1A1208;margin-bottom:14px;display:flex;align-items:center;gap:7px;">
+                    <i class="bi bi-pencil-fill" style="color:#D4860B;font-size:.8rem;"></i>Viết đánh giá của bạn
+                </div>
+
+                <!-- Star picker -->
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:.75rem;color:#9B8B7A;margin-bottom:8px;">Chọn số sao:</div>
+                    <div class="star-input">
+                        @for (int i = 5; i >= 1; i--)
+                        {
+                            var v = i;
+                            <input type="radio" id="star@(v)rv@(BookId)" name="rv_rating_@BookId"
+                                   @onchange="@(() => newRating = v)" />
+                            <label for="star@(v)rv@(BookId)" title="@v sao">★</label>
+                        }
+                    </div>
+                    @if (newRating > 0)
+                    {
+                        <div style="font-size:.74rem;color:#D4860B;margin-top:5px;font-weight:600;">@RatingLabel(newRating)</div>
+                    }
+                </div>
+
+                <!-- Comment -->
+                <textarea @bind="newComment"
+                          placeholder="Chia sẻ cảm nhận của bạn về cuốn sách..."
+                          style="margin-bottom:14px;"></textarea>
+
+                <!-- Error -->
+                @if (!string.IsNullOrEmpty(submitError))
+                {
+                    <div style="font-size:.78rem;color:#C0392B;background:rgba(192,57,43,.07);border:1px solid rgba(192,57,43,.2);border-radius:8px;padding:9px 13px;margin-bottom:12px;display:flex;align-items:center;gap:7px;">
+                        <i class="bi bi-exclamation-circle-fill" style="flex-shrink:0;"></i>@submitError
+                    </div>
+                }
+
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                    <span style="font-size:.73rem;color:#C4B8A8;">
+                        <i class="bi bi-shield-check" style="color:#D4860B;"></i>
+                        Chỉ khách hàng đã mua &amp; đơn hoàn thành mới có thể đánh giá
+                    </span>
+                    <button class="btn-submit"
+                            @onclick="SubmitReview"
+                            disabled="@(isSubmitting || newRating == 0)">
+                        @if (isSubmitting)
+                        {
+                            <i class="bi bi-arrow-repeat spin"></i>
+                        }
+                        else
+                        {
+                            <i class="bi bi-send-fill" style="font-size:.76rem;"></i>
+                        }
+                        @(isSubmitting ? "Đang gửi..." : "Gửi đánh giá")
+                    </button>
+                </div>
+            </div>
+        }
+
+        <!-- ══ REVIEW LIST ══ -->
+        @if (!reviews.Any())
+        {
+            <div style="text-align:center;padding:36px 0;color:#9B8B7A;">
+                <i class="bi bi-chat-square-text" style="font-size:2.4rem;opacity:.28;display:block;margin-bottom:12px;"></i>
+                <p style="font-size:.87rem;margin:0;">Chưa có đánh giá nào. Hãy là người đầu tiên!</p>
+            </div>
+        }
+        else
+        {
+            <div style="display:flex;flex-direction:column;gap:12px;">
+                @foreach (var (rv, idx) in PagedReviews().Select((r, i) => (r, i)))
+                {
+                    <div class="rv-card" style="animation-delay:@(idx * 0.05)s;">
+                        <div style="display:flex;align-items:flex-start;gap:14px;">
+                            <div class="rv-avatar" style="background:@AvatarColor(rv.UserName);">
+                                @GetInitials(rv.UserName)
+                            </div>
+                            <div style="flex:1;min-width:0;">
+                                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:5px;">
+                                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                                        <span style="font-weight:700;font-size:.9rem;">@rv.UserName</span>
+                                        <span style="font-size:.68rem;font-weight:700;color:#2E7D52;background:rgba(46,125,82,.1);border:1px solid rgba(46,125,82,.2);padding:2px 8px;border-radius:50px;">
+                                            <i class="bi bi-bag-check-fill" style="font-size:.6rem;"></i> Đã mua
+                                        </span>
+                                    </div>
+                                    <span style="font-size:.7rem;color:#C4B8A8;flex-shrink:0;">@rv.ReviewDate.ToString("dd/MM/yyyy")</span>
+                                </div>
+                                <div style="margin-bottom:8px;">
+                                    @for (int s = 1; s <= 5; s++)
+                                    {
+                                        <span style="color:@(s<=rv.Rating?"#D4860B":"#DDD5C8");font-size:.82rem;">★</span>
+                                    }
+                                </div>
+                                @if (!string.IsNullOrEmpty(rv.Comment))
+                                {
+                                    <p style="font-size:.86rem;color:#4A3728;line-height:1.65;margin:0;">@rv.Comment</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (TotalPages > 1)
+            {
+                <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:18px;flex-wrap:wrap;">
+                    <button class="pg-btn @(rvPage<=1?"pg-off":"")"
+                            @onclick="@(()=>{if(rvPage>1)rvPage--;})">
+                        <i class="bi bi-chevron-left" style="font-size:.7rem;"></i>
+                    </button>
+                    @for (int p = 1; p <= TotalPages; p++)
+                    {
+                        var pg = p;
+                        if (pg == 1 || pg == TotalPages || (pg >= rvPage - 1 && pg <= rvPage + 1))
+                        {
+                            <button class="pg-btn @(pg==rvPage?"pg-on":"")"
+                                    @onclick="@(()=>rvPage=pg)">
+                                @pg
+                            </button>
+                        }
+                        else if (pg == rvPage - 2 || pg == rvPage + 2)
+                        {
+                            <span style="color:#C4B8A8;font-size:.8rem;">…</span>
+                        }
+                    }
+                    <button class="pg-btn @(rvPage>=TotalPages?"pg-off":"")"
+                            @onclick="@(()=>{if(rvPage<TotalPages)rvPage++;})">
+                        <i class="bi bi-chevron-right" style="font-size:.7rem;"></i>
+                    </button>
+                </div>
+                <div style="text-align:center;margin-top:5px;font-size:.7rem;color:#C4B8A8;">
+                    Trang @rvPage / @TotalPages &nbsp;·&nbsp; @reviews.Count đánh giá
+                </div>
+            }
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public int BookId { get; set; }
+
+    private const int PageSize = 5;
+
+    private List<ReviewItem> reviews = new();
+    private bool isLoading = true;
+    private bool isLoggedIn = false;
+    private bool isSubmitting = false;
+    private int newRating = 0;
+    private string newComment = "";
+    private string submitError = "";
+    private string submitState = "";   
+    private string accessToken = "";
+    private int rvPage = 1;
+
+    private double AvgRating => reviews.Count == 0 ? 0 : reviews.Average(r => r.Rating);
+    private int TotalPages => (int)Math.Ceiling(reviews.Count / (double)PageSize);
+
+    private List<ReviewItem> PagedReviews() =>
+        reviews.Skip((rvPage - 1) * PageSize).Take(PageSize).ToList();
+
+    // ── Lifecycle ──────────────────────────────────────────────────────
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        rvPage = 1;
+        await LoadReviews();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        accessToken = await JS.InvokeAsync<string?>("localStorage.getItem", "accessToken") ?? "";
+        isLoggedIn = !string.IsNullOrEmpty(accessToken);
+        StateHasChanged();
+    }
+
+    // ── API ────────────────────────────────────────────────────────────
+    private async Task LoadReviews()
+    {
+        try
+        {
+            var result = await Http.GetFromJsonAsync<List<ReviewItem>>($"api/review/book/{BookId}");
+            reviews = result ?? new();
+        }
+        catch { reviews = new(); }
+        finally { isLoading = false; }
+    }
+
+    private async Task SubmitReview()
+    {
+        if (newRating == 0) { submitError = "Vui lòng chọn số sao."; return; }
+
+        submitError = "";
+        isSubmitting = true;
+        try
+        {
+            var req = new HttpRequestMessage(HttpMethod.Post, "api/review");
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            req.Content = JsonContent.Create(new
+            {
+                bookId = BookId,
+                rating = newRating,
+                comment = newComment.Trim()
+            });
+
+            var resp = await Http.SendAsync(req);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                submitState = "success";
+                newRating = 0;
+                newComment = "";
+                await LoadReviews();
+            }
+            else
+            {
+                // Server trả message lỗi từ ReviewService
+                // VD: "Bạn chưa mua sách này", "Bạn đã đánh giá rồi"...
+                var err = await resp.Content.ReadFromJsonAsync<ErrorDto>();
+                submitError = err?.Message ?? $"Lỗi {(int)resp.StatusCode}";
+            }
+        }
+        catch (Exception ex) { submitError = $"Lỗi kết nối: {ex.Message}"; }
+        finally { isSubmitting = false; }
+    }
+
+    // ── Helpers ────────────────────────────────────────────────────────
+    private static string StarsFilled(double avg)
+    {
+        int full = (int)Math.Round(avg);
+        return string.Concat(Enumerable.Repeat("★", full))
+             + string.Concat(Enumerable.Repeat("☆", 5 - full));
+    }
+
+    private static string RatingLabel(int r) => r switch
+    {
+        5 => "★★★★★",
+        4 => "★★★★",
+        3 => "★★★",
+        2 => "★★",
+        1 => "★",
+        _ => ""
+    };
+
+    private static string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "?";
+        var p = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return p.Length == 1 ? p[0][..1].ToUpper() : $"{p[0][..1]}{p[^1][..1]}".ToUpper();
+    }
+
+    private static readonly string[] Colors =
+        { "#D4860B","#6B4C2A","#2E7D52","#2563A8","#8B4C8B","#C0392B","#16808A","#7A6030" };
+
+    private static string AvatarColor(string name) =>
+        Colors[Math.Abs(name.GetHashCode()) % Colors.Length];
+
+    private class ReviewItem
+    {
+        public int ReviewId { get; set; }
+        public string UserName { get; set; } = "";
+        public int Rating { get; set; }
+        public string? Comment { get; set; }
+        public DateTime ReviewDate { get; set; }
+    }
+    private class ErrorDto { public string? Message { get; set; } }
+}

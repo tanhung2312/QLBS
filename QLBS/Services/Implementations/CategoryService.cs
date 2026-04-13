@@ -89,14 +89,11 @@ namespace QLBS.Services.Implementations
 
         public async Task<BookByCategoryResponseDto?> GetBooksByCategoryIdAsync(int categoryId)
         {
-            // 1. Kiểm tra danh mục tồn tại
             var category = await _categoryRepository.GetByIdAsync(categoryId);
             if (category == null) return null;
 
-            // 2. Lấy tất cả sách của danh mục
             var books = await _bookRepository.GetByCategoryIdAsync(categoryId);
 
-            // 3. Map sang DTO
             var bookDtos = books.Select(b => new BookResponseDto
             {
                 BookId = b.BookId,
@@ -110,7 +107,6 @@ namespace QLBS.Services.Implementations
                 Price = b.Price,
                 Quantity = b.Quantity,
                 Description = b.Description,
-                // Ưu tiên ảnh bìa (IsCover = true), fallback ảnh OrderIndex nhỏ nhất
                 ImageUrl = b.BookImages != null && b.BookImages.Any()
                     ? (b.BookImages.FirstOrDefault(img => img.IsCover)?.URL
                        ?? b.BookImages.OrderBy(img => img.OrderIndex).First().URL)

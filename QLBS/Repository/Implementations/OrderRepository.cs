@@ -14,7 +14,6 @@ namespace QLBS.Repository.Implementations
             _context = context;
         }
 
-        // ── Tạo đơn hàng ─────────────────────────────────────────────────────
         public async Task<OrderTable> CreateOrderAsync(OrderTable order, List<OrderDetail> details, int userId, int paymentMethodId)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
@@ -64,7 +63,6 @@ namespace QLBS.Repository.Implementations
             }
         }
 
-        // ── Lấy đơn theo ID ──────────────────────────────────────────────────
         public async Task<OrderTable?> GetByIdAsync(int id)
         {
             return await _context.OrderTables
@@ -72,10 +70,11 @@ namespace QLBS.Repository.Implementations
                 .Include(o => o.OrderDetails)
                     .ThenInclude(od => od.Book)
                         .ThenInclude(b => b.BookImages)
+                .Include(o => o.User)                  
+                    .ThenInclude(u => u.Account)
                 .FirstOrDefaultAsync(o => o.OrderId == id);
         }
 
-        // ── Cập nhật trạng thái đơn hàng ─────────────────────────────────────
         public async Task UpdateOrderStatusAsync(int orderId, byte status)
         {
             var order = await _context.OrderTables.FindAsync(orderId);
@@ -86,7 +85,6 @@ namespace QLBS.Repository.Implementations
             }
         }
 
-        // ── Cập nhật mã GHN ──────────────────────────────────────────────────
         public async Task UpdateOrderGhnCodeAsync(int orderId, string ghnCode)
         {
             var order = await _context.OrderTables.FindAsync(orderId);
@@ -98,7 +96,6 @@ namespace QLBS.Repository.Implementations
             }
         }
 
-        // ── Cập nhật trạng thái thanh toán ───────────────────────────────────
         public async Task UpdatePaymentStatusAsync(int orderId, byte paymentStatus, string transactionId)
         {
             var payment = await _context.Payments
@@ -113,7 +110,6 @@ namespace QLBS.Repository.Implementations
             }
         }
 
-        // ── Huỷ đơn và hoàn kho ──────────────────────────────────────────────
         public async Task CancelOrderAndRestoreStockAsync(int orderId)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
@@ -147,7 +143,6 @@ namespace QLBS.Repository.Implementations
             }
         }
 
-        // ── Lấy đơn theo user ────────────────────────────────────────────────
         public async Task<IEnumerable<OrderTable>> GetOrdersByUserIdAsync(int userId)
         {
             return await _context.OrderTables
@@ -158,7 +153,6 @@ namespace QLBS.Repository.Implementations
                 .ToListAsync();
         }
 
-        // ── Lấy tất cả đơn (admin) ───────────────────────────────────────────
         public async Task<IEnumerable<OrderTable>> GetAllOrdersAsync()
         {
             return await _context.OrderTables

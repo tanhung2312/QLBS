@@ -65,6 +65,22 @@
         }
     }
 
+    @@keyframes popIn {
+        0% {
+            opacity: 0;
+            transform: scale(.85) translateY(6px)
+        }
+
+        70% {
+            transform: scale(1.04) translateY(-2px)
+        }
+
+        100% {
+            opacity: 1;
+            transform: scale(1) translateY(0)
+        }
+    }
+
     .font-cormorant {
         font-family: 'Cormorant Garamond', serif;
     }
@@ -120,6 +136,10 @@
         background: rgba(212,134,11,.05) !important;
     }
 
+    .order-row-completed {
+        background: rgba(46,125,82,.02) !important;
+    }
+
     .tab-pill {
         position: relative;
         display: flex;
@@ -147,14 +167,6 @@
 
     .pf-toast {
         animation: slideIn .25s ease both;
-    }
-
-    .notif-badge {
-        animation: pulse .6s ease 3;
-    }
-
-    .btn-spin {
-        animation: spin .7s linear infinite;
     }
 
     ::-webkit-scrollbar {
@@ -210,11 +222,85 @@
             background: rgba(212,134,11,.08);
         }
 
-    .avatar-ring {
-        background: linear-gradient(135deg,#D4860B,#F5A623);
-        padding: 3px;
-        box-shadow: 0 0 0 4px rgba(212,134,11,.2), 0 20px 60px rgba(107,76,42,.2);
+    /* ── Review CTA button ── */
+    .review-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 11px;
+        border-radius: 8px;
+        font-size: .71rem;
+        font-weight: 700;
+        border: 1.5px solid rgba(212,134,11,.35);
+        background: rgba(212,134,11,.07);
+        color: #D4860B;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all .18s;
+        white-space: nowrap;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        animation: popIn .4s cubic-bezier(.22,1,.36,1) both;
     }
+
+        .review-btn:hover {
+            background: linear-gradient(135deg,#D4860B,#F5A623);
+            color: #fff;
+            border-color: #D4860B;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(212,134,11,.32);
+        }
+
+        .review-btn i {
+            font-size: .68rem;
+        }
+
+    /* ── Completed row highlight ── */
+    .completed-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #2E7D52;
+        display: inline-block;
+        margin-right: 4px;
+        flex-shrink: 0;
+        box-shadow: 0 0 0 3px rgba(46,125,82,.15);
+    }
+
+    /* ── Pagination ── */
+    .pg-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 9px;
+        font-size: .82rem;
+        font-weight: 600;
+        border: 1.5px solid #EDE8DF;
+        background: #FFFDF8;
+        color: #9B8B7A;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all .15s;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+        .pg-btn:hover {
+            border-color: #D4860B;
+            color: #D4860B;
+            background: rgba(212,134,11,.07);
+        }
+
+        .pg-btn.pg-on {
+            border-color: #D4860B;
+            background: #D4860B;
+            color: #fff;
+        }
+
+        .pg-btn.pg-off {
+            opacity: .4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
 </style>
 
 <div class="font-jakarta bg-[#FAF7F2] min-h-screen text-[#1A1208]">
@@ -276,9 +362,6 @@
                                 <a href="/orders" class="flex items-center gap-2.5 px-4 py-2.5 text-[.84rem] font-medium text-[#D4860B] bg-[rgba(212,134,11,.06)] no-underline">
                                     <i class="bi bi-bag-check-fill text-[#D4860B] w-4 text-center"></i> Đơn hàng
                                 </a>
-                                <a href="/wishlist" class="flex items-center gap-2.5 px-4 py-2.5 text-[.84rem] font-medium text-[#7A6A5A] no-underline hover:bg-[rgba(212,134,11,.08)] hover:text-[#6B4C2A] transition-colors">
-                                    <i class="bi bi-heart-fill text-[#E57373] w-4 text-center"></i> Yêu thích
-                                </a>
                                 <div class="h-px bg-[#EDE8DF] my-1"></div>
                                 <button @onclick="Logout" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-[.84rem] font-medium text-[#7A6A5A] hover:bg-[rgba(192,57,43,.07)] hover:text-[#C0392B] transition-colors border-none bg-transparent cursor-pointer" style="font-family:inherit;text-align:left;">
                                     <i class="bi bi-box-arrow-right text-[#C0392B] w-4 text-center"></i> Đăng xuất
@@ -291,13 +374,12 @@
         </div>
     </nav>
 
-    <!-- PAGE HEADER BANNER -->
+    <!-- HEADER BANNER -->
     <div class="relative overflow-hidden pt-12 pb-8"
          style="background:linear-gradient(140deg,#1A1208 0%,#3D2B1F 45%,#6B4C2A 100%);">
         <div class="absolute pointer-events-none rounded-full"
              style="width:500px;height:400px;top:-100px;right:5%;background:rgba(212,134,11,.1);filter:blur(80px);"></div>
         <div class="relative z-10 max-w-[1100px] mx-auto px-6 fade-up-1">
-            <!-- Breadcrumb -->
             <div class="flex items-center gap-2 text-white/45 text-[.76rem] mb-5">
                 <a href="/" class="hover:text-white/70 transition-colors no-underline text-white/45">Trang chủ</a>
                 <i class="bi bi-chevron-right text-[.6rem]"></i>
@@ -305,26 +387,31 @@
                 <i class="bi bi-chevron-right text-[.6rem]"></i>
                 <span class="text-[#F5A623]">Đơn hàng</span>
             </div>
-
             <div class="flex items-center gap-5">
                 <div class="w-14 h-14 rounded-[16px] flex items-center justify-center text-2xl flex-shrink-0"
                      style="background:rgba(212,134,11,.15);border:1px solid rgba(212,134,11,.3);">
                     <i class="bi bi-bag-check-fill text-[#F5A623]"></i>
                 </div>
                 <div>
-                    <h1 class="font-cormorant text-[2.1rem] font-bold text-white leading-tight mb-1">
-                        Đơn hàng của tôi
-                    </h1>
+                    <h1 class="font-cormorant text-[2.1rem] font-bold text-white leading-tight mb-1">Đơn hàng của tôi</h1>
                     <div class="flex items-center gap-2.5 flex-wrap">
                         <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[.78rem] font-medium text-white/75"
                               style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);">
                             <i class="bi bi-bag text-[#F5A623] text-[.72rem]"></i>
                             @(isLoadingOrders ? "Đang tải..." : $"{realOrders.Count} đơn hàng")
                         </span>
+                        @if (PendingReviewCount > 0)
+                        {
+                            <span class="inline-flex items-center gap-1.5 px-3 py-[3px] rounded-full text-[.72rem] font-bold"
+                                  style="background:rgba(212,134,11,.2);border:1px solid rgba(212,134,11,.4);color:#F5A623;animation:pulse 2s ease-in-out infinite;">
+                                <i class="bi bi-star-fill text-[.6rem]"></i>
+                                @PendingReviewCount đơn chờ đánh giá
+                            </span>
+                        }
                         <span class="inline-flex items-center gap-1.5 px-3 py-[3px] rounded-full text-[.72rem] font-medium"
                               style="background:rgba(46,125,82,.2);border:1px solid rgba(46,125,82,.3);color:#4CAF82;">
                             <span class="w-1.5 h-1.5 rounded-full bg-[#4CAF82] inline-block @(isConnected?"":"opacity-40")"></span>
-                            @(isConnected ? "Nhận thông báo real-time" : "Đang kết nối...")
+                            @(isConnected ? "Real-time" : "Đang kết nối...")
                         </span>
                     </div>
                 </div>
@@ -333,18 +420,18 @@
     </div>
 
     <!-- STAT CARDS -->
-    <div class="max-w-[1100px] mx-auto px-6 -mt-0.5 fade-up-2">
+    <div class="max-w-[1100px] mx-auto px-6 fade-up-2">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 py-6">
             @{
-                var stats = new (string icon, string iconBg, string iconColor, string label, string tabKey)[]
+                var statDefs = new (string icon, string iconBg, string iconColor, string label, string tabKey)[]
                 {
-            ("bi-bag-check",    "rgba(212,134,11,.12)", "#D4860B", "Tất cả",       "all"),
-            ("bi-hourglass",    "rgba(37,99,168,.1)",   "#2563A8", "Chờ xử lý",    "pending"),
-            ("bi-truck",        "rgba(212,134,11,.1)",  "#D4860B", "Đang giao",    "shipping"),
-            ("bi-check-circle", "rgba(46,125,82,.1)",   "#2E7D52", "Đã giao",      "delivered"),
+            ("bi-bag-check",    "rgba(212,134,11,.12)", "#D4860B", "Tất cả",    "all"),
+            ("bi-hourglass",    "rgba(37,99,168,.1)",   "#2563A8", "Chờ xử lý", "pending"),
+            ("bi-truck",        "rgba(212,134,11,.1)",  "#D4860B", "Đang giao", "shipping"),
+            ("bi-check-circle", "rgba(46,125,82,.1)",   "#2E7D52", "Đã giao",   "delivered"),
                 };
             }
-            @foreach (var s in stats)
+            @foreach (var s in statDefs)
             {
                 var k = s.tabKey;
                 var cnt = k switch
@@ -354,7 +441,7 @@
                     "delivered" => realOrders.Count(o => o.OrderStatusName == "Hoàn thành"),
                     _ => realOrders.Count
                 };
-                <div class="stat-card @(orderTab==k?"active-stat":"")" @onclick="() => SetTab(k)">
+                <div class="stat-card @(orderTab==k?"active-stat":"")" @onclick="@(() => SetTab(k))">
                     <div class="w-10 h-10 rounded-[12px] flex items-center justify-center text-base flex-shrink-0"
                          style="background:@s.iconBg;color:@s.iconColor;">
                         <i class="bi @s.icon"></i>
@@ -373,7 +460,7 @@
         <div class="bg-[#FFFDF8] border border-[#EDE8DF] rounded-[20px] overflow-hidden"
              style="box-shadow:0 4px 24px rgba(107,76,42,.09);">
 
-            <!-- TAB FILTER BAR -->
+            <!-- TAB BAR -->
             <div class="flex border-b border-[#EDE8DF] px-4 overflow-x-auto bg-[#FFFDF8]" style="scrollbar-width:none;">
                 @foreach (var (key, lbl) in new[] { ("all", "Tất cả"), ("pending", "Chờ xử lý"), ("shipping", "Đang giao"), ("delivered", "Đã giao"), ("cancelled", "Đã huỷ") })
                 {
@@ -386,7 +473,7 @@
                         "cancelled" => realOrders.Count(o => o.OrderStatusName == "Đã hủy"),
                         _ => realOrders.Count
                     };
-                    <div @onclick="() => SetTab(k)" class="tab-pill @(orderTab==k?"active":"")">
+                    <div @onclick="@(() => SetTab(k))" class="tab-pill @(orderTab==k?"active":"")">
                         @lbl
                         @if (cnt > 0)
                         {
@@ -398,7 +485,7 @@
                 }
             </div>
 
-            <!-- TABLE / LOADING / EMPTY -->
+            <!-- TABLE -->
             @if (isLoadingOrders)
             {
                 <div class="p-6 flex flex-col gap-3">
@@ -423,19 +510,22 @@
             else
             {
                 <div class="overflow-x-auto">
-                    <table class="w-full" style="border-collapse:collapse;min-width:700px;">
+                    <table class="w-full" style="border-collapse:collapse;min-width:560px;">
                         <thead>
                             <tr style="background:linear-gradient(90deg,#FAF7F2,#FFFDF8);">
-                                @foreach (var h in new[] { "Mã đơn", "Ngày đặt", "Tổng tiền", "Số lượng", "Thanh toán", "Trạng thái", "" })
+                                @foreach (var h in new[] { "Mã đơn", "Ngày đặt", "Tổng tiền", "Trạng thái", "Thao tác" })
                                 {
                                     <th class="text-left text-[.67rem] font-bold tracking-wider uppercase text-[#9B8B7A] px-5 py-3.5 border-b border-[#EDE8DF] whitespace-nowrap">@h</th>
                                 }
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var order in GetFilteredOrders())
+                            @foreach (var order in PagedOrders())
                             {
-                                <tr class="order-row transition-colors @(order.IsNew ? "order-row-new" : "")">
+                                bool isCompleted = order.OrderStatusName == "Hoàn thành";
+                                <tr class="order-row transition-colors @(order.IsNew ? "order-row-new" : isCompleted ? "order-row-completed" : "")">
+
+                                    <!-- Mã đơn -->
                                     <td class="px-5 py-4 border-b border-[rgba(237,232,223,.5)]">
                                         <div class="text-[.87rem] font-bold text-[#6B4C2A]">#@order.OrderId</div>
                                         @if (!string.IsNullOrEmpty(order.GhnOrderCode))
@@ -443,34 +533,56 @@
                                             <div class="text-[.69rem] font-mono text-[#9B8B7A] mt-0.5">@order.GhnOrderCode</div>
                                         }
                                     </td>
+
+                                    <!-- Ngày đặt -->
                                     <td class="px-5 py-4 text-[.8rem] text-[#7A6A5A] border-b border-[rgba(237,232,223,.5)] whitespace-nowrap">
                                         <div>@order.OrderDate.ToString("dd/MM/yyyy")</div>
                                         <div class="text-[.7rem] text-[#9B8B7A]">@order.OrderDate.ToString("HH:mm")</div>
                                     </td>
-                                    <td class="px-5 py-4 border-b border-[rgba(237,232,223,.5)] whitespace-nowrap">
-                                        <div class="text-[.9rem] font-bold text-[#1A1208]">@order.TotalAmount.ToString("#,##0")đ</div>
-                                    </td>
-                                    <td class="px-5 py-4 text-[.82rem] text-[#7A6A5A] border-b border-[rgba(237,232,223,.5)]">
-                                        @order.TotalQuantity cuốn
-                                    </td>
+
+                                    <!-- Tổng tiền + số lượng + thanh toán -->
                                     <td class="px-5 py-4 border-b border-[rgba(237,232,223,.5)]">
-                                        <span class="text-[.73rem] font-semibold @(order.PaymentStatus=="Đã thanh toán"?"text-[#2E7D52]":"text-[#D4860B]")">
+                                        <div class="text-[.9rem] font-bold text-[#1A1208]">@order.TotalAmount.ToString("#,##0")đ</div>
+                                        <div class="text-[.7rem] text-[#9B8B7A] mt-0.5">@order.TotalQuantity cuốn</div>
+                                        <span class="text-[.7rem] font-semibold @(order.PaymentStatus=="Đã thanh toán"?"text-[#2E7D52]":"text-[#D4860B]")">
                                             @order.PaymentStatus
                                         </span>
                                     </td>
+
+                                    <!-- Trạng thái -->
                                     <td class="px-5 py-4 border-b border-[rgba(237,232,223,.5)]">
                                         <span class="inline-flex items-center gap-1 px-2.5 py-[3px] rounded-full text-[.7rem] font-bold @GetStatusClass(order.OrderStatusName)">
                                             ● @order.OrderStatusName
                                         </span>
                                         @if (order.IsNew)
                                         {
-                                            <span class="ml-1.5 text-[.63rem] font-extrabold text-[#D4860B] tracking-wide">MỚI</span>
+                                            <span class="block mt-1 text-[.63rem] font-extrabold text-[#D4860B] tracking-wide">MỚI</span>
                                         }
                                     </td>
+
+                                    <!-- Thao tác: Đánh giá + Chi tiết -->
                                     <td class="px-5 py-4 border-b border-[rgba(237,232,223,.5)]">
-                                        <a href="/order/@order.OrderId" class="detail-btn" title="Xem chi tiết">
-                                            <i class="bi bi-chevron-right"></i>
-                                        </a>
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            @if (isCompleted)
+                                            {
+                                                @if (order.HasReviewed)
+                                                {
+                                                    <div class="inline-flex items-center gap-1 px-2 py-[3px] rounded-full text-[.66rem] font-bold"
+                                                         style="background:rgba(46,125,82,.08);color:#2E7D52;border:1px solid rgba(46,125,82,.2);">
+                                                        <i class="bi bi-patch-check-fill" style="font-size:.6rem;"></i>Đã đánh giá
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <a href="/order/@order.OrderId#review" class="review-btn">
+                                                        <i class="bi bi-star-fill"></i>Đánh giá
+                                                    </a>
+                                                }
+                                            }
+                                            <a href="/order/@order.OrderId" class="detail-btn" title="Xem chi tiết">
+                                                <i class="bi bi-chevron-right"></i>
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             }
@@ -478,18 +590,79 @@
                     </table>
                 </div>
 
-                <!-- Summary footer -->
-                <div class="px-5 py-3.5 border-t border-[#EDE8DF] flex items-center justify-between text-[.78rem] text-[#9B8B7A]"
+                <!-- PAGINATION -->
+                <div class="px-5 py-4 border-t border-[#EDE8DF] flex flex-col sm:flex-row items-center justify-between gap-3"
                      style="background:linear-gradient(90deg,#FAF7F2,#FFFDF8);">
-                    <span>Hiển thị @GetFilteredOrders().Count / @realOrders.Count đơn hàng</span>
-                    <span class="font-semibold text-[#6B4C2A]">
-                        Tổng: @GetFilteredOrders().Sum(o => o.TotalAmount).ToString("#,##0")đ
+                    <span class="text-[.78rem] text-[#9B8B7A]">
+                        Hiển thị <strong class="text-[#6B4C2A]">@PgFrom–@PgTo</strong> / <strong class="text-[#6B4C2A]">@PgTotal</strong> đơn
+                        &nbsp;·&nbsp;
+                        Tổng: <strong class="text-[#6B4C2A]">@PgSum.ToString("#,##0")đ</strong>
                     </span>
+
+                    @if (TotalPages > 1)
+                    {
+                        <div class="flex items-center gap-1.5">
+                            <button class="pg-btn @(currentPage<=1?"pg-off":"")" @onclick="@(()=>{if(currentPage>1)currentPage--;})">
+                                <i class="bi bi-chevron-left" style="font-size:.72rem;"></i>
+                            </button>
+                            @for (int p = 1; p <= TotalPages; p++)
+                            {
+                                var pg = p;
+                                if (pg == 1 || pg == TotalPages || (pg >= currentPage - 1 && pg <= currentPage + 1))
+                                {
+                                    <button class="pg-btn @(pg==currentPage?"pg-on":"")" @onclick="@(()=>currentPage=pg)">@pg</button>
+                                }
+                                else if (pg == currentPage - 2 || pg == currentPage + 2)
+                                {
+                                    <span style="color:#C4B8A8;padding:0 2px;font-size:.82rem;">…</span>
+                                }
+                            }
+                            <button class="pg-btn @(currentPage>=TotalPages?"pg-off":"")" @onclick="@(()=>{if(currentPage<TotalPages)currentPage++;})">
+                                <i class="bi bi-chevron-right" style="font-size:.72rem;"></i>
+                            </button>
+                        </div>
+
+                        <div class="flex items-center gap-2 text-[.78rem] text-[#9B8B7A]">
+                            <span>Hiển thị</span>
+                            <select @bind="PageSize" @bind:after="ResetPage"
+                                    style="border:1.5px solid #EDE8DF;border-radius:8px;padding:4px 8px;font-size:.78rem;font-family:inherit;color:#6B4C2A;background:#FFFDF8;outline:none;cursor:pointer;">
+                                <option value="5">5</option>
+                                <option value="10">10</option>
+                                <option value="20">20</option>
+                                <option value="50">50</option>
+                            </select>
+                            <span>/ trang</span>
+                        </div>
+                    }
                 </div>
+
+                <!-- BANNER: đơn hoàn thành chờ đánh giá -->
+                @if (PendingReviewCount > 0 && (orderTab == "all" || orderTab == "delivered"))
+                {
+                    <div class="mx-5 mb-5 mt-1 rounded-[14px] px-5 py-4 flex items-center gap-4 flex-wrap"
+                         style="background:linear-gradient(135deg,rgba(212,134,11,.08),rgba(245,166,35,.05));border:1.5px solid rgba(212,134,11,.22);">
+                        <div class="w-9 h-9 rounded-[10px] flex items-center justify-center flex-shrink-0"
+                             style="background:rgba(212,134,11,.15);color:#D4860B;font-size:.9rem;">
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-[.86rem] font-bold text-[#6B4C2A]">
+                                Bạn có @PendingReviewCount đơn hàng chờ đánh giá
+                            </div>
+                            <div class="text-[.76rem] text-[#9B8B7A] mt-0.5">
+                                Chia sẻ cảm nhận để giúp người mua khác và nhận điểm thưởng từ BookStore
+                            </div>
+                        </div>
+                        <button @onclick='@(() => SetTab("delivered"))'
+                                class="flex-shrink-0 px-4 py-2 rounded-[10px] text-[.8rem] font-bold border-none cursor-pointer text-white"
+                                style="background:linear-gradient(135deg,#D4860B,#F5A623);box-shadow:0 3px 12px rgba(212,134,11,.3);font-family:inherit;">
+                            <i class="bi bi-star mr-1"></i>Xem đơn cần đánh giá
+                        </button>
+                    </div>
+                }
             }
         </div>
 
-        <!-- Back to profile -->
         <div class="mt-5 flex justify-start">
             <a href="/profile" class="inline-flex items-center gap-2 text-[.82rem] font-medium text-[#9B8B7A] no-underline hover:text-[#6B4C2A] transition-colors">
                 <i class="bi bi-arrow-left text-[.8rem]"></i> Quay lại hồ sơ
@@ -518,6 +691,36 @@
     private List<OrderHistoryItem> realOrders = new();
     private HubConnection? hubConnection;
 
+    // ── Computed properties ────────────────────────────────────────────
+    private int PendingReviewCount =>
+        realOrders.Count(o => o.OrderStatusName == "Hoàn thành" && !o.HasReviewed);
+
+    // ── Pagination ─────────────────────────────────────────────────────
+    private int currentPage = 1;
+    private int _pageSize = 10;
+    private int PageSize { get => _pageSize; set { _pageSize = value; currentPage = 1; _filteredCache = null; } }
+    private void ResetPage() { currentPage = 1; _filteredCache = null; }
+
+    private List<OrderHistoryItem>? _filteredCache;
+    private string _filteredCacheTab = "";
+
+    private List<OrderHistoryItem> FilteredCache()
+    {
+        if (_filteredCache == null || _filteredCacheTab != orderTab)
+        { _filteredCache = GetFilteredOrders(); _filteredCacheTab = orderTab; }
+        return _filteredCache;
+    }
+
+    private List<OrderHistoryItem> PagedOrders() =>
+        FilteredCache().Skip((currentPage - 1) * PageSize).Take(PageSize).ToList();
+
+    private int TotalPages => (int)Math.Ceiling(FilteredCache().Count / (double)PageSize);
+    private int PgTotal => FilteredCache().Count;
+    private int PgFrom => PgTotal == 0 ? 0 : (currentPage - 1) * PageSize + 1;
+    private int PgTo => Math.Min(currentPage * PageSize, PgTotal);
+    private decimal PgSum => FilteredCache().Sum(o => o.TotalAmount);
+
+    // ── Lifecycle ──────────────────────────────────────────────────────
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
@@ -531,7 +734,7 @@
         {
             isLoggedIn = true;
             Http.DefaultRequestHeaders.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                new AuthenticationHeaderValue("Bearer", accessToken);
         }
 
         if (!int.TryParse(userIdStr, out currentUserId))
@@ -542,7 +745,7 @@
         StateHasChanged();
     }
 
-    // ── SignalR ─────────────────────────────────────────────────────────
+    // ── SignalR ────────────────────────────────────────────────────────
     private async Task ConnectSignalRAsync()
     {
         if (string.IsNullOrEmpty(accessToken)) return;
@@ -550,9 +753,7 @@
         {
             hubConnection = new HubConnectionBuilder()
                 .WithUrl("https://localhost:7213/notificationHub", options =>
-                {
-                    options.AccessTokenProvider = () => Task.FromResult<string?>(accessToken);
-                })
+                    { options.AccessTokenProvider = () => Task.FromResult<string?>(accessToken); })
                 .WithAutomaticReconnect(new[] { TimeSpan.Zero, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(10) })
                 .Build();
 
@@ -567,6 +768,7 @@
                         order.IsNew = true;
                         if (dto.NewStatus == "Hoàn thành") order.PaymentStatus = "Đã thanh toán";
                     }
+                    _filteredCache = null;
                     await ShowToast($"🔔 {dto.Message}", "success");
                     StateHasChanged();
                     await Task.Delay(5000);
@@ -589,36 +791,28 @@
         catch (Exception ex) { Console.WriteLine($"[SignalR] Lỗi: {ex.Message}"); }
     }
 
-    // ── Load orders ─────────────────────────────────────────────────────
+    // ── Load ───────────────────────────────────────────────────────────
     private async Task LoadOrders()
     {
         isLoadingOrders = true;
         try
         {
             var req = new HttpRequestMessage(HttpMethod.Get, "api/order/history");
-            req.Headers.Authorization =
-                new AuthenticationHeaderValue("Bearer", accessToken);
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             var resp = await Http.SendAsync(req);
-
             if (resp.IsSuccessStatusCode)
             {
                 var result = await resp.Content.ReadFromJsonAsync<List<OrderHistoryItem>>();
                 realOrders = result ?? new();
             }
-            else
-            {
-                await ShowToast($"Lỗi {(int)resp.StatusCode}: Không thể tải đơn hàng", "error");
-            }
+            else { await ShowToast($"Lỗi {(int)resp.StatusCode}: Không thể tải đơn hàng", "error"); }
         }
-        catch (Exception ex)
-        {
-            await ShowToast($"Lỗi kết nối: {ex.Message}", "error");
-        }
+        catch (Exception ex) { await ShowToast($"Lỗi kết nối: {ex.Message}", "error"); }
         finally { isLoadingOrders = false; }
     }
 
-    // ── Helpers ─────────────────────────────────────────────────────────
-    private void SetTab(string tab) => orderTab = tab;
+    // ── Helpers ────────────────────────────────────────────────────────
+    private void SetTab(string tab) { orderTab = tab; currentPage = 1; _filteredCache = null; }
     private void ToggleDropdown() => showDropdown = !showDropdown;
 
     private List<OrderHistoryItem> GetFilteredOrders() => orderTab switch
@@ -701,7 +895,7 @@
         return p.Length == 1 ? p[0][..1].ToUpper() : $"{p[0][..1]}{p[^1][..1]}".ToUpper();
     }
 
-    // ── Models ────────────────────────────────────────────────────────────
+    // ── Models ─────────────────────────────────────────────────────────
     public class OrderHistoryItem
     {
         public int OrderId { get; set; }
@@ -714,6 +908,9 @@
         public string PaymentMethod { get; set; } = "";
         public string? GhnOrderCode { get; set; }
         public bool IsNew { get; set; } = false;
+
+        // API nên trả thêm field này — nếu chưa có thì mặc định false
+        public bool HasReviewed { get; set; } = false;
     }
 
     private class OrderStatusUpdateDto

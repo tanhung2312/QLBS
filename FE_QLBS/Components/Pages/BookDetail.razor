@@ -45,7 +45,6 @@
         -webkit-font-smoothing: antialiased;
     }
 
-    /* ── Keyframes ── */
     @@keyframes fadeUp {
         from {
             opacity: 0;
@@ -158,7 +157,6 @@
         animation: fadeUp .55s cubic-bezier(.22,1,.36,1) .21s both
     }
 
-    /* ── Skeleton ── */
     .skel {
         background: linear-gradient(90deg, #EAE3D9 25%, #F5F0EA 50%, #EAE3D9 75%);
         background-size: 600px 100%;
@@ -166,7 +164,6 @@
         border-radius: 12px;
     }
 
-    /* ── Noise overlay ── */
     .noise::after {
         content: '';
         position: absolute;
@@ -176,7 +173,6 @@
         border-radius: inherit;
     }
 
-    /* ── Image stage ── */
     .img-stage {
         position: relative;
         border-radius: 20px;
@@ -200,7 +196,6 @@
             transform: scale(1.03);
         }
 
-    /* ── Floating badge ── */
     .float-badge {
         position: absolute;
         top: 14px;
@@ -215,7 +210,6 @@
         z-index: 2;
     }
 
-    /* ── Thumbnail strip ── */
     .thumb-strip {
         display: flex;
         gap: 8px;
@@ -256,7 +250,6 @@
             transform: translateY(-2px);
         }
 
-    /* ── Qty stepper ── */
     .qty {
         display: inline-flex;
         align-items: center;
@@ -300,7 +293,6 @@
         color: var(--ink);
     }
 
-    /* ── Buttons ── */
     .btn-cart {
         height: 52px;
         flex: 1;
@@ -391,7 +383,6 @@
                 animation: pulse .3s ease;
             }
 
-    /* ── Pills ── */
     .pill {
         display: inline-flex;
         align-items: center;
@@ -428,7 +419,6 @@
         color: var(--coral);
     }
 
-    /* ── Price ── */
     .price-main {
         font-family: 'Playfair Display', serif;
         font-size: 2.6rem;
@@ -438,7 +428,6 @@
         letter-spacing: -.02em;
     }
 
-    /* ── Info panel ── */
     .info-card {
         background: var(--card);
         border: 1px solid var(--sand);
@@ -461,7 +450,6 @@
         padding: 6px 20px 12px;
     }
 
-    /* ── Detail table ── */
     .dtable {
         width: 100%;
         border-collapse: collapse;
@@ -493,7 +481,6 @@
                 font-weight: 600;
             }
 
-    /* ── Policy list ── */
     .policy-row {
         display: flex;
         align-items: center;
@@ -523,7 +510,6 @@
         flex-shrink: 0;
     }
 
-    /* ── Ship card ── */
     .ship-row {
         display: flex;
         align-items: center;
@@ -550,7 +536,6 @@
         flex-shrink: 0;
     }
 
-    /* ── Coupon ── */
     .coupon {
         display: inline-flex;
         align-items: center;
@@ -573,7 +558,6 @@
             transform: translateY(-1px);
         }
 
-    /* ── Tabs ── */
     .tab-rail {
         display: flex;
         gap: 4px;
@@ -607,7 +591,6 @@
             background: rgba(13,11,8,.03);
         }
 
-    /* ── Spec ── */
     .spec-row {
         display: flex;
         padding: 11px 0;
@@ -633,7 +616,6 @@
         color: var(--ink);
     }
 
-    /* ── Rating bars ── */
     .rbar {
         height: 5px;
         border-radius: 4px;
@@ -648,7 +630,6 @@
         animation: barIn .8s ease both;
     }
 
-    /* ── Review card ── */
     .rv-card {
         padding: 20px;
         border-radius: 16px;
@@ -662,7 +643,15 @@
             box-shadow: 0 4px 20px rgba(13,11,8,.07);
         }
 
-    /* ── Related book card ── */
+    /* Review skeleton */
+    .rv-skel {
+        padding: 20px;
+        border-radius: 16px;
+        background: var(--card);
+        border: 1px solid var(--sand);
+        margin-bottom: 12px;
+    }
+
     .bk-card {
         display: block;
         text-decoration: none;
@@ -712,7 +701,6 @@
         transform: scale(1.06);
     }
 
-    /* ── Toast ── */
     .toast-wrap {
         position: fixed;
         bottom: 24px;
@@ -733,7 +721,6 @@
         border: 1px solid rgba(255,255,255,.1);
     }
 
-    /* ── Nav ── */
     .nav-a {
         color: rgba(13,11,8,.5);
         text-decoration: none;
@@ -753,7 +740,6 @@
             color: var(--gold);
         }
 
-    /* ── Footer links ── */
     .ft-a {
         display: flex;
         align-items: center;
@@ -769,7 +755,6 @@
             color: var(--gold2);
         }
 
-    /* ── Divider ornament ── */
     .ornament {
         display: flex;
         align-items: center;
@@ -785,7 +770,6 @@
             background: var(--sand);
         }
 
-    /* ── Price section bg ── */
     .price-section {
         background: linear-gradient(135deg, #FFFBF3 0%, #FFF8EB 100%);
         border: 1px solid rgba(201,150,10,.2);
@@ -806,7 +790,6 @@
             background: radial-gradient(circle, rgba(201,150,10,.14) 0%, transparent 70%);
         }
 
-    /* ── Section header accent ── */
     .section-accent {
         display: inline-block;
         width: 3px;
@@ -816,7 +799,6 @@
         flex-shrink: 0;
     }
 
-    /* ── Scroll indicator on image ── */
     .img-overlay-tag {
         position: absolute;
         bottom: 14px;
@@ -831,7 +813,6 @@
         letter-spacing: .04em;
     }
 
-    /* ── Author chip ── */
     .author-chip {
         display: inline-flex;
         align-items: center;
@@ -866,7 +847,6 @@
         font-weight: 700;
     }
 
-    /* ── Stars ── */
     .stars {
         color: var(--gold2);
         letter-spacing: -.5px;
@@ -876,7 +856,6 @@
         color: var(--sand);
     }
 
-    /* Large rating number */
     .rating-big {
         font-family: 'Playfair Display', serif;
         font-size: 4.5rem;
@@ -884,18 +863,26 @@
         color: var(--ink);
         line-height: 1;
     }
+
+    /* CTA banner - gợi ý đánh giá qua đơn hàng */
+    .rv-cta {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 16px 20px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, rgba(201,150,10,.07), rgba(201,150,10,.03));
+        border: 1.5px dashed rgba(201,150,10,.35);
+        margin-bottom: 24px;
+    }
 </style>
 
 <!-- TOP STRIP -->
 <div style="background:#0D0B08;" class="py-1.5">
     <div class="max-w-7xl mx-auto px-5 flex justify-between items-center">
         <div class="flex items-center gap-5" style="color:rgba(255,255,255,.38);font-size:.73rem;">
-            <span class="flex items-center gap-1.5">
-                <i class="bi bi-telephone-fill" style="color:var(--gold2);font-size:.62rem;"></i>0901 234 567
-            </span>
-            <span class="hidden sm:flex items-center gap-1.5">
-                <i class="bi bi-envelope-fill" style="color:var(--gold2);font-size:.62rem;"></i>bookstore@gmail.com
-            </span>
+            <span class="flex items-center gap-1.5"><i class="bi bi-telephone-fill" style="color:var(--gold2);font-size:.62rem;"></i>0901 234 567</span>
+            <span class="hidden sm:flex items-center gap-1.5"><i class="bi bi-envelope-fill" style="color:var(--gold2);font-size:.62rem;"></i>bookstore@gmail.com</span>
         </div>
         <a href="#" class="text-xs no-underline flex items-center gap-1.5" style="color:rgba(255,255,255,.32);">
             <i class="bi bi-box-seam" style="font-size:.62rem;"></i>Theo dõi đơn hàng
@@ -906,7 +893,6 @@
 <!-- NAVBAR -->
 <nav class="py-3 sticky top-0 z-50" style="background:var(--fog);border-bottom:1px solid var(--sand);backdrop-filter:blur(24px);">
     <div class="max-w-7xl mx-auto px-5 flex items-center gap-4">
-        <!-- Logo -->
         <a href="/" class="no-underline flex items-center gap-2.5 mr-auto lg:mr-0 flex-shrink-0"
            style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--ink);letter-spacing:-.01em;">
             <div class="w-9 h-9 rounded-[11px] flex items-center justify-center text-white text-sm flex-shrink-0"
@@ -915,16 +901,12 @@
             </div>
             Book<span style="color:var(--gold);">Store</span>
         </a>
-
-        <!-- Nav links -->
         <div class="hidden lg:flex items-center gap-0.5 mx-auto">
             @foreach (var (href, label) in new[] { ("/", "Trang Chủ"), ("/categories", "Danh Mục"), ("/books/new", "Sách Mới"), ("/books/bestseller", "Bán Chạy") })
             {
                 <a href="@href" class="nav-a">@label</a>
             }
         </div>
-
-        <!-- Actions -->
         <div class="flex items-center gap-2 flex-shrink-0">
             <a href="/cart" class="relative w-9 h-9 rounded-[10px] flex items-center justify-center text-sm no-underline"
                style="background:var(--surface);border:1px solid var(--sand);color:var(--ink);">
@@ -935,11 +917,9 @@
                           style="background:var(--coral);">@cartCount</span>
                 }
             </a>
-
             @if (!isLoggedIn)
             {
-                <a href="/login" class="flex items-center gap-2 text-white rounded-[10px] px-4 py-[8px] text-sm font-semibold no-underline"
-                   style="background:var(--ink);">
+                <a href="/login" class="flex items-center gap-2 text-white rounded-[10px] px-4 py-[8px] text-sm font-semibold no-underline" style="background:var(--ink);">
                     <i class="bi bi-person text-sm"></i><span class="hidden sm:inline">Đăng nhập</span>
                 </a>
             }
@@ -1000,7 +980,6 @@
     </div>
 </div>
 
-<!-- ══════════════ MAIN CONTENT ══════════════ -->
 @if (isLoading)
 {
     <section class="py-12" style="background:var(--surface);">
@@ -1041,58 +1020,46 @@ else if (book == null)
 }
 else
 {
-    <!-- ── HERO SECTION ── -->
+    <!-- HERO SECTION -->
     <section class="py-10 pb-14" style="background:var(--surface);">
         <div class="max-w-7xl mx-auto px-5">
             <div class="flex flex-col lg:flex-row gap-10 xl:gap-14 items-start">
 
-                <!-- ── LEFT: Image panel ── -->
+                <!-- LEFT: Image panel -->
                 <div class="w-full lg:w-[300px] flex-shrink-0 a1">
-                    <!-- Main image -->
                     <div class="img-stage">
                         <img src="@GetSafeUrl(currentImageUrl, FallbackImg)" alt="@book.BookTitle" />
                         @if (book.Quantity == 0)
                         {
                             <div class="absolute inset-0 flex items-center justify-center" style="background:rgba(13,11,8,.54);">
-                                <span class="text-white font-semibold text-sm px-5 py-2.5 rounded-[10px]"
-                                      style="background:var(--coral);letter-spacing:.04em;">Hết hàng</span>
+                                <span class="text-white font-semibold text-sm px-5 py-2.5 rounded-[10px]" style="background:var(--coral);letter-spacing:.04em;">Hết hàng</span>
                             </div>
                         }
                         @if (book.Quantity is > 0 and <= 5)
                         {
-                            <div class="float-badge text-white" style="background:rgba(201,69,44,.85);backdrop-filter:blur(8px);">
-                                🔥 Sắp hết
-                            </div>
+                            <div class="float-badge text-white" style="background:rgba(201,69,44,.85);backdrop-filter:blur(8px);">🔥 Sắp hết</div>
                         }
                         <div class="img-overlay-tag">
-                            <i class="bi bi-images" style="font-size:.6rem;margin-right:4px;"></i>
-                            @activeThumb+1 / @bookImages.Count
+                            <i class="bi bi-images" style="font-size:.6rem;margin-right:4px;"></i>@(activeThumb + 1) / @bookImages.Count
                         </div>
                     </div>
 
-                    <!-- Thumbnails -->
                     <div class="thumb-strip">
                         @for (int i = 0; i < bookImages.Count; i++)
                         {
-                            var idx = i;
-                            var url = bookImages[i];
+                            var idx = i; var url = bookImages[i];
                             <div class="thumb @(activeThumb == idx ? "on" : "")" @onclick="() => SelectThumb(idx, url)">
                                 <img src="@GetSafeUrl(url, FallbackImg)" loading="lazy" alt="Ảnh @(i+1)" />
                             </div>
                         }
                     </div>
 
-                    <!-- Quantity & CTA -->
                     <div class="flex items-center gap-3 mt-6 mb-3">
                         <span class="text-sm font-medium" style="color:var(--muted);">Số lượng</span>
                         <div class="qty">
-                            <button class="qty-btn" @onclick="DecreaseQty" disabled="@(qty <= 1)">
-                                <i class="bi bi-dash"></i>
-                            </button>
+                            <button class="qty-btn" @onclick="DecreaseQty" disabled="@(qty <= 1)"><i class="bi bi-dash"></i></button>
                             <div class="qty-num">@qty</div>
-                            <button class="qty-btn" @onclick="IncreaseQty" disabled="@(qty >= book.Quantity)">
-                                <i class="bi bi-plus"></i>
-                            </button>
+                            <button class="qty-btn" @onclick="IncreaseQty" disabled="@(qty >= book.Quantity)"><i class="bi bi-plus"></i></button>
                         </div>
                         @if (book.Quantity > 0)
                         {
@@ -1109,6 +1076,7 @@ else
                             else
                             {
                                 <i class="bi bi-cart-plus"></i>
+
                                 <span>Thêm</span>
                             }
                         </button>
@@ -1120,20 +1088,17 @@ else
                         </button>
                     </div>
 
-                    <!-- Policy card -->
                     <div class="info-card">
                         <div class="info-card-head">Cam kết của BookStore</div>
                         @foreach (var (ico, bg, clr, title, sub) in new[]{
-                    ("bi-truck",         "rgba(21,101,192,.1)", "#1565C0",  "Giao hàng nhanh & uy tín",  "Toàn quốc 2–3 ngày làm việc"),
-                    ("bi-arrow-repeat",  "rgba(45,106,79,.1)",  "#2D6A4F",  "Đổi trả miễn phí",          "Trong vòng 7 ngày"),
-                    ("bi-shield-check",  "rgba(201,150,10,.1)", "#8C6A00",  "Hàng chính hãng",           "Cam kết 100% chính hãng"),
-                    ("bi-headset",       "rgba(201,68,68,.1)",  "#C94444",  "Hỗ trợ 24/7",               "Hotline: 0901 234 567"),
+                    ("bi-truck",        "rgba(21,101,192,.1)", "#1565C0", "Giao hàng nhanh & uy tín", "Toàn quốc 2–3 ngày làm việc"),
+                    ("bi-arrow-repeat", "rgba(45,106,79,.1)",  "#2D6A4F", "Đổi trả miễn phí",         "Trong vòng 7 ngày"),
+                    ("bi-shield-check", "rgba(201,150,10,.1)", "#8C6A00", "Hàng chính hãng",          "Cam kết 100% chính hãng"),
+                    ("bi-headset",      "rgba(201,68,68,.1)",  "#C94444", "Hỗ trợ 24/7",              "Hotline: 0901 234 567"),
                     })
                         {
                             <div class="policy-row">
-                                <div class="policy-ico" style="background:@bg; color:@clr;">
-                                    <i class="bi @ico"></i>
-                                </div>
+                                <div class="policy-ico" style="background:@bg; color:@clr;"><i class="bi @ico"></i></div>
                                 <div class="flex-1 min-w-0">
                                     <div class="text-xs font-semibold" style="color:var(--ink);">@title</div>
                                     <div class="text-xs mt-0.5" style="color:var(--muted);">@sub</div>
@@ -1144,28 +1109,21 @@ else
                     </div>
                 </div>
 
-                <!-- ── RIGHT: Info ── -->
+                <!-- RIGHT: Info -->
                 <div class="flex-1 min-w-0 a2">
-
-                    <!-- Category + badges -->
                     <div class="flex items-center gap-2 flex-wrap mb-4">
-                        <span class="pill pill-cat">
-                            <i class="bi bi-bookmark-fill" style="font-size:.62rem;"></i>@book.CategoryName
-                        </span>
+                        <span class="pill pill-cat"><i class="bi bi-bookmark-fill" style="font-size:.62rem;"></i>@book.CategoryName</span>
                     </div>
 
-                    <!-- Title -->
                     <h1 style="font-family:'Playfair Display',serif;font-size:clamp(1.7rem,3.2vw,2.3rem);color:var(--ink);line-height:1.2;font-weight:700;margin:0 0 14px;">
                         @book.BookTitle
                     </h1>
 
-                    <!-- Author / Publisher chips -->
                     <div class="flex flex-wrap items-center gap-2 mb-4">
                         @if (!string.IsNullOrEmpty(book.AuthorName))
                         {
                             <a href="#" class="author-chip">
-                                <div class="author-chip-avatar">@book.AuthorName[0]</div>
-                                @book.AuthorName
+                                <div class="author-chip-avatar">@book.AuthorName[0]</div>@book.AuthorName
                             </a>
                         }
                         @if (!string.IsNullOrEmpty(book.Publisher))
@@ -1182,57 +1140,44 @@ else
                         }
                     </div>
 
-                    <!-- Stars + stats -->
+                    <!-- Stars + stats — dynamic từ reviews -->
                     <div class="flex items-center gap-3 mb-6 flex-wrap" style="font-size:.83rem;">
                         <div class="flex items-center gap-1.5">
-                            <span class="stars">★★★★</span><span class="stars-muted">★</span>
-                            <span class="font-semibold text-sm" style="color:var(--ink);">4.2</span>
+                            @((MarkupString)RenderStars(averageRating))
+                            <span class="font-semibold text-sm" style="color:var(--ink);">@averageRating.ToString("F1")</span>
                         </div>
                         <span style="color:var(--pale);">·</span>
-                        <span style="color:var(--muted);">128 đánh giá</span>
+                        <span style="color:var(--muted);">@reviews.Count đánh giá</span>
                         <span style="color:var(--pale);">·</span>
                         <span style="color:var(--muted);">Đã bán <strong style="color:var(--ink);">342</strong></span>
                     </div>
 
-                    <!-- Price section -->
                     <div class="price-section mb-5">
                         <div class="flex items-end gap-3 flex-wrap mb-3">
-                            <div class="price-main">
-                                @book.Price.ToString("#,##0")<span style="font-size:1.4rem;font-weight:600;"> đ</span>
-                            </div>
+                            <div class="price-main">@book.Price.ToString("#,##0")<span style="font-size:1.4rem;font-weight:600;"> đ</span></div>
                         </div>
                         <div class="text-xs mb-3" style="color:#8C6A00;">
-                            <i class="bi bi-info-circle" style="font-size:.68rem;margin-right:4px;"></i>
-                            Chính sách khuyến mãi áp dụng tại BookStore
+                            <i class="bi bi-info-circle" style="font-size:.68rem;margin-right:4px;"></i>Chính sách khuyến mãi áp dụng tại BookStore
                         </div>
                         @if (book.Quantity > 5)
                         {
-                            <span class="pill pill-ok">
-                                <i class="bi bi-check-circle-fill" style="font-size:.62rem;"></i>Còn hàng · @book.Quantity cuốn
-                            </span>
+                            <span class="pill pill-ok"><i class="bi bi-check-circle-fill" style="font-size:.62rem;"></i>Còn hàng · @book.Quantity cuốn</span>
                         }
                         else if (book.Quantity > 0)
                         {
-                            <span class="pill pill-low">
-                                <i class="bi bi-exclamation-triangle-fill" style="font-size:.62rem;"></i>Chỉ còn @book.Quantity cuốn
-                            </span>
+                            <span class="pill pill-low"><i class="bi bi-exclamation-triangle-fill" style="font-size:.62rem;"></i>Chỉ còn @book.Quantity cuốn</span>
                         }
                         else
                         {
-                            <span class="pill pill-out">
-                                <i class="bi bi-x-circle-fill" style="font-size:.62rem;"></i>Hết hàng
-                            </span>
+                            <span class="pill pill-out"><i class="bi bi-x-circle-fill" style="font-size:.62rem;"></i>Hết hàng</span>
                         }
                     </div>
 
-                    <!-- Shipping -->
                     <div class="mb-5">
                         <div class="text-xs font-semibold uppercase tracking-widest mb-2.5" style="color:var(--muted);">Vận chuyển</div>
                         <div class="flex flex-col gap-2">
                             <div class="ship-row">
-                                <div class="ship-ico" style="background:rgba(21,101,192,.1);color:#1565C0;">
-                                    <i class="bi bi-send-fill"></i>
-                                </div>
+                                <div class="ship-ico" style="background:rgba(21,101,192,.1);color:#1565C0;"><i class="bi bi-send-fill"></i></div>
                                 <div>
                                     <div class="text-sm font-semibold" style="color:var(--ink);">Giao hàng tiêu chuẩn</div>
                                     <div class="text-xs mt-0.5" style="color:var(--muted);">Dự kiến 2–3 ngày · Miễn phí từ 150.000đ</div>
@@ -1242,20 +1187,16 @@ else
                         </div>
                     </div>
 
-                    <!-- Coupons -->
                     <div class="mb-6">
                         <div class="text-xs font-semibold uppercase tracking-widest mb-2.5" style="color:var(--muted);">Mã ưu đãi</div>
                         <div class="flex gap-2 flex-wrap">
                             @foreach (var c in new[] { "Giảm 10k đơn từ 100k", "Giảm 20k đơn từ 200k", "Freeship toàn quốc" })
                             {
-                                <div class="coupon">
-                                    <i class="bi bi-ticket-perforated-fill" style="font-size:.68rem;"></i>@c
-                                </div>
+                                <div class="coupon"><i class="bi bi-ticket-perforated-fill" style="font-size:.68rem;"></i>@c</div>
                             }
                         </div>
                     </div>
 
-                    <!-- Detail table -->
                     <div class="info-card">
                         <div class="info-card-head">Thông tin chi tiết</div>
                         <div class="info-card-body pt-2">
@@ -1279,13 +1220,15 @@ else
         </div>
     </section>
 
-    <!-- ── TABS SECTION ── -->
+    <!-- TABS SECTION -->
     <section class="py-10" style="background:#FFFFFF;border-top:1px solid var(--sand);">
         <div class="max-w-4xl mx-auto px-5">
             <div class="tab-rail">
-                <button class="tab-btn @(activeTab=="desc"?"on":"")" @onclick='()=>activeTab="desc"'>  Mô tả sách</button>
-                <button class="tab-btn @(activeTab=="spec"?"on":"")" @onclick='()=>activeTab="spec"'>  Thông số</button>
-                <button class="tab-btn @(activeTab=="review"?"on":"")" @onclick='()=>activeTab="review"'>Đánh giá (128)</button>
+                <button class="tab-btn @(activeTab=="desc"?"on":"")" @onclick='()=>SwitchTab("desc")'>Mô tả sách</button>
+                <button class="tab-btn @(activeTab=="spec"?"on":"")" @onclick='()=>SwitchTab("spec")'>Thông số</button>
+                <button class="tab-btn @(activeTab=="review"?"on":"")" @onclick='()=>SwitchTab("review")'>
+                    Đánh giá @(reviews.Count > 0 ? $"({reviews.Count})" : "")
+                </button>
             </div>
 
             @if (activeTab == "desc")
@@ -1310,90 +1253,148 @@ else
             {
                 <div style="animation:fadeIn .22s ease;">
                     @foreach (var (lbl, val) in new[]{
-            ("Tên sách",       book.BookTitle),
-            ("Tác giả",        book.AuthorName),
-            ("Danh mục",       book.CategoryName),
-            ("Nhà xuất bản",   book.Publisher ?? "—"),
-            ("Năm xuất bản",   book.PublishYear > 0 ? book.PublishYear.ToString() : "—"),
-            ("Tồn kho",        book.Quantity + " cuốn"),
-            ("Giá bán",        book.Price.ToString("#,##0") + "đ"),
+            ("Tên sách",     book.BookTitle),
+            ("Tác giả",      book.AuthorName),
+            ("Danh mục",     book.CategoryName),
+            ("Nhà xuất bản", book.Publisher ?? "—"),
+            ("Năm xuất bản", book.PublishYear > 0 ? book.PublishYear.ToString() : "—"),
+            ("Tồn kho",      book.Quantity + " cuốn"),
+            ("Giá bán",      book.Price.ToString("#,##0") + "đ"),
             })
                     {
-                        <div class="spec-row">
-                            <div class="spec-l">@lbl</div>
-                            <div class="spec-v">@val</div>
-                        </div>
+                        <div class="spec-row"><div class="spec-l">@lbl</div><div class="spec-v">@val</div></div>
                     }
                 </div>
             }
             else
             {
+                <!-- ══ REVIEW TAB ══ -->
                 <div style="animation:fadeIn .22s ease;">
-                    <!-- Rating summary -->
-                    <div class="flex gap-10 mb-8 flex-wrap items-center p-6 rounded-2xl" style="background:var(--surface);border:1px solid var(--sand);">
-                        <div class="text-center">
-                            <div class="rating-big">4.2</div>
-                            <div class="my-2 stars" style="font-size:1.3rem;">★★★★<span class="stars-muted">★</span></div>
-                            <div class="text-xs" style="color:var(--muted);">128 đánh giá</div>
-                        </div>
-                        <div class="flex-1 min-w-[160px]">
-                            @foreach (var (star, pct) in new[] { ("5★", 52), ("4★", 28), ("3★", 12), ("2★", 5), ("1★", 3) })
-                            {
-                                <div class="flex items-center gap-3 mb-2.5">
-                                    <span class="text-xs w-5 text-right font-medium" style="color:var(--muted);">@star</span>
-                                    <div class="flex-1 rbar"><div class="rfill" style="width:@(pct)%;"></div></div>
-                                    <span class="text-xs w-7 font-medium" style="color:var(--muted);">@(pct)%</span>
-                                </div>
-                            }
-                        </div>
-                    </div>
 
-                    <!-- Review cards -->
-                    @foreach (var (name, star, date, text, starCount) in new[]{
-            ("Nguyễn Văn A", "★★★★★", "12/03/2026", "Sách rất hay, giao hàng nhanh, đóng gói cẩn thận. Rất hài lòng!", 5),
-            ("Trần Thị B",   "★★★★☆", "08/03/2026", "Nội dung tốt, giấy in đẹp, trình bày rõ ràng. Sẽ mua thêm.", 4),
-            ("Lê Văn C",     "★★★☆☆", "01/03/2026", "Sách ổn, nội dung phù hợp nhưng chưa có gì đột phá.", 3)
-            })
+                    @if (isLoadingReviews)
                     {
-                        <div class="rv-card">
-                            <div class="flex items-start gap-3 mb-3">
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0"
-                                     style="background:linear-gradient(135deg,var(--gold),var(--gold2));font-size:.9rem;">
-                                    @name[0]
+                        <!-- Skeleton loader -->
+                        <div class="flex gap-10 mb-8 p-6 rounded-2xl" style="background:var(--surface);border:1px solid var(--sand);">
+                            <div class="skel w-24 h-24 rounded-2xl flex-shrink-0"></div>
+                            <div class="flex-1 flex flex-col gap-3">
+                                <div class="skel h-4 w-full rounded-lg"></div>
+                                <div class="skel h-4 w-full rounded-lg"></div>
+                                <div class="skel h-4 w-3/4 rounded-lg"></div>
+                            </div>
+                        </div>
+                        @for (int i = 0; i < 3; i++)
+                        {
+                            <div class="rv-skel">
+                                <div class="flex gap-3 mb-3">
+                                    <div class="skel w-10 h-10 rounded-full flex-shrink-0"></div>
+                                    <div class="flex-1 flex flex-col gap-2">
+                                        <div class="skel h-4 w-40 rounded-lg"></div>
+                                        <div class="skel h-3 w-28 rounded-lg"></div>
+                                    </div>
                                 </div>
-                                <div class="flex-1">
-                                    <div class="flex items-center justify-between flex-wrap gap-1">
-                                        <span class="font-semibold text-sm" style="color:var(--ink);">@name</span>
-                                        <span class="text-xs" style="color:var(--pale);">@date</span>
-                                    </div>
-                                    <div class="flex items-center gap-2 mt-1">
-                                        <span class="stars" style="font-size:.88rem;">@star</span>
-                                        <span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background:rgba(45,106,79,.1);color:var(--forest);">✓ Đã mua</span>
-                                    </div>
+                                <div class="skel h-4 w-full rounded-lg mb-2" style="margin-left:52px;"></div>
+                                <div class="skel h-4 w-2/3 rounded-lg" style="margin-left:52px;"></div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <!-- Rating Summary -->
+                        @if (reviews.Count > 0)
+                        {
+                            <div class="flex gap-10 mb-8 flex-wrap items-center p-6 rounded-2xl" style="background:var(--surface);border:1px solid var(--sand);">
+                                <div class="text-center">
+                                    <div class="rating-big">@averageRating.ToString("F1")</div>
+                                    <div class="my-2" style="font-size:1.3rem;">@((MarkupString)RenderStars(averageRating))</div>
+                                    <div class="text-xs" style="color:var(--muted);">@reviews.Count đánh giá</div>
+                                </div>
+                                <div class="flex-1 min-w-[160px]">
+                                    @foreach (var star in new[] { 5, 4, 3, 2, 1 })
+                                    {
+                                        var count = reviews.Count(r => r.Rating == star);
+                                        var pct = reviews.Count > 0 ? (int)Math.Round(count * 100.0 / reviews.Count) : 0;
+                                        <div class="flex items-center gap-3 mb-2.5">
+                                            <span class="text-xs w-5 text-right font-medium" style="color:var(--muted);">@(star)★</span>
+                                            <div class="flex-1 rbar"><div class="rfill" style="width:@(pct)%;"></div></div>
+                                            <span class="text-xs w-7 font-medium" style="color:var(--muted);">@(pct)%</span>
+                                        </div>
+                                    }
                                 </div>
                             </div>
-                            <p class="text-sm leading-[1.8] m-0" style="color:#3C2D1E;padding-left:52px;">@text</p>
+                        }
+
+                        <!-- CTA: hướng dẫn đánh giá qua trang đơn hàng -->
+                        <div class="rv-cta">
+                            <div class="w-10 h-10 rounded-[11px] flex items-center justify-center flex-shrink-0"
+                                 style="background:rgba(201,150,10,.12);color:var(--gold);">
+                                <i class="bi bi-bag-check-fill"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-sm font-semibold mb-0.5" style="color:var(--ink);">Bạn đã mua cuốn sách này?</div>
+                                <div class="text-xs" style="color:var(--muted);">Vào trang đơn hàng để gửi đánh giá sau khi đơn hoàn thành.</div>
+                            </div>
+                            <a href="/profile?tab=orders"
+                               class="inline-flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-xs font-bold no-underline flex-shrink-0 transition-all"
+                               style="background:var(--ink);color:#fff;"
+                               onmouseover="this.style.filter='brightness(1.15)'" onmouseout="this.style.filter=''">
+                                <i class="bi bi-arrow-right-circle"></i>Đơn hàng
+                            </a>
                         </div>
+
+                        <!-- Review list -->
+                        @if (reviews.Count == 0)
+                        {
+                            <div class="text-center py-16 rounded-2xl" style="background:var(--surface);border:2px dashed var(--sand);">
+                                <div style="font-size:3rem;margin-bottom:12px;opacity:.25;">⭐</div>
+                                <p class="text-sm font-semibold mb-1" style="color:var(--ink);">Chưa có đánh giá nào</p>
+                                <p class="text-xs" style="color:var(--muted);">Hãy là người đầu tiên đánh giá cuốn sách này!</p>
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (var rv in reviews)
+                            {
+                                <div class="rv-card">
+                                    <div class="flex items-start gap-3 mb-3">
+                                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0"
+                                             style="background:linear-gradient(135deg,var(--gold),var(--gold2));font-size:.9rem;">
+                                            @(rv.UserName?.Length > 0 ? rv.UserName[0].ToString().ToUpper() : "?")
+                                        </div>
+                                        <div class="flex-1">
+                                            <div class="flex items-center justify-between flex-wrap gap-1">
+                                                <span class="font-semibold text-sm" style="color:var(--ink);">@rv.UserName</span>
+                                                <span class="text-xs" style="color:var(--pale);">@rv.ReviewDate.ToString("dd/MM/yyyy")</span>
+                                            </div>
+                                            <div class="flex items-center gap-2 mt-1">
+                                                <span class="stars" style="font-size:.88rem;">@((MarkupString)RenderStars(rv.Rating))</span>
+                                                <span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background:rgba(45,106,79,.1);color:var(--forest);">✓ Đã mua</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(rv.Comment))
+                                    {
+                                        <p class="text-sm leading-[1.8] m-0" style="color:#3C2D1E;padding-left:52px;">@rv.Comment</p>
+                                    }
+                                </div>
+                            }
+                        }
                     }
                 </div>
             }
         </div>
     </section>
 
-    <!-- ── RELATED BOOKS ── -->
+    <!-- RELATED BOOKS -->
     @if (relatedBooks.Count > 0)
     {
         <section class="py-12" style="background:var(--surface);border-top:1px solid var(--sand);">
             <div class="max-w-7xl mx-auto px-5">
-                <!-- Section header -->
                 <div class="flex items-end justify-between mb-8 flex-wrap gap-4">
                     <div class="flex items-start gap-3">
                         <div class="section-accent mt-1.5"></div>
                         <div>
                             <div class="text-xs font-bold uppercase tracking-widest mb-1.5" style="color:var(--gold);">Cùng danh mục</div>
-                            <h2 style="font-family:'Playfair Display',serif;font-size:1.9rem;color:var(--ink);margin:0;font-weight:700;line-height:1.1;">
-                                Sách liên quan
-                            </h2>
+                            <h2 style="font-family:'Playfair Display',serif;font-size:1.9rem;color:var(--ink);margin:0;font-weight:700;line-height:1.1;">Sách liên quan</h2>
                         </div>
                     </div>
                     <a href="/categories/@book.CategoryId"
@@ -1404,14 +1405,11 @@ else
                         Xem tất cả <i class="bi bi-arrow-right"></i>
                     </a>
                 </div>
-
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                     @foreach (var rb in relatedBooks)
                     {
                         <a href="/book/@rb.BookId" class="bk-card">
-                            <div class="bk-img">
-                                <img src="@GetSafeUrl(rb.ImageUrl, FallbackImg)" alt="@rb.BookTitle" loading="lazy" />
-                            </div>
+                            <div class="bk-img"><img src="@GetSafeUrl(rb.ImageUrl, FallbackImg)" alt="@rb.BookTitle" loading="lazy" /></div>
                             <div class="p-3.5" style="position:relative;z-index:2;">
                                 <div class="text-xs font-bold uppercase tracking-wider mb-1.5" style="color:var(--gold);">@rb.CategoryName</div>
                                 <div class="font-semibold text-sm leading-snug mb-1"
@@ -1429,36 +1427,22 @@ else
     }
 }
 
-<!-- ══════════════ FOOTER ══════════════ -->
+<!-- FOOTER -->
 <footer class="pt-14" style="background:#0D0B08;">
     <div class="max-w-7xl mx-auto px-5">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-12">
-            <!-- Brand -->
             <div>
-                <a href="/" class="flex items-center gap-2.5 no-underline mb-5"
-                   style="font-family:'Playfair Display',serif;font-size:1.45rem;color:#fff;">
-                    <div class="w-9 h-9 rounded-[11px] flex items-center justify-center text-white text-sm"
-                         style="background:linear-gradient(135deg,var(--gold),var(--gold2));">
-                        <i class="bi bi-book-half"></i>
-                    </div>
-                    BookStore
+                <a href="/" class="flex items-center gap-2.5 no-underline mb-5" style="font-family:'Playfair Display',serif;font-size:1.45rem;color:#fff;">
+                    <div class="w-9 h-9 rounded-[11px] flex items-center justify-center text-white text-sm" style="background:linear-gradient(135deg,var(--gold),var(--gold2));"><i class="bi bi-book-half"></i></div>BookStore
                 </a>
-                <p class="text-xs leading-loose mb-5" style="color:rgba(255,255,255,.28);">
-                    Nơi quy tụ kho tàng tri thức nhân loại, mang sách đến tay bạn đọc mọi nơi.
-                </p>
-                @foreach (var (ico, txt) in new[] {
-                ("bi-geo-alt-fill",   "123 Nguyễn Huệ, Q1, TP.HCM"),
-                ("bi-telephone-fill", "0901 234 567"),
-                ("bi-envelope-fill",  "bookstore@gmail.com")
-                })
+                <p class="text-xs leading-loose mb-5" style="color:rgba(255,255,255,.28);">Nơi quy tụ kho tàng tri thức nhân loại, mang sách đến tay bạn đọc mọi nơi.</p>
+                @foreach (var (ico, txt) in new[] { ("bi-geo-alt-fill", "123 Nguyễn Huệ, Q1, TP.HCM"), ("bi-telephone-fill", "0901 234 567"), ("bi-envelope-fill", "bookstore@gmail.com") })
                 {
                     <div class="flex items-center gap-2 mb-2 text-xs" style="color:rgba(255,255,255,.28);">
                         <i class="bi @ico" style="color:var(--gold2);font-size:.62rem;flex-shrink:0;"></i>@txt
                     </div>
                 }
             </div>
-
-            <!-- Categories -->
             <div>
                 <div class="text-xs font-bold uppercase tracking-widest mb-5" style="color:rgba(255,255,255,.2);">Danh mục</div>
                 @foreach (var c in new[] { "Tiểu Thuyết", "Kinh Tế", "Công Nghệ", "Tâm Lý Học", "Thiếu Nhi", "Lịch Sử" })
@@ -1466,8 +1450,6 @@ else
                     <a href="#" class="ft-a"><i class="bi bi-chevron-right" style="font-size:.48rem;"></i>@c</a>
                 }
             </div>
-
-            <!-- Support -->
             <div>
                 <div class="text-xs font-bold uppercase tracking-widest mb-5" style="color:rgba(255,255,255,.2);">Hỗ trợ</div>
                 @foreach (var l in new[] { "Hướng dẫn mua hàng", "Chính sách đổi trả", "Vận chuyển", "Thanh toán", "Liên hệ chúng tôi" })
@@ -1475,8 +1457,6 @@ else
                     <a href="#" class="ft-a"><i class="bi bi-chevron-right" style="font-size:.48rem;"></i>@l</a>
                 }
             </div>
-
-            <!-- Newsletter + Social -->
             <div>
                 <div class="text-xs font-bold uppercase tracking-widest mb-5" style="color:rgba(255,255,255,.2);">Kết nối với chúng tôi</div>
                 <div class="flex gap-2 mb-5">
@@ -1502,12 +1482,8 @@ else
                 </div>
             </div>
         </div>
-
-        <!-- Bottom bar -->
         <div class="flex flex-wrap justify-between items-center py-5 border-t gap-3" style="border-color:rgba(255,255,255,.06);">
-            <p class="text-xs m-0" style="color:rgba(255,255,255,.18);">
-                &copy; @DateTime.Now.Year BookStore. Tất cả quyền được bảo lưu.
-            </p>
+            <p class="text-xs m-0" style="color:rgba(255,255,255,.18);">&copy; @DateTime.Now.Year BookStore. Tất cả quyền được bảo lưu.</p>
             <div class="flex gap-5">
                 <a href="/terms" class="no-underline text-xs" style="color:rgba(255,255,255,.18);">Điều khoản</a>
                 <a href="/privacy" class="no-underline text-xs" style="color:rgba(255,255,255,.18);">Bảo mật</a>
@@ -1520,8 +1496,7 @@ else
 @if (showToast)
 {
     <div class="toast-wrap">
-        <i class="bi bi-check-circle-fill flex-shrink-0" style="color:#6EE7B7;font-size:.9rem;"></i>
-        @toastMessage
+        <i class="bi bi-check-circle-fill flex-shrink-0" style="color:#6EE7B7;font-size:.9rem;"></i>@toastMessage
     </div>
 }
 
@@ -1530,17 +1505,27 @@ else
 
     private const string FallbackImg = "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=533&fit=crop";
 
+    // ── Auth / UI state ──
     private bool isLoggedIn = false, isLoading = true, isAddingCart = false;
     private bool isWishlisted = false, showDropdown = false, showToast = false;
     private string accessToken = "", userFullName = "", userEmail = "";
     private string activeTab = "desc", toastMessage = "";
     private int cartCount = 0, qty = 1, activeThumb = 0;
-
     private string currentImageUrl = "";
     private List<string> bookImages = new();
     private BookResponseDto? book;
     private List<BookResponseDto> relatedBooks = new();
 
+    // ── Review state ──
+    private List<ReviewResponseDto> reviews = new();
+    private bool isLoadingReviews = false;
+    private bool reviewsLoaded = false;          // chỉ gọi API 1 lần
+    private double averageRating = 0;
+
+    // ── Write review (đã chuyển sang trang Order detail) ──
+    // Không cần state ở đây nữa
+
+    // ── Lifecycle ──
     protected override async Task OnInitializedAsync() => await LoadBook();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -1555,9 +1540,15 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
-        if (!isLoading) { isLoading = true; qty = 1; activeTab = "desc"; activeThumb = 0; await LoadBook(); }
+        if (!isLoading)
+        {
+            isLoading = true; qty = 1; activeTab = "desc";
+            activeThumb = 0; reviewsLoaded = false; reviews = new();
+            await LoadBook();
+        }
     }
 
+    // ── Book loading ──
     private async Task LoadBook()
     {
         try
@@ -1586,6 +1577,30 @@ else
         catch { relatedBooks = new(); }
     }
 
+    // ── Review loading (lazy — chỉ gọi khi mở tab) ──
+    private async Task LoadReviews()
+    {
+        if (reviewsLoaded) return;
+        isLoadingReviews = true; StateHasChanged();
+        try
+        {
+            var result = await Http.GetFromJsonAsync<List<ReviewResponseDto>>($"api/Review/{BookId}");
+            reviews = result ?? new();
+            averageRating = reviews.Count > 0 ? reviews.Average(r => r.Rating) : 0;
+            reviewsLoaded = true;
+        }
+        catch { reviews = new(); }
+        finally { isLoadingReviews = false; StateHasChanged(); }
+    }
+
+    // ── Tab switching ──
+    private async Task SwitchTab(string tab)
+    {
+        activeTab = tab;
+        if (tab == "review") await LoadReviews();
+    }
+
+    // Render stars HTML từ rating số (hỗ trợ cả int và double)
     private void SelectThumb(int idx, string url) { activeThumb = idx; currentImageUrl = url; }
 
     private HttpRequestMessage BuildReq(HttpMethod m, string url)
@@ -1628,6 +1643,19 @@ else
         Navigation.NavigateTo("/login");
     }
 
+    // Render stars HTML từ rating số (hỗ trợ cả int và double)
+    private static string RenderStars(double rating)
+    {
+        var full = (int)Math.Floor(rating);
+        var empty = 5 - (int)Math.Ceiling(rating);
+        var half = 5 - full - empty;
+        return string.Concat(
+            string.Concat(Enumerable.Repeat("<span class='stars'>★</span>", full)),
+            string.Concat(Enumerable.Repeat("<span class='stars'>½</span>", half)),
+            string.Concat(Enumerable.Repeat("<span class='stars-muted'>★</span>", empty))
+        );
+    }
+
     private static string GetInitials(string name)
     {
         if (string.IsNullOrEmpty(name)) return "?";
@@ -1649,6 +1677,7 @@ else
         showToast = false; StateHasChanged();
     }
 
+    // ── DTOs ──
     private class BookResponseDto
     {
         public int BookId { get; set; }
@@ -1664,4 +1693,14 @@ else
         public string? Description { get; set; }
         public string? ImageUrl { get; set; }
     }
+
+    private class ReviewResponseDto
+    {
+        public int ReviewId { get; set; }
+        public string UserName { get; set; } = "";
+        public int Rating { get; set; }
+        public string? Comment { get; set; }
+        public DateTime ReviewDate { get; set; }
+    }
+
 }

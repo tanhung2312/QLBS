@@ -102,6 +102,12 @@
         animation: slideIn .25s ease both;
     }
 
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg)
+        }
+    }
+
     .info-row {
         display: flex;
         align-items: flex-start;
@@ -304,12 +310,12 @@
                                 Sản phẩm đã đặt
                             </span>
                             <span class="ml-auto inline-flex items-center gap-1 px-2.5 py-[3px] rounded-full text-[.7rem] font-bold bg-[rgba(212,134,11,.1)] text-[#D4860B]">
-                                @order.Items.Count món
+                                @(order.Items?.Count ?? 0) món
                             </span>
                         </div>
 
                         <div class="divide-y divide-[#F0EBE3]">
-                            @foreach (var item in order.Items)
+                            @foreach (var item in order.Items ?? new())
                             {
                                 var bookId = item.BookId;
                                 <div class="book-row flex gap-4 px-6 py-4 cursor-pointer"
@@ -542,6 +548,137 @@
                     </div>
                 </div>
             </div>
+
+            <!-- ── SECTION ĐÁNH GIÁ (chỉ hiện khi đơn Hoàn thành) ── -->
+            @if (order.OrderStatusName == "Hoàn thành")
+            {
+                <div id="review" class="mt-6 fade-up-4"
+                     style="scroll-margin-top: 80px;">
+                    <div class="bg-[#FFFDF8] border border-[#EDE8DF] rounded-[18px] overflow-hidden"
+                         style="box-shadow:0 2px 12px rgba(107,76,42,.08);">
+
+                        <!-- Header -->
+                        <div class="px-6 py-[18px] border-b border-[#EDE8DF] flex items-center gap-2"
+                             style="background:linear-gradient(90deg,rgba(212,134,11,.04),transparent);">
+                            <div class="w-8 h-8 rounded-[9px] flex items-center justify-center text-[.84rem]"
+                                 style="background:rgba(212,134,11,.12);color:#D4860B;">
+                                <i class="bi bi-star-fill"></i>
+                            </div>
+                            <span class="font-cormorant text-[1.15rem] font-bold text-[#1A1208]">
+                                Đánh giá sản phẩm
+                            </span>
+                            <span class="ml-auto text-[.74rem] text-[#9B8B7A]">
+                                @(order.Items?.Count ?? 0) sản phẩm cần đánh giá
+                            </span>
+                        </div>
+
+                        <!-- Danh sách sách cần đánh giá -->
+                        <div class="divide-y divide-[#F0EBE3]">
+                            @foreach (var item in order.Items ?? new())
+                            {
+                                var bookId = item.BookId;
+                                bool isReviewed = reviewedBookIds.Contains(bookId);
+
+                                <div class="px-6 py-5">
+                                    <!-- Book info row -->
+                                    <div class="flex items-center gap-4 mb-4">
+                                        <div class="w-[48px] h-[64px] rounded-[8px] overflow-hidden flex-shrink-0 bg-[#FAF7F2] border border-[#EDE8DF]">
+                                            @if (!string.IsNullOrEmpty(item.BookImageUrl))
+                                            {
+                                                <img src="@item.BookImageUrl" alt="@item.BookTitle"
+                                                     class="w-full h-full object-cover" />
+                                            }
+                                            else
+                                            {
+                                                <div class="w-full h-full flex items-center justify-center text-[#DDD5C8]">
+                                                    <i class="bi bi-book"></i>
+                                                </div>
+                                            }
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="text-[.88rem] font-bold text-[#1A1208] truncate">@item.BookTitle</div>
+                                            <div class="text-[.74rem] text-[#9B8B7A] mt-0.5">@item.UnitPrice.ToString("#,##0")đ × @item.Quantity</div>
+                                        </div>
+                                        @if (isReviewed)
+                                        {
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-[4px] rounded-full text-[.7rem] font-bold flex-shrink-0"
+                                                  style="background:rgba(46,125,82,.08);color:#2E7D52;border:1px solid rgba(46,125,82,.2);">
+                                                <i class="bi bi-patch-check-fill text-[.62rem]"></i> Đã đánh giá
+                                            </span>
+                                        }
+                                    </div>
+
+                                    @if (!isReviewed)
+                                    {
+                                        <!-- Star picker -->
+                                        <div class="mb-3">
+                                            <div class="text-[.74rem] text-[#9B8B7A] mb-2 font-medium">Chọn số sao:</div>
+                                            <div class="flex gap-1.5">
+                                                @for (int star = 1; star <= 5; star++)
+                                                {
+                                                    var s = star;
+                                                    var bid2 = bookId;
+                                                    int currentRating = bookRatings.TryGetValue(bid2, out var r) ? r : 0;
+                                                    <button @onclick="@(() => SetRating(bid2, s))"
+                                                            class="text-[1.6rem] leading-none transition-transform hover:scale-110 border-none bg-transparent cursor-pointer p-0"
+                                                            style="color:@(s <= currentRating ? "#D4860B" : "#DDD5C8");">
+                                                        ★
+                                                    </button>
+                                                }
+                                                @if (bookRatings.TryGetValue(bookId, out var rating) && rating > 0)
+                                                {
+                                                    <span class="self-center ml-2 text-[.74rem] font-bold text-[#D4860B]">
+                                                        @(rating switch { 5 => "Tuyệt vời!", 4 => "Rất tốt", 3 => "Bình thường", 2 => "Không tốt", _ => "Rất tệ" })
+                                                    </span>
+                                                }
+                                            </div>
+                                        </div>
+
+                                        <!-- Comment -->
+                                        <textarea value="@(bookComments.TryGetValue(bookId, out var cv) ? cv : "")"
+                                                  @oninput="@(e => SetComment(bookId, e.Value?.ToString() ?? ""))"
+                                                  placeholder="Chia sẻ cảm nhận của bạn về cuốn sách này..."
+                                                  rows="3"
+                                                  class="w-full rounded-[10px] px-3.5 py-2.5 text-[.85rem] outline-none resize-none mb-3 font-jakarta"
+                                                  style="border:1.5px solid #EDE8DF;background:#FAF7F2;color:#1A1208;transition:border-color .15s;"
+                                                  onfocus="this.style.borderColor='#D4860B';this.style.background='#fff'"
+                                                  onblur="this.style.borderColor='#EDE8DF';this.style.background='#FAF7F2'">
+                                                        </textarea>
+
+                                        <!-- Error -->
+                                        @if (reviewErrors.TryGetValue(bookId, out var err) && !string.IsNullOrEmpty(err))
+                                        {
+                                            <div class="flex items-center gap-2 text-[.78rem] text-[#C0392B] mb-3 px-3 py-2 rounded-[8px]"
+                                                 style="background:rgba(192,57,43,.06);border:1px solid rgba(192,57,43,.15);">
+                                                <i class="bi bi-exclamation-circle-fill text-[.7rem]"></i>@err
+                                            </div>
+                                        }
+
+                                        <!-- Submit -->
+                                        <div class="flex justify-end">
+                                            <button @onclick="@(() => SubmitReview(bookId))"
+                                                    disabled="@(submittingBookIds.Contains(bookId) || !bookRatings.ContainsKey(bookId) || bookRatings[bookId] == 0)"
+                                                    class="inline-flex items-center gap-2 px-5 py-2.5 rounded-[10px] text-white text-[.84rem] font-semibold border-none cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed font-jakarta"
+                                                    style="background:linear-gradient(135deg,#D4860B,#F5A623);box-shadow:0 3px 12px rgba(212,134,11,.25);">
+                                                @if (submittingBookIds.Contains(bookId))
+                                                {
+                                                    <i class="bi bi-arrow-repeat" style="animation:spin .7s linear infinite;display:inline-block;"></i>
+                                                    <span>Đang gửi...</span>
+                                                }
+                                                else
+                                                {
+                                                    <i class="bi bi-send-fill text-[.76rem]"></i>
+                                                    <span>Gửi đánh giá</span>
+                                                }
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
         }
     </div>
 
@@ -566,6 +703,70 @@
     private string accessToken = "";
     private List<ToastItem> toasts = new();
 
+    // ── Review state ───────────────────────────────────────────────────
+    private HashSet<int> reviewedBookIds = new();
+    private Dictionary<int, int> bookRatings = new();
+    private Dictionary<int, string> bookComments = new();
+    private Dictionary<int, string> reviewErrors = new();
+    private HashSet<int> submittingBookIds = new();
+
+    private void SetRating(int bookId, int star)
+    {
+        bookRatings[bookId] = star;
+        if (reviewErrors.ContainsKey(bookId)) reviewErrors.Remove(bookId);
+    }
+
+    private void SetComment(int bookId, string val) => bookComments[bookId] = val;
+
+    private async Task SubmitReview(int bookId)
+    {
+        if (!bookRatings.TryGetValue(bookId, out var rating) || rating == 0)
+        {
+            reviewErrors[bookId] = "Vui lòng chọn số sao.";
+            return;
+        }
+
+        reviewErrors.Remove(bookId);
+        submittingBookIds.Add(bookId);
+        StateHasChanged();
+
+        try
+        {
+            var req = new HttpRequestMessage(HttpMethod.Post, "api/review");
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            req.Content = System.Net.Http.Json.JsonContent.Create(new
+            {
+                bookId = bookId,
+                orderId = OrderId,
+                rating = rating,
+                comment = bookComments.TryGetValue(bookId, out var c) ? c.Trim() : ""
+            });
+
+            var resp = await Http.SendAsync(req);
+            if (resp.IsSuccessStatusCode)
+            {
+                reviewedBookIds.Add(bookId);
+                bookRatings.Remove(bookId);
+                bookComments.Remove(bookId);
+                await ShowToast("Đánh giá của bạn đã được ghi nhận!", "success");
+            }
+            else
+            {
+                var body = await resp.Content.ReadFromJsonAsync<ErrorResponse>();
+                reviewErrors[bookId] = body?.Message ?? $"Lỗi {(int)resp.StatusCode}";
+            }
+        }
+        catch (Exception ex)
+        {
+            reviewErrors[bookId] = $"Lỗi kết nối: {ex.Message}";
+        }
+        finally
+        {
+            submittingBookIds.Remove(bookId);
+            StateHasChanged();
+        }
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
@@ -583,6 +784,15 @@
 
         await LoadOrder();
         StateHasChanged();
+
+        // Scroll đến section đánh giá nếu URL có #review
+        var uri = Navigation.Uri;
+        if (uri.Contains("#review"))
+        {
+            await Task.Delay(400);
+            await JS.InvokeVoidAsync("eval",
+                "document.getElementById('review')?.scrollIntoView({behavior:'smooth',block:'start'})");
+        }
     }
 
     private async Task LoadOrder()
@@ -596,7 +806,12 @@
 
             if (resp.IsSuccessStatusCode)
             {
-                order = await resp.Content.ReadFromJsonAsync<OrderDetailModel>();
+                var dto = await resp.Content.ReadFromJsonAsync<OrderDetailModel>();
+                if (dto != null)
+                {
+                    dto.Items ??= new();   // đảm bảo Items không bao giờ null
+                    order = dto;
+                }
             }
             else if (resp.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
@@ -683,5 +898,10 @@
     {
         public string Message { get; set; } = "";
         public string Type { get; set; } = "success";
+    }
+
+    private class ErrorResponse
+    {
+        public string? Message { get; set; }
     }
 }

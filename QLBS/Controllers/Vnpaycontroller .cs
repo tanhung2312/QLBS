@@ -21,9 +21,6 @@ namespace QLBS.Controllers
             _logger = logger;
         }
 
-        // ── POST api/vnpay/create-payment ─────────────────────────────────────
-        // Frontend gọi sau khi tạo order, body: { "orderId": 123, "amount": 150000, "orderInfo": "..." }
-        // Trả về: { "paymentUrl": "https://sandbox.vnpayment.vn/..." }
         [HttpPost("create-payment")]
         [Authorize]
         public IActionResult CreatePayment([FromBody] CreateVnPayRequest request)
@@ -31,8 +28,6 @@ namespace QLBS.Controllers
             if (request.OrderId <= 0 || request.Amount <= 0)
                 return BadRequest(new { message = "OrderId hoặc Amount không hợp lệ." });
 
-            // Tạo OrderTable tạm để truyền vào VnPayService
-            // (VnPayService chỉ cần OrderId và TotalAmount)
             var order = new OrderTable
             {
                 OrderId = request.OrderId,
@@ -114,7 +109,6 @@ namespace QLBS.Controllers
         }
     }
 
-    // ── Request DTO ───────────────────────────────────────────────────────────
     public class CreateVnPayRequest
     {
         public int OrderId { get; set; }

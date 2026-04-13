@@ -1887,8 +1887,19 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
+
         accessToken = await JS.InvokeAsync<string?>("localStorage.getItem", "accessToken") ?? "";
-        Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        if (string.IsNullOrEmpty(accessToken))
+        {
+            await JS.InvokeVoidAsync("eval", "window.location.href='/admin/login'");
+            return;
+        }
+
+        // Vẫn set DefaultRequestHeaders cho các call khác (UpdateStatus, SimulateGhn...)
+        Http.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", accessToken);
+
         await LoadOrders();
         StateHasChanged();
     }
@@ -1898,11 +1909,37 @@
         isLoading = true; StateHasChanged();
         try
         {
-            var result = await Http.GetFromJsonAsync<List<OrderSummaryDto>>("api/order/admin/all");
-            orders = result ?? new();
-            ApplyFilters();
+            // Tự gắn token vào từng request thay vì dùng DefaultRequestHeaders
+            var req = new HttpRequestMessage(HttpMethod.Get, "api/order/admin/all");
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            var resp = await Http.SendAsync(req);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                var result = await resp.Content.ReadFromJsonAsync<List<OrderSummaryDto>>();
+                orders = result ?? new();
+                ApplyFilters();
+            }
+            else if (resp.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                ShowToast("Phiên đăng nhập hết hạn, vui lòng đăng nhập lại", "error");
+                await Task.Delay(1500);
+                await JS.InvokeVoidAsync("eval", "window.location.href='/admin/login'");
+            }
+            else if (resp.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            {
+                ShowToast("Tài khoản không có quyền Admin", "error");
+            }
+            else
+            {
+                ShowToast($"Lỗi {(int)resp.StatusCode} khi tải đơn hàng", "error");
+            }
         }
-        catch { ShowToast("Không thể tải danh sách đơn hàng", "error"); }
+        catch (Exception ex)
+        {
+            ShowToast($"Không thể kết nối đến server: {ex.Message}", "error");
+        }
         finally { isLoading = false; StateHasChanged(); }
     }
 

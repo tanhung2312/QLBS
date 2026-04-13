@@ -17,7 +17,6 @@ namespace QLBS.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Admin,Staff")] 
         public async Task<IActionResult> GetAll()
         {
             var result = await _discountService.GetAllDiscountsAsync();

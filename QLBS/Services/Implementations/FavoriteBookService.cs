@@ -23,7 +23,7 @@ namespace QLBS.Services.Implementations
 
         public async Task<FavoriteBookListResponseDto> GetFavoritesAsync(int userId)
         {
-            // Dùng GetByAccountIdAsync để kiểm tra user tồn tại
+
             var user = await _userRepo.GetByAccountIdAsync(userId);
             if (user == null)
                 throw new KeyNotFoundException("User không tồn tại.");
@@ -41,7 +41,6 @@ namespace QLBS.Services.Implementations
                     AuthorName = f.Book.Author?.AuthorName,
                     CategoryName = f.Book.Category?.CategoryName,
                     Price = f.Book.Price,
-                    // Lấy ảnh bìa (IsCover = true), nếu không có thì lấy ảnh đầu tiên
                     CoverImageUrl = f.Book.BookImages?
                                      .FirstOrDefault(i => i.IsCover)?.URL
                                    ?? f.Book.BookImages?.FirstOrDefault()?.URL,
@@ -67,7 +66,6 @@ namespace QLBS.Services.Implementations
                 if (!existing.IsDeleted)
                     throw new InvalidOperationException("Sách đã có trong danh sách yêu thích.");
 
-                // Khôi phục nếu đã xóa mềm
                 existing.IsDeleted = false;
                 existing.MarkedDate = DateTime.UtcNow;
                 await _favoriteBookRepo.UpdateAsync(existing);

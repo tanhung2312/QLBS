@@ -15,7 +15,6 @@ namespace QLBS.Controllers
             _favoriteBookService = favoriteBookService;
         }
 
-        /// <summary>Lấy danh sách sách yêu thích của user</summary>
         [HttpGet("{userId}")]
         public async Task<IActionResult> GetFavorites(int userId)
         {
@@ -23,7 +22,6 @@ namespace QLBS.Controllers
             return Ok(result);
         }
 
-        /// <summary>Thêm sách vào yêu thích</summary>
         [HttpPost]
         public async Task<IActionResult> AddFavorite([FromBody] FavoriteBookRequestDto dto)
         {
@@ -31,7 +29,6 @@ namespace QLBS.Controllers
             return Ok(new { message = "Thêm sách yêu thích thành công." });
         }
 
-        /// <summary>Xóa mềm sách khỏi yêu thích</summary>
         [HttpDelete("{userId}/{bookId}")]
         public async Task<IActionResult> RemoveFavorite(int userId, int bookId)
         {

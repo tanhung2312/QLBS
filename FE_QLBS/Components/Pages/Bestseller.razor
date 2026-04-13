@@ -7,23 +7,25 @@
 
 <PageTitle>Sách Bán Chạy - BookStore</PageTitle>
 
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
 <script src="https://cdn.tailwindcss.com"></script>
 
 <style>
     :root {
-        --ink: #0D0B08;
-        --gold: #C9960A;
-        --gold2: #E8AF1A;
-        --sand: #EAE3D9;
-        --surface: #F9F6F1;
+        --ink: #1A1208;
+        --brown: #6B4C2A;
+        --amber: #D4860B;
+        --amber-lt: #F5A623;
+        --amber-dim: rgba(212,134,11,.10);
+        --sand: #EDE8DF;
+        --surface: #FAF7F2;
         --card: #FFFFFF;
-        --muted: #7C6F5E;
-        --pale: #B0A496;
-        --coral: #C94444;
-        --forest: #2D6A4F;
-        --fog: rgba(249,246,241,0.96);
+        --muted: #9B8B7A;
+        --pale: #C4B8A8;
+        --coral: #C0392B;
+        --forest: #2E7D52;
+        --fog: rgba(255,253,248,0.96);
     }
 
     *, *::before, *::after {
@@ -37,7 +39,7 @@
     }
 
     body {
-        font-family: 'Outfit', sans-serif;
+        font-family: 'Plus Jakarta Sans', sans-serif;
         background: var(--surface);
         color: var(--ink);
         -webkit-font-smoothing: antialiased;
@@ -45,7 +47,7 @@
     }
 
     ::-webkit-scrollbar {
-        width: 4px;
+        width: 5px;
     }
 
     ::-webkit-scrollbar-track {
@@ -58,7 +60,7 @@
     }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: var(--gold);
+            background: var(--amber);
         }
 
     @@keyframes fadeUp {
@@ -83,25 +85,13 @@
         }
     }
 
-    @@keyframes dropIn {
-        from {
-            opacity: 0;
-            transform: translateY(-8px) scale(.97)
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0) scale(1)
-        }
-    }
-
     @@keyframes glowPulse {
         0%, 100% {
-            box-shadow: 0 0 0 0 rgba(201,150,10,.3)
+            box-shadow: 0 0 0 0 rgba(212,134,11,.3)
         }
 
         50% {
-            box-shadow: 0 0 0 8px rgba(201,150,10,0)
+            box-shadow: 0 0 0 8px rgba(212,134,11,0)
         }
     }
 
@@ -151,6 +141,18 @@
         }
     }
 
+    @@keyframes pulse-dot {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 1
+        }
+
+        50% {
+            transform: scale(1.5);
+            opacity: .6
+        }
+    }
+
     .a1 {
         animation: fadeUp .5s cubic-bezier(.22,1,.36,1) .04s both
     }
@@ -160,7 +162,7 @@
     }
 
     .skel {
-        background: linear-gradient(90deg, #EAE3D9 25%, #F5F0EA 50%, #EAE3D9 75%);
+        background: linear-gradient(90deg,#EDE8DF 25%,#F5F0EA 50%,#EDE8DF 75%);
         background-size: 600px 100%;
         animation: shimmer 1.5s infinite;
         border-radius: 10px;
@@ -168,36 +170,53 @@
 
     /* ── Nav ── */
     .nav-a {
-        color: rgba(13,11,8,.5);
+        color: rgba(26,18,8,.6);
         text-decoration: none;
-        font-size: .85rem;
+        font-size: .88rem;
         font-weight: 500;
-        padding: 6px 14px;
+        padding: 6px 12px;
         border-radius: 8px;
         transition: all .15s;
+        position: relative;
     }
+
+        .nav-a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 12px;
+            right: 12px;
+            height: 2px;
+            background: var(--amber);
+            border-radius: 2px;
+            transform: scaleX(0);
+            transition: transform .2s;
+        }
 
         .nav-a:hover {
             color: var(--ink);
-            background: rgba(13,11,8,.05);
         }
 
+            .nav-a:hover::after, .nav-a.active::after {
+                transform: scaleX(1);
+            }
+
         .nav-a.active {
-            color: var(--gold);
+            color: var(--amber);
         }
 
     /* ── Hero ── */
     .hero-bg {
         position: relative;
         overflow: hidden;
-        background: linear-gradient(145deg, #0D0B08 0%, #1E1408 45%, #2E1E0A 100%);
+        background: linear-gradient(145deg,#5A3D20 0%,#6B4C2A 45%,#7A5A34 100%);
     }
 
         .hero-bg::before {
             content: '';
             position: absolute;
             inset: 0;
-            background: radial-gradient(ellipse 55% 70% at 90% 40%, rgba(201,150,10,.2) 0%, transparent 65%), radial-gradient(ellipse 30% 40% at 5% 90%, rgba(201,150,10,.08) 0%, transparent 60%);
+            background: radial-gradient(ellipse 55% 70% at 90% 40%,rgba(245,166,35,.22) 0%,transparent 65%), radial-gradient(ellipse 30% 40% at 5% 90%,rgba(212,134,11,.10) 0%,transparent 60%);
             pointer-events: none;
         }
 
@@ -205,12 +224,11 @@
             content: '';
             position: absolute;
             inset: 0;
-            background-image: linear-gradient(rgba(255,255,255,.022) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.022) 1px, transparent 1px);
+            background-image: linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px), linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);
             background-size: 52px 52px;
             pointer-events: none;
         }
 
-    /* Floating trophy deco */
     .deco {
         position: absolute;
         border-radius: 50%;
@@ -233,18 +251,13 @@
         cursor: pointer;
         transition: all .18s;
         white-space: nowrap;
+        font-family: 'Plus Jakarta Sans',sans-serif;
     }
 
-        .chip:hover {
-            border-color: var(--gold);
-            color: #8C6A00;
-            background: rgba(201,150,10,.06);
-        }
-
-        .chip.active {
-            border-color: var(--gold);
-            color: #8C6A00;
-            background: rgba(201,150,10,.11);
+        .chip:hover, .chip.active {
+            border-color: var(--amber);
+            color: var(--brown);
+            background: var(--amber-dim);
         }
 
     /* ── View toggle ── */
@@ -275,7 +288,7 @@
         .vbtn.on {
             background: var(--card);
             color: var(--ink);
-            box-shadow: 0 1px 4px rgba(13,11,8,.1);
+            box-shadow: 0 1px 4px rgba(26,18,8,.1);
         }
 
     /* ── Book CARD (grid) ── */
@@ -288,12 +301,13 @@
         position: relative;
         cursor: pointer;
         animation: slideUp .45s cubic-bezier(.22,1,.36,1) both;
+        box-shadow: 0 2px 8px rgba(107,76,42,.07);
     }
 
         .bk-card:hover {
             transform: translateY(-7px);
-            box-shadow: 0 22px 52px rgba(13,11,8,.13);
-            border-color: rgba(201,150,10,.35);
+            box-shadow: 0 22px 52px rgba(107,76,42,.14);
+            border-color: rgba(212,134,11,.35);
         }
 
     .bk-img {
@@ -313,11 +327,10 @@
         transform: scale(1.06);
     }
 
-    /* Gradient overlay */
     .bk-overlay {
         position: absolute;
         inset: 0;
-        background: linear-gradient(180deg, transparent 40%, rgba(13,11,8,.72) 100%);
+        background: linear-gradient(180deg,transparent 40%,rgba(26,18,8,.72) 100%);
     }
 
     /* ── Rank badge ── */
@@ -356,18 +369,17 @@
     }
 
     .rank-n {
-        background: rgba(13,11,8,.55);
+        background: rgba(26,18,8,.55);
         backdrop-filter: blur(6px);
         color: rgba(255,255,255,.8);
         border: 1px solid rgba(255,255,255,.15);
     }
 
-    /* Price on image */
     .price-tag {
         position: absolute;
         bottom: 10px;
         left: 12px;
-        font-family: 'Playfair Display', serif;
+        font-family: 'Playfair Display',serif;
         font-size: 1.1rem;
         font-weight: 700;
         color: #fff;
@@ -375,7 +387,6 @@
         text-shadow: 0 2px 8px rgba(0,0,0,.5);
     }
 
-    /* Wishlist btn */
     .wish-btn {
         position: absolute;
         bottom: 10px;
@@ -397,15 +408,10 @@
     }
 
         .wish-btn:hover, .wish-btn.on {
-            background: rgba(201,68,68,.85);
+            background: rgba(192,57,43,.85);
             border-color: transparent;
         }
 
-        .wish-btn.on {
-            animation: glowPulse .4s ease;
-        }
-
-    /* Card body */
     .bk-body {
         padding: 14px 16px 16px;
     }
@@ -415,12 +421,12 @@
         font-weight: 800;
         letter-spacing: .08em;
         text-transform: uppercase;
-        color: var(--gold);
+        color: var(--amber);
         margin-bottom: 5px;
     }
 
     .bk-title {
-        font-family: 'Playfair Display', serif;
+        font-family: 'Playfair Display',serif;
         font-size: .97rem;
         font-weight: 700;
         color: var(--ink);
@@ -446,9 +452,9 @@
         height: 40px;
         border-radius: 10px;
         border: none;
-        background: var(--ink);
+        background: linear-gradient(135deg,#6B4C2A,#8B6040);
         color: #fff;
-        font-family: 'Outfit', sans-serif;
+        font-family: 'Plus Jakarta Sans',sans-serif;
         font-size: .8rem;
         font-weight: 700;
         cursor: pointer;
@@ -457,12 +463,13 @@
         justify-content: center;
         gap: 6px;
         transition: all .2s;
+        box-shadow: 0 3px 12px rgba(107,76,42,.25);
     }
 
         .btn-cart:hover {
-            background: var(--gold);
             transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(201,150,10,.35);
+            box-shadow: 0 6px 18px rgba(107,76,42,.35);
+            background: linear-gradient(135deg,var(--amber),var(--amber-lt));
         }
 
     /* ── LIST row ── */
@@ -479,6 +486,7 @@
         position: relative;
         overflow: hidden;
         animation: slideUp .4s cubic-bezier(.22,1,.36,1) both;
+        box-shadow: 0 1px 4px rgba(107,76,42,.05);
     }
 
         .bk-row::before {
@@ -488,15 +496,15 @@
             top: 0;
             bottom: 0;
             width: 3px;
-            background: linear-gradient(180deg, var(--gold), var(--gold2));
+            background: linear-gradient(180deg,var(--amber),var(--amber-lt));
             border-radius: 0 2px 2px 0;
             transform: scaleY(0);
             transition: transform .22s;
         }
 
         .bk-row:hover {
-            border-color: rgba(201,150,10,.35);
-            box-shadow: 0 6px 24px rgba(13,11,8,.08);
+            border-color: rgba(212,134,11,.35);
+            box-shadow: 0 6px 24px rgba(107,76,42,.09);
             transform: translateX(4px);
         }
 
@@ -529,16 +537,16 @@
         flex-shrink: 0;
         width: 28px;
         text-align: center;
-        font-family: 'Playfair Display', serif;
+        font-family: 'Playfair Display',serif;
         font-size: 1.2rem;
         font-weight: 700;
     }
 
     .bk-row-price {
-        font-family: 'Playfair Display', serif;
+        font-family: 'Playfair Display',serif;
         font-size: 1rem;
         font-weight: 700;
-        color: var(--coral);
+        color: var(--amber);
     }
 
     .btn-row-cart {
@@ -547,9 +555,9 @@
         padding: 0 18px;
         border-radius: 10px;
         border: none;
-        background: var(--ink);
+        background: linear-gradient(135deg,#6B4C2A,#8B6040);
         color: #fff;
-        font-family: 'Outfit', sans-serif;
+        font-family: 'Plus Jakarta Sans',sans-serif;
         font-size: .78rem;
         font-weight: 700;
         cursor: pointer;
@@ -557,10 +565,11 @@
         align-items: center;
         gap: 5px;
         transition: all .2s;
+        box-shadow: 0 2px 8px rgba(107,76,42,.22);
     }
 
         .btn-row-cart:hover {
-            background: var(--gold);
+            background: linear-gradient(135deg,var(--amber),var(--amber-lt));
         }
 
     /* ── Toast ── */
@@ -577,17 +586,17 @@
         align-items: center;
         gap: 10px;
         backdrop-filter: blur(16px);
-        background: rgba(26,21,17,.92);
+        background: rgba(26,18,8,.92);
         color: #fff;
         border: 1px solid rgba(255,255,255,.1);
-        box-shadow: 0 10px 32px rgba(13,11,8,.22);
+        box-shadow: 0 10px 32px rgba(107,76,42,.22);
         animation: toastIn .25s cubic-bezier(.22,1,.36,1) both;
     }
 
-    /* ── Stat chip ── */
+    /* ── Stat glass ── */
     .stat-glass {
-        background: rgba(255,255,255,.07);
-        border: 1px solid rgba(255,255,255,.12);
+        background: rgba(255,255,255,.08);
+        border: 1px solid rgba(255,255,255,.15);
         border-radius: 14px;
         padding: 14px 22px;
         text-align: center;
@@ -596,34 +605,18 @@
     }
 
         .stat-glass:hover {
-            background: rgba(255,255,255,.11);
-            border-color: rgba(201,150,10,.4);
+            background: rgba(255,255,255,.13);
+            border-color: rgba(245,166,35,.45);
         }
 
     .pdot {
         width: 6px;
         height: 6px;
         border-radius: 50%;
-        background: var(--gold2);
+        background: var(--amber-lt);
         display: inline-block;
-        animation: glowPulse 2.5s ease-in-out infinite;
+        animation: pulse-dot 2.5s ease-in-out infinite;
     }
-
-    /* ── Footer ── */
-    .ft-a {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        color: rgba(255,255,255,.3);
-        text-decoration: none;
-        font-size: .8rem;
-        margin-bottom: 9px;
-        transition: color .14s;
-    }
-
-        .ft-a:hover {
-            color: var(--gold2);
-        }
 
     /* ── Tag ── */
     .tag-pill {
@@ -632,16 +625,16 @@
         gap: 5px;
         padding: 4px 13px;
         border-radius: 50px;
-        background: rgba(201,150,10,.15);
-        border: 1px solid rgba(201,150,10,.3);
-        color: #E8AF1A;
+        background: rgba(212,134,11,.18);
+        border: 1px solid rgba(212,134,11,.35);
+        color: var(--amber-lt);
         font-size: .72rem;
         font-weight: 700;
         letter-spacing: .08em;
         text-transform: uppercase;
     }
 
-    /* Pagination */
+    /* ── Pagination ── */
     .pg-btn {
         width: 36px;
         height: 36px;
@@ -656,44 +649,76 @@
         color: var(--muted);
         cursor: pointer;
         transition: all .15s;
+        font-family: 'Plus Jakarta Sans',sans-serif;
     }
 
         .pg-btn:hover {
-            border-color: var(--gold);
-            color: #8C6A00;
-            background: rgba(201,150,10,.07);
+            border-color: var(--amber);
+            color: var(--brown);
+            background: var(--amber-dim);
         }
 
         .pg-btn.active {
-            border-color: var(--gold);
-            background: var(--gold);
+            border-color: var(--amber);
+            background: var(--amber);
             color: #fff;
+        }
+
+    /* ── Footer links ── */
+    .ft-a {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: rgba(255,255,255,.3);
+        text-decoration: none;
+        font-size: .82rem;
+        margin-bottom: 9px;
+        transition: color .14s;
+    }
+
+        .ft-a:hover {
+            color: var(--amber-lt);
+        }
+
+        .ft-a i {
+            font-size: .6rem;
+            color: rgba(212,134,11,.5);
+        }
+
+        .ft-a:hover i {
+            color: var(--amber);
         }
 </style>
 
 <!-- TOP STRIP -->
-<div class="py-1.5" style="background:#0D0B08;">
-    <div class="max-w-7xl mx-auto px-5 flex justify-between items-center flex-wrap gap-2">
-        <div class="flex items-center gap-4" style="color:rgba(255,255,255,.38);font-size:.73rem;">
-            <span class="flex items-center gap-1.5"><i class="bi bi-telephone-fill" style="color:var(--gold2);font-size:.6rem;"></i>0901 234 567</span>
-            <span class="hidden sm:flex items-center gap-1.5"><i class="bi bi-envelope-fill" style="color:var(--gold2);font-size:.6rem;"></i>bookstore@gmail.com</span>
+<div style="background:linear-gradient(90deg,#5A3D20,#6B4C2A,#7A5A34);" class="py-1.5">
+    <div class="max-w-7xl mx-auto px-5 flex justify-between items-center flex-wrap gap-2"
+         style="color:rgba(255,255,255,.65);font-size:.73rem;">
+        <div class="flex items-center gap-4">
+            <span class="flex items-center gap-1.5">
+                <i class="bi bi-telephone-fill" style="color:var(--amber-lt);font-size:.65rem;"></i>0901 234 567
+            </span>
+            <span class="hidden sm:flex items-center gap-1.5">
+                <i class="bi bi-envelope-fill" style="color:var(--amber-lt);font-size:.65rem;"></i>bookstore@@gmail.com
+            </span>
         </div>
-        <a href="#" class="no-underline flex items-center gap-1.5" style="color:rgba(255,255,255,.3);font-size:.73rem;">
-            <i class="bi bi-box-seam" style="font-size:.6rem;"></i>Theo dõi đơn hàng
+        <a href="#" class="no-underline flex items-center gap-1.5" style="color:rgba(255,255,255,.55);">
+            <i class="bi bi-box-seam" style="font-size:.65rem;"></i>Theo dõi đơn hàng
         </a>
     </div>
 </div>
 
 <!-- NAVBAR -->
-<nav class="py-3 sticky top-0 z-50" style="background:var(--fog);border-bottom:1px solid var(--sand);backdrop-filter:blur(24px);">
+<nav class="py-3 sticky top-0 z-50"
+     style="background:var(--fog);border-bottom:1px solid var(--sand);backdrop-filter:blur(24px);box-shadow:0 1px 0 rgba(107,76,42,.06),0 4px 24px rgba(107,76,42,.06);">
     <div class="max-w-7xl mx-auto px-5 flex items-center gap-4">
         <a href="/" class="no-underline flex items-center gap-2.5 mr-auto lg:mr-0 flex-shrink-0"
-           style="font-family:'Playfair Display',serif;font-size:1.48rem;color:var(--ink);">
-            <div class="w-9 h-9 rounded-[11px] flex items-center justify-center text-white text-sm flex-shrink-0"
-                 style="background:linear-gradient(135deg,var(--gold),var(--gold2));box-shadow:0 3px 10px rgba(201,150,10,.35);">
+           style="font-family:'Playfair Display',serif;font-size:1.55rem;color:var(--brown);letter-spacing:-.5px;">
+            <div class="w-9 h-9 rounded-[10px] flex items-center justify-center text-white text-sm flex-shrink-0"
+                 style="background:linear-gradient(135deg,var(--amber),var(--amber-lt));box-shadow:0 4px 12px rgba(212,134,11,.35);">
                 <i class="bi bi-book-half"></i>
             </div>
-            Book<span style="color:var(--gold);">Store</span>
+            Book<span style="color:var(--amber);">Store</span>
         </a>
         <div class="hidden lg:flex items-center gap-0.5 mx-auto">
             <a href="/" class="nav-a">Trang Chủ</a>
@@ -702,24 +727,27 @@
             <a href="/books/bestseller" class="nav-a active">Bán Chạy</a>
         </div>
         <div class="flex items-center gap-2 flex-shrink-0">
-            <a href="/cart" class="relative w-9 h-9 rounded-[10px] flex items-center justify-center text-sm no-underline"
-               style="background:var(--surface);border:1px solid var(--sand);color:var(--ink);">
+            <a href="/cart" class="relative w-9 h-9 rounded-[10px] flex items-center justify-center text-sm no-underline transition-all"
+               style="background:var(--surface);border:1px solid var(--sand);color:var(--brown);">
                 <i class="bi bi-bag"></i>
                 @if (cartCount > 0)
                 {
-                    <span class="absolute -top-1.5 -right-1.5 text-white text-[.5rem] w-4 h-4 rounded-full flex items-center justify-center font-bold" style="background:var(--coral);">@cartCount</span>
+                    <span class="absolute -top-1.5 -right-1.5 text-white text-[.5rem] w-4 h-4 rounded-full flex items-center justify-center font-bold border border-white"
+                          style="background:var(--coral);">@cartCount</span>
                 }
             </a>
             @if (!isLoggedIn)
             {
-                <a href="/login" class="flex items-center gap-2 text-white rounded-[10px] px-4 py-[8px] text-sm font-semibold no-underline" style="background:var(--ink);">
+                <a href="/login" class="flex items-center gap-2 text-white rounded-full px-5 py-2 text-sm font-semibold no-underline transition-colors"
+                   style="background:var(--ink);font-family:'Plus Jakarta Sans',sans-serif;box-shadow:0 2px 10px rgba(26,18,8,.2);"
+                   onmouseover="this.style.background='var(--amber)'" onmouseout="this.style.background='var(--ink)'">
                     <i class="bi bi-person text-sm"></i><span class="hidden sm:inline">Đăng nhập</span>
                 </a>
             }
             else
             {
-                <div class="w-9 h-9 rounded-[10px] flex items-center justify-center text-white text-[.72rem] font-bold cursor-pointer"
-                     style="background:linear-gradient(135deg,var(--gold),var(--gold2));">
+                <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold cursor-pointer flex-shrink-0"
+                     style="background:linear-gradient(135deg,var(--amber),var(--amber-lt));box-shadow:0 2px 10px rgba(212,134,11,.3);">
                     @GetInitials(userFullName)
                 </div>
             }
@@ -729,10 +757,9 @@
 
 <!-- ══ HERO ══ -->
 <section class="hero-bg py-16 sm:py-20">
-    <!-- Deco blobs -->
-    <div class="deco" style="width:180px;height:180px;background:rgba(201,150,10,.12);filter:blur(50px);top:10%;right:8%;animation-delay:.3s;"></div>
-    <div class="deco" style="width:120px;height:120px;background:rgba(201,150,10,.08);filter:blur(40px);bottom:15%;right:20%;animation-delay:1.1s;"></div>
-    <div class="deco" style="width:80px;height:80px;background:rgba(255,255,255,.04);filter:blur(30px);top:40%;left:3%;animation-delay:.7s;"></div>
+    <div class="deco" style="width:180px;height:180px;background:rgba(245,166,35,.15);filter:blur(50px);top:10%;right:8%;animation-delay:.3s;"></div>
+    <div class="deco" style="width:120px;height:120px;background:rgba(212,134,11,.10);filter:blur(40px);bottom:15%;right:20%;animation-delay:1.1s;"></div>
+    <div class="deco" style="width:80px;height:80px;background:rgba(255,255,255,.05);filter:blur(30px);top:40%;left:3%;animation-delay:.7s;"></div>
 
     <div class="max-w-7xl mx-auto px-5 relative" style="z-index:10;">
         <div class="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-8">
@@ -742,24 +769,23 @@
                 </div>
                 <h1 class="mb-4" style="font-family:'Playfair Display',serif;font-size:clamp(2.2rem,5vw,3.5rem);font-weight:700;color:#fff;line-height:1.1;letter-spacing:-.02em;">
                     Sách bán chạy<br />
-                    <em class="not-italic" style="background:linear-gradient(135deg,var(--gold2),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">nhất tháng này</em>
+                    <em class="not-italic" style="background:linear-gradient(135deg,var(--amber-lt),var(--amber));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">nhất tháng này</em>
                 </h1>
-                <p class="text-base leading-relaxed mb-8" style="color:rgba(255,255,255,.5);max-width:400px;">
+                <p class="text-base leading-relaxed mb-8" style="color:rgba(255,255,255,.55);max-width:400px;">
                     Những cuốn sách được yêu thích bởi hàng nghìn độc giả — cập nhật theo doanh số thực tế mỗi tháng.
                 </p>
-                <!-- Stats -->
                 <div class="flex gap-3 flex-wrap">
                     @foreach (var (num, lbl) in new[] { ($"{books.Count}", "Đầu sách"), ("200K+", "Độc giả"), ("4.8★", "Đánh giá") })
                     {
                         <div class="stat-glass">
-                            <div class="font-bold mb-0.5" style="font-family:'Playfair Display',serif;font-size:1.35rem;background:linear-gradient(135deg,var(--gold2),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">@num</div>
-                            <div style="color:rgba(255,255,255,.38);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;">@lbl</div>
+                            <div class="font-bold mb-0.5" style="font-family:'Playfair Display',serif;font-size:1.35rem;background:linear-gradient(135deg,var(--amber-lt),var(--amber));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">@num</div>
+                            <div style="color:rgba(255,255,255,.4);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;">@lbl</div>
                         </div>
                     }
                 </div>
             </div>
 
-            <!-- Top 3 podium preview (desktop) -->
+            <!-- Top 3 podium preview -->
             <div class="hidden lg:flex items-end gap-3 a2" style="flex-shrink:0;">
                 @foreach (var (rank, height, delay, medal) in new[] { (2, "130px", "0s", "🥈"), (1, "160px", ".08s", "🥇"), (3, "110px", ".16s", "🥉") })
                 {
@@ -767,7 +793,7 @@
                     <div class="flex flex-col items-center gap-2" style="animation-delay:@delay;">
                         <div class="text-xl">@medal</div>
                         <div class="rounded-xl overflow-hidden border-2 shadow-2xl flex-shrink-0"
-                             style="width:@(rank==1?"84px":"70px");height:@height;border-color:@(rank==1?"var(--gold2)":"rgba(255,255,255,.2)");">
+                             style="width:@(rank==1?"84px":"70px");height:@height;border-color:@(rank==1?"var(--amber-lt)":"rgba(255,255,255,.25)");">
                             @if (b != null)
                             {
                                 <img src="@GetSafeUrl(b.ImageUrl, FallbackImg)" class="w-full h-full object-cover" alt="@b.BookTitle" />
@@ -777,7 +803,7 @@
                                 <div style="width:100%;height:100%;background:rgba(255,255,255,.08);"></div>
                             }
                         </div>
-                        <div class="text-xs font-semibold text-center max-w-[80px] leading-tight" style="color:rgba(255,255,255,.6);">
+                        <div class="text-xs font-semibold text-center max-w-[80px] leading-tight" style="color:rgba(255,255,255,.65);">
                             @(b?.BookTitle?.Length > 18 ? b.BookTitle[..18] + "…" : b?.BookTitle ?? "—")
                         </div>
                     </div>
@@ -794,11 +820,11 @@
             <!-- Search -->
             <div class="flex items-center gap-2 px-3.5 py-2 rounded-[10px] flex-1 max-w-xs"
                  style="background:var(--card);border:1.5px solid var(--sand);transition:border-color .15s;"
-                 onfocusin="this.style.borderColor='var(--gold)'" onfocusout="this.style.borderColor='var(--sand)'">
+                 onfocusin="this.style.borderColor='var(--amber)'" onfocusout="this.style.borderColor='var(--sand)'">
                 <i class="bi bi-search flex-shrink-0" style="color:var(--pale);font-size:.82rem;"></i>
                 <input type="text" @bind="search" @bind:event="oninput"
                        placeholder="Tìm sách bán chạy..."
-                       style="background:none;border:none;outline:none;font-family:'Outfit',sans-serif;font-size:.83rem;color:var(--ink);width:100%;" />
+                       style="background:none;border:none;outline:none;font-family:'Plus Jakarta Sans',sans-serif;font-size:.83rem;color:var(--ink);width:100%;" />
                 @if (!string.IsNullOrEmpty(search))
                 {
                     <button @onclick="@(()=>search="")" style="background:none;border:none;cursor:pointer;color:var(--pale);font-size:.75rem;flex-shrink:0;">
@@ -809,7 +835,7 @@
 
             <div class="w-px h-5 flex-shrink-0" style="background:var(--sand);"></div>
 
-            <!-- Category filter -->
+            <!-- Category chips -->
             <div class="flex gap-2 flex-wrap flex-1">
                 <button class="chip @(activeCat==""?"active":"")" @onclick='()=>activeCat=""'>Tất cả</button>
                 @foreach (var cat in allCats)
@@ -821,7 +847,7 @@
 
             <!-- Count + View -->
             <div class="flex items-center gap-3 flex-shrink-0">
-                <span class="text-sm" style="color:var(--muted);">
+                <span style="font-size:.84rem;color:var(--muted);">
                     <strong style="color:var(--ink);">@Filtered.Count()</strong> sách
                 </span>
                 <div class="vtog">
@@ -866,7 +892,8 @@
                 </p>
                 @if (!string.IsNullOrEmpty(search) || !string.IsNullOrEmpty(activeCat))
                 {
-                    <button @onclick="ResetFilter" class="px-5 py-2.5 rounded-xl text-sm font-semibold text-white border-0 cursor-pointer" style="background:var(--ink);">
+                    <button @onclick="ResetFilter" class="px-5 py-2.5 rounded-xl text-sm font-semibold text-white border-0 cursor-pointer"
+                            style="background:var(--ink);font-family:'Plus Jakarta Sans',sans-serif;">
                         Xóa bộ lọc
                     </button>
                 }
@@ -874,30 +901,22 @@
         }
         else if (isGrid)
         {
-            <!-- ── GRID VIEW ── -->
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
                 @foreach (var (book, idx) in Filtered.Select((b, i) => (b, i)))
                 {
                     var bid = book.BookId;
                     var rank = idx + 1;
-                    <div class="bk-card" style="animation-delay:@(Math.Min(idx*.06,.5))s;"
-                         @onclick="()=>GoBook(bid)">
+                    <div class="bk-card" style="animation-delay:@(Math.Min(idx*.06,.5))s;" @onclick="()=>GoBook(bid)">
                         <div class="bk-img">
                             <img src="@GetSafeUrl(book.ImageUrl, FallbackImg)" alt="@book.BookTitle" loading="lazy" />
                             <div class="bk-overlay"></div>
-
-                            <!-- Rank badge -->
                             <div class="rank-badge @(rank==1?"rank-1":rank==2?"rank-2":rank==3?"rank-3":"rank-n")"
                                  style="animation-delay:@(idx*.06+.2)s;">
                                 @(rank <= 3 ? rank.ToString() : $"#{rank}")
                             </div>
-
-                            <!-- Price -->
                             <div class="price-tag">
                                 @book.Price.ToString("#,##0")<span style="font-size:.62em;font-weight:400;margin-left:2px;">đ</span>
                             </div>
-
-                            <!-- Wishlist -->
                             <button class="wish-btn @(wishlist.Contains(bid)?"on":"")"
                                     @onclick="()=>ToggleWish(bid)" @onclick:stopPropagation="true">
                                 <i class="bi @(wishlist.Contains(bid)?"bi-heart-fill":"bi-heart")"></i>
@@ -917,37 +936,33 @@
         }
         else
         {
-            <!-- ── LIST VIEW ── -->
             <div class="flex flex-col gap-3">
                 @foreach (var (book, idx) in Filtered.Select((b, i) => (b, i)))
                 {
                     var bid = book.BookId;
                     var rank = idx + 1;
                     <div class="bk-row" style="animation-delay:@(Math.Min(idx*.04,.4))s;" @onclick="()=>GoBook(bid)">
-                        <!-- Rank -->
-                        <div class="bk-row-rank" style="color:@(rank==1?"#D4940A":rank==2?"#888":rank==3?"#CD7F32":"var(--pale)");">
-                            @(rank <= 3 ? (rank == 1 ? "🥇" : rank == 2 ? "🥈" : "🥉") : $"#{rank}")
+                        <div class="bk-row-rank" style="color:@(rank==1?"var(--amber)":rank==2?"#888":rank==3?"#CD7F32":"var(--pale)");">
+                            @(rank == 1 ? "🥇" : rank == 2 ? "🥈" : rank == 3 ? "🥉" : $"#{rank}")
                         </div>
-                        <!-- Image -->
                         <div class="bk-row-img">
                             <img src="@GetSafeUrl(book.ImageUrl, FallbackImg)" alt="@book.BookTitle" loading="lazy" />
                         </div>
-                        <!-- Info -->
                         <div class="flex-1 min-w-0">
                             <div class="bk-cat">@book.CategoryName</div>
                             <div class="bk-title" style="-webkit-line-clamp:1;margin-bottom:3px;">@book.BookTitle</div>
                             <div class="bk-author" style="margin-bottom:0;"><i class="bi bi-person-fill" style="font-size:.62rem;"></i>@book.AuthorName</div>
                         </div>
-                        <!-- Price + btn -->
                         <div class="flex items-center gap-3 flex-shrink-0">
                             <div class="bk-row-price hidden sm:block">@book.Price.ToString("#,##0")đ</div>
                             <button class="btn-row-cart" @onclick="()=>AddToCart(bid)" @onclick:stopPropagation="true">
                                 <i class="bi bi-bag-plus" style="font-size:.78rem;"></i>
                                 <span class="hidden sm:inline">Thêm</span>
                             </button>
-                            <button class="wish-btn" style="position:static;width:36px;height:36px;border-radius:9px;background:var(--surface);border:1.5px solid var(--sand);color:var(--pale);"
+                            <button style="width:36px;height:36px;border-radius:9px;background:var(--surface);border:1.5px solid var(--sand);color:var(--pale);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;flex-shrink:0;"
                                     @onclick="()=>ToggleWish(bid)" @onclick:stopPropagation="true">
-                                <i class="bi @(wishlist.Contains(bid)?"bi-heart-fill text-red-400":"bi-heart")"></i>
+                                <i class="bi @(wishlist.Contains(bid)?"bi-heart-fill":"bi-heart")"
+                                   style="@(wishlist.Contains(bid)?"color:var(--coral)":"")"></i>
                             </button>
                         </div>
                     </div>
@@ -955,8 +970,7 @@
             </div>
         }
 
-        <!-- Pagination placeholder -->
-        @if (Filtered.Count() > 0 && !isLoading)
+        @if (Filtered.Any() && !isLoading)
         {
             <div class="flex justify-center gap-2 mt-10">
                 <button class="pg-btn"><i class="bi bi-chevron-left" style="font-size:.75rem;"></i></button>
@@ -970,57 +984,111 @@
 </section>
 
 <!-- ══ FOOTER ══ -->
-<footer class="pt-12" style="background:#0D0B08;">
-    <div class="max-w-7xl mx-auto px-5">
+<footer style="background:#1A1208;" id="footer">
+    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(212,134,11,.4),transparent);"></div>
+    <div class="max-w-7xl mx-auto px-5 pt-12">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-12">
+
+            <!-- Brand -->
             <div>
                 <a href="/" class="flex items-center gap-2.5 no-underline mb-5"
                    style="font-family:'Playfair Display',serif;font-size:1.45rem;color:#fff;">
-                    <div class="w-9 h-9 rounded-[11px] flex items-center justify-center text-white text-sm"
-                         style="background:linear-gradient(135deg,var(--gold),var(--gold2));">
+                    <div class="w-9 h-9 rounded-[10px] flex items-center justify-center text-white text-sm"
+                         style="background:linear-gradient(135deg,var(--amber),var(--amber-lt));">
                         <i class="bi bi-book-half"></i>
                     </div>BookStore
                 </a>
-                <p class="text-xs leading-loose mb-5" style="color:rgba(255,255,255,.28);">Nơi quy tụ kho tàng tri thức nhân loại.</p>
-                @foreach (var (ico, txt) in new[] { ("bi-geo-alt-fill", "123 Nguyễn Huệ, Q1, TP.HCM"), ("bi-telephone-fill", "0901 234 567"), ("bi-envelope-fill", "bookstore@gmail.com") })
+                <p class="text-xs leading-loose mb-5" style="color:rgba(255,255,255,.3);">Nơi quy tụ kho tàng tri thức nhân loại.</p>
+                @foreach (var (ico, txt) in new[] {
+                ("geo-alt-fill",   "123 Nguyễn Huệ, Quận 1, TP.HCM"),
+                ("telephone-fill", "0901 234 567"),
+                ("envelope-fill",  "bookstore@@gmail.com")
+                })
                 {
-                    <div class="flex items-center gap-2 mb-2 text-xs" style="color:rgba(255,255,255,.28);">
-                        <i class="bi @ico" style="color:var(--gold2);font-size:.62rem;flex-shrink:0;"></i>@txt
+                    <div class="flex items-start gap-3 mb-2" style="font-size:.82rem;color:rgba(255,255,255,.35);">
+                        <i class="bi bi-@ico mt-0.5 flex-shrink-0" style="color:var(--amber);font-size:.65rem;"></i><span>@txt</span>
                     </div>
                 }
             </div>
+
+            <!-- Khám phá -->
             <div>
-                <div class="text-xs font-bold uppercase tracking-widest mb-5" style="color:rgba(255,255,255,.2);">Danh mục</div>
-                @foreach (var l in new[] { "Tiểu Thuyết", "Kinh Tế", "Công Nghệ", "Tâm Lý Học", "Thiếu Nhi", "Lịch Sử" })
+                <div class="text-xs font-bold uppercase tracking-widest mb-5 pb-3"
+                     style="color:#fff;border-bottom:1px solid rgba(212,134,11,.3);">
+                    Khám phá
+                </div>
+                @foreach (var (lbl, href) in new[] {
+                ("Trang chủ",       "/"),
+                ("Tất cả danh mục", "/categories"),
+                ("Sách mới về kho", "/books/new"),
+                ("Sách bán chạy",   "/books/bestseller"),
+                ("Giỏ hàng",        "/cart"),
+                ("Hồ sơ của tôi",   "/profile"),
+                })
                 {
-                    <a href="#" class="ft-a"><i class="bi bi-chevron-right" style="font-size:.48rem;"></i>@l</a>
+                    <a href="@href" class="ft-a"><i class="bi bi-chevron-right"></i>@lbl</a>
                 }
             </div>
+
+            <!-- Hỗ trợ -->
             <div>
-                <div class="text-xs font-bold uppercase tracking-widest mb-5" style="color:rgba(255,255,255,.2);">Hỗ trợ</div>
-                @foreach (var l in new[] { "Hướng dẫn mua hàng", "Chính sách đổi trả", "Vận chuyển", "Thanh toán", "Liên hệ chúng tôi" })
+                <div class="text-xs font-bold uppercase tracking-widest mb-5 pb-3"
+                     style="color:#fff;border-bottom:1px solid rgba(212,134,11,.3);">
+                    Hỗ trợ khách hàng
+                </div>
+                @foreach (var l in new[] { "Hướng dẫn mua hàng", "Chính sách đổi trả", "Vận chuyển", "Thanh toán", "Câu hỏi thường gặp", "Liên hệ chúng tôi" })
                 {
-                    <a href="#" class="ft-a"><i class="bi bi-chevron-right" style="font-size:.48rem;"></i>@l</a>
+                    <a href="#" class="ft-a"><i class="bi bi-chevron-right"></i>@l</a>
                 }
             </div>
+
+            <!-- Newsletter -->
             <div>
-                <div class="text-xs font-bold uppercase tracking-widest mb-5" style="color:rgba(255,255,255,.2);">Bản tin sách</div>
-                <p class="text-xs mb-4 leading-loose" style="color:rgba(255,255,255,.28);">Nhận thông báo sách mới và ưu đãi độc quyền.</p>
-                <div class="flex rounded-[12px] overflow-hidden" style="border:1px solid rgba(255,255,255,.1);">
-                    <input type="email" placeholder="Email của bạn..." class="flex-1 px-3 py-2.5 text-xs outline-none"
-                           style="background:rgba(255,255,255,.05);color:#fff;border:none;" />
-                    <button class="px-3.5 py-2.5 border-0 cursor-pointer text-sm"
-                            style="background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--ink);">
+                <div class="text-xs font-bold uppercase tracking-widest mb-5 pb-3"
+                     style="color:#fff;border-bottom:1px solid rgba(212,134,11,.3);">
+                    Kết nối với chúng tôi
+                </div>
+                <div class="flex gap-2.5 flex-wrap mb-6">
+                    @foreach (var ic in new[] { "facebook", "instagram", "youtube", "tiktok" })
+                    {
+                        <a href="#" class="w-9 h-9 rounded-full flex items-center justify-center text-sm no-underline transition-all"
+                           style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);"
+                           onmouseover="this.style.background='var(--amber)';this.style.color='#fff'"
+                           onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.color='rgba(255,255,255,.5)'">
+                            <i class="bi bi-@ic"></i>
+                        </a>
+                    }
+                </div>
+                <div class="font-bold text-sm mb-2" style="color:#fff;font-family:'Playfair Display',serif;">Nhận thông báo mới</div>
+                <p class="text-xs mb-4 leading-relaxed" style="color:rgba(255,255,255,.35);">Đăng ký để nhận ưu đãi và sách mới mỗi tuần.</p>
+                <div class="flex rounded-xl overflow-hidden" style="border:1px solid rgba(255,255,255,.12);">
+                    <input type="email" @bind="newsletterEmail" placeholder="Email của bạn..."
+                           class="flex-1 border-0 outline-none text-white text-xs px-4 py-2.5"
+                           style="background:rgba(255,255,255,.06);font-family:'Plus Jakarta Sans',sans-serif;"
+                           onfocus="this.style.background='rgba(255,255,255,.1)'"
+                           onblur="this.style.background='rgba(255,255,255,.06)'" />
+                    <button @onclick="SubscribeNewsletter"
+                            class="px-4 text-white text-sm border-0 cursor-pointer flex-shrink-0 transition-opacity hover:opacity-85"
+                            style="background:linear-gradient(135deg,var(--amber),var(--amber-lt));">
                         <i class="bi bi-send-fill"></i>
                     </button>
                 </div>
+                @if (!string.IsNullOrEmpty(newsletterMsg))
+                {
+                    <p class="mt-2 text-xs flex items-center gap-1.5" style="color:#6EE7B7;">
+                        <i class="bi bi-check-circle-fill"></i>@newsletterMsg
+                    </p>
+                }
             </div>
         </div>
-        <div class="flex flex-wrap justify-between items-center py-5 border-t gap-3" style="border-color:rgba(255,255,255,.06);">
-            <p class="text-xs m-0" style="color:rgba(255,255,255,.18);">&copy; @DateTime.Now.Year BookStore. Tất cả quyền được bảo lưu.</p>
+
+        <div class="flex flex-wrap justify-between items-center py-5 border-t gap-3"
+             style="border-color:rgba(255,255,255,.06);">
+            <p class="text-xs m-0" style="color:rgba(255,255,255,.2);">&copy; @DateTime.Now.Year BookStore. Tất cả quyền được bảo lưu.</p>
             <div class="flex gap-5">
-                <a href="/terms" class="no-underline text-xs" style="color:rgba(255,255,255,.18);">Điều khoản</a>
-                <a href="/privacy" class="no-underline text-xs" style="color:rgba(255,255,255,.18);">Bảo mật</a>
+                <a href="/terms" class="no-underline text-xs" style="color:rgba(255,255,255,.2);">Điều khoản</a>
+                <span style="color:rgba(255,255,255,.1);">|</span>
+                <a href="/privacy" class="no-underline text-xs" style="color:rgba(255,255,255,.2);">Bảo mật</a>
             </div>
         </div>
     </div>
@@ -1045,6 +1113,8 @@
     private int cartCount = 0;
     private HashSet<int> wishlist = new();
     private List<BookVm> books = new();
+    private string newsletterEmail = "";
+    private string newsletterMsg = "";
 
     private IEnumerable<string> allCats => books.Select(b => b.CategoryName).Distinct().OrderBy(c => c);
 
@@ -1116,6 +1186,14 @@
         showToast = false; StateHasChanged();
     }
 
+    private async Task SubscribeNewsletter()
+    {
+        if (string.IsNullOrWhiteSpace(newsletterEmail)) return;
+        newsletterMsg = "Đăng ký thành công! Cảm ơn bạn.";
+        newsletterEmail = "";
+        await Task.CompletedTask;
+    }
+
     private static string GetInitials(string name)
     {
         if (string.IsNullOrEmpty(name)) return "?";
@@ -1139,5 +1217,14 @@
         public decimal Price { get; set; }
         public string? ImageUrl { get; set; }
     }
-    private class ApiBookDto { public int BookId { get; set; } public string? BookTitle { get; set; } public string? AuthorName { get; set; } public string? CategoryName { get; set; } public decimal Price { get; set; } public string? ImageUrl { get; set; } }
+
+    private class ApiBookDto
+    {
+        public int BookId { get; set; }
+        public string? BookTitle { get; set; }
+        public string? AuthorName { get; set; }
+        public string? CategoryName { get; set; }
+        public decimal Price { get; set; }
+        public string? ImageUrl { get; set; }
+    }
 }

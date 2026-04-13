@@ -352,6 +352,7 @@ select * from OrderTable;
 select * from Book;
 select * from Category;
 select * from Author;
+select * from DiscountCode;
 
 SELECT * FROM Category WHERE IsDeleted = 0;
 

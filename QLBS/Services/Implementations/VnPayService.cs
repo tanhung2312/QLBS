@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using QLBS.Constants;
+using QLBS.Dtos.Order;
 using QLBS.Helpers;
 using QLBS.Models;
 using QLBS.Repository.Interfaces;
@@ -14,20 +15,25 @@ namespace QLBS.Services.Implementations
         private readonly IOrderRepository _orderRepository;
         private readonly GhnSettings _ghnSettings;
         private readonly IGhnService _ghnService;
+        private readonly IEmailService _emailService;
+        private readonly ILogger<OrderService> _logger;
 
         public VnPayService(
             IOptions<VnPaySettings> config,
             IOrderRepository orderRepository,
             IOptions<GhnSettings> ghnSettings,
-            IGhnService ghnService)
+            IGhnService ghnService,
+            IEmailService emailService,
+            ILogger<OrderService> logger)
         {
             _config = config.Value;
             _orderRepository = orderRepository;
             _ghnSettings = ghnSettings.Value;
             _ghnService = ghnService;
+            _emailService = emailService;
+            _logger = logger;
         }
 
-        // ── Tạo URL thanh toán ────────────────────────────────────────────────
         public string CreatePaymentUrl(HttpContext context, OrderTable order)
         {
             var vnpay = new VnPayLibrary();
@@ -47,7 +53,6 @@ namespace QLBS.Services.Implementations
             return vnpay.CreateRequestUrl(_config.BaseUrl, _config.HashSecret);
         }
 
-        // ── Xử lý response từ VNPay ───────────────────────────────────────────
         public PaymentResponseModel PaymentExecute(IQueryCollection collections)
         {
             var vnpay = new VnPayLibrary();
@@ -77,7 +82,6 @@ namespace QLBS.Services.Implementations
             };
         }
 
-        // ── Xử lý callback / IPN sau khi VNPay redirect về ───────────────────
         public async Task<bool> HandlePaymentCallbackAsync(PaymentResponseModel model)
         {
             if (!model.Success) return false;
@@ -87,42 +91,72 @@ namespace QLBS.Services.Implementations
 
             if (model.VnPayResponseCode == "00")
             {
-                // Cập nhật thanh toán thành công
                 await _orderRepository.UpdatePaymentStatusAsync(
                     orderId, PaymentStatusConstants.Success, model.TransactionId);
 
-                // Cập nhật trạng thái đơn → Đã xác nhận
                 await _orderRepository.UpdateOrderStatusAsync(
                     orderId, OrderStatusConstants.Confirmed);
 
-                // Tạo vận đơn GHN nếu chưa có
                 var order = await _orderRepository.GetByIdAsync(orderId);
                 if (order != null && string.IsNullOrEmpty(order.GhnOrderCode))
                 {
                     int totalWeight = order.OrderDetails.Sum(d => d.Quantity) * _ghnSettings.DefaultWeight;
                     int paymentMethodId = order.Payments.FirstOrDefault()?.PaymentMethodId
                                          ?? PaymentMethodConstants.VNPay;
+                    try
+                    {
+                        var ghnCode = await _ghnService.CreateShippingOrderAsync(
+                            order,
+                            order.OrderDetails.ToList(),
+                            order.DistrictID ?? 0,
+                            order.WardCode ?? "",
+                            totalWeight,
+                            paymentMethodId
+                        );
 
-                    var ghnCode = await _ghnService.CreateShippingOrderAsync(
-                        order,
-                        order.OrderDetails.ToList(),
-                        order.DistrictID ?? 0,
-                        order.WardCode ?? "",
-                        totalWeight,
-                        paymentMethodId
-                    );
+                        if (!string.IsNullOrEmpty(ghnCode))
+                            await _orderRepository.UpdateOrderGhnCodeAsync(orderId, ghnCode);
+                        else
+                            _logger.LogWarning("GHN không trả về mã vận đơn cho OrderId: {OrderId}", orderId);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Lỗi tạo vận đơn GHN cho OrderId: {OrderId}", orderId);
+                    }
 
-                    if (!string.IsNullOrEmpty(ghnCode))
-                        await _orderRepository.UpdateOrderGhnCodeAsync(orderId, ghnCode);
+                    var userEmail = order.User?.Account?.Email;
+                    if (!string.IsNullOrEmpty(userEmail))
+                    {
+                        _ = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                await _emailService.SendOrderConfirmationAsync(
+                                    userEmail,
+                                    order.ReceiverName ?? "",
+                                    new OrderResultDto
+                                    {
+                                        OrderId = order.OrderId,
+                                        TotalAmount = order.TotalAmount,
+                                        Message = "Thanh toán VNPay thành công."
+                                    }
+                                );
+                            }
+                            catch (Exception emailEx)
+                            {
+                                _logger.LogWarning(emailEx, "Gửi email thất bại cho OrderId: {OrderId}", orderId);
+                            }
+                        });
+                    }
                 }
 
                 return true;
             }
             else
             {
-                // Thanh toán thất bại
                 await _orderRepository.UpdatePaymentStatusAsync(
                     orderId, PaymentStatusConstants.Failed, model.TransactionId);
+
                 return false;
             }
         }

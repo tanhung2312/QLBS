@@ -34,7 +34,6 @@ namespace QLBS.Controllers
             _orderRepository = orderRepository;
         }
 
-        // ── User: Tạo đơn hàng ───────────────────────────────────────────────
         [HttpPost("checkout")]
         [Authorize]
         public async Task<IActionResult> Checkout([FromBody] CreateOrderDto dto)
@@ -64,7 +63,6 @@ namespace QLBS.Controllers
             }
         }
 
-        // ── User: Lịch sử đơn hàng ───────────────────────────────────────────
         [HttpGet("history")]
         [Authorize]
         public async Task<IActionResult> GetHistory()
@@ -85,7 +83,6 @@ namespace QLBS.Controllers
             }
         }
 
-        // ── User: Chi tiết đơn hàng (chỉ xem đơn của mình) ──────────────────
         [HttpGet("{id}")]
         [Authorize]
         public async Task<IActionResult> GetDetail(int id)
@@ -109,7 +106,6 @@ namespace QLBS.Controllers
             }
         }
 
-        // ── Admin: Lấy tất cả đơn hàng ───────────────────────────────────────
         [HttpGet("admin/all")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllOrders()
@@ -126,7 +122,6 @@ namespace QLBS.Controllers
             }
         }
 
-        // ── Admin: Chi tiết đơn hàng bất kỳ ─────────────────────────────────
         [HttpGet("admin/{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAdminDetail(int id)
@@ -145,7 +140,6 @@ namespace QLBS.Controllers
             }
         }
 
-        // ── Admin: Cập nhật trạng thái đơn ───────────────────────────────────
         [HttpPut("update-status/{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] byte newStatus)
@@ -163,7 +157,7 @@ namespace QLBS.Controllers
 
                 await _orderRepository.UpdateOrderStatusAsync(id, newStatus);
 
-                string statusName = GetOrderStatusName(newStatus); // ✅ thêm dòng này
+                string statusName = GetOrderStatusName(newStatus); 
 
                 string statusMessage = newStatus switch
                 {
@@ -179,24 +173,22 @@ namespace QLBS.Controllers
                 _logger.LogInformation("[SignalR] Gửi tới Group: User_{UserId}, OrderId={OrderId}, Status={Status}",
                     order.UserId, order.OrderId, statusName);
 
-                // Notify user
                 await _hubContext.Clients
                     .Group($"User_{order.UserId}")
                     .SendAsync("ReceiveOrderStatus", new
                     {
                         OrderId = order.OrderId,
-                        NewStatus = statusName,  // ✅ string thay vì byte
+                        NewStatus = statusName,
                         Message = statusMessage,
                         Timestamp = DateTime.Now
                     });
 
-                // Notify admins
                 await _hubContext.Clients
                     .Group("Admins")
                     .SendAsync("AdminOrderUpdate", new
                     {
                         OrderId = order.OrderId,
-                        NewStatus = statusName,  // ✅ string thay vì byte
+                        NewStatus = statusName, 
                         Message = $"Admin vừa cập nhật đơn #{id} → {statusName}"
                     });
 
@@ -223,14 +215,12 @@ namespace QLBS.Controllers
                 if (string.IsNullOrEmpty(order.GhnOrderCode))
                     return BadRequest(new { message = "Đơn hàng chưa có mã GHN." });
 
-                // Gọi thẳng GhnWebhookController để xử lý giống webhook thật
                 var webhookDto = new QLBS.Dtos.Ghn.GhnWebhookDto
                 {
                     OrderCode = order.GhnOrderCode,
                     Status = status
                 };
 
-                // Map status → byte
                 byte? newStatus = status.ToLower() switch
                 {
                     "ready_to_pick" => OrderStatusConstants.Processing,
@@ -264,10 +254,8 @@ namespace QLBS.Controllers
                     order.OrderStatus == OrderStatusConstants.Cancelled)
                     return BadRequest(new { message = "Đơn đã ở trạng thái cuối, không thể cập nhật." });
 
-                // Cập nhật trạng thái đơn
                 order.OrderStatus = newStatus.Value;
 
-                // COD giao thành công → cập nhật thanh toán
                 if (newStatus == OrderStatusConstants.Completed)
                 {
                     var payment = order.Payments.FirstOrDefault();
@@ -282,7 +270,6 @@ namespace QLBS.Controllers
 
                 string statusName = GetOrderStatusName(newStatus.Value);
 
-                // Notify user qua SignalR
                 await _hubContext.Clients
                     .Group($"User_{order.UserId}")
                     .SendAsync("ReceiveOrderStatus", new
@@ -293,7 +280,6 @@ namespace QLBS.Controllers
                         Timestamp = DateTime.Now
                     });
 
-                // Notify admin
                 await _hubContext.Clients
                     .Group("Admins")
                     .SendAsync("AdminOrderUpdate", new
@@ -322,7 +308,6 @@ namespace QLBS.Controllers
             }
         }
 
-        // ── Helper ────────────────────────────────────────────────────────────
         private static string GetOrderStatusName(byte status) => status switch
         {
             OrderStatusConstants.Pending => "Chờ xử lý",

@@ -32,7 +32,7 @@ namespace QLBS.Services.Implementations
                 new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
-        // ── Helper: gắn Token + ShopId vào request ────────────────────────────
+
         private HttpRequestMessage Req(HttpMethod method, string url)
         {
             var req = new HttpRequestMessage(method, url);
@@ -42,7 +42,6 @@ namespace QLBS.Services.Implementations
             return req;
         }
 
-        // ── GET Tỉnh/Thành ────────────────────────────────────────────────────
         public async Task<List<ProvinceDto>> GetProvincesAsync()
         {
             var response = await _httpClient.SendAsync(
@@ -69,7 +68,6 @@ namespace QLBS.Services.Implementations
                 .ToList() ?? new();
         }
 
-        // ── GET Quận/Huyện ────────────────────────────────────────────────────
         public async Task<List<DistrictDto>> GetDistrictsAsync(int provinceId)
         {
             var response = await _httpClient.SendAsync(
@@ -97,7 +95,7 @@ namespace QLBS.Services.Implementations
                 .ToList() ?? new();
         }
 
-        // ── GET Phường/Xã (GHN dùng POST) ────────────────────────────────────
+
         public async Task<List<WardDto>> GetWardsAsync(int districtId)
         {
             var req = Req(HttpMethod.Post, $"{BASE}/master-data/ward");
@@ -228,7 +226,6 @@ namespace QLBS.Services.Implementations
             return result?.Data?.OrderCode;
         }
 
-        // ── GHN raw response models ───────────────────────────────────────────
         private class GhnResponse<T>
         {
             [JsonPropertyName("code")] public int Code { get; set; }

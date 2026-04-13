@@ -284,12 +284,10 @@ namespace QLBS.Services.Implementations
         {
             try
             {
-                // 1. Tìm account theo email
                 var account = await _accountRepository.GetByEmailWithProfileAsync(email);
 
                 if (account == null)
                 {
-                    // 2a. Tạo account + profile mới
                     var roleId = await _accountRepository.GetRoleIdByNameAsync("Customer");
                     if (roleId == null)
                         throw new Exception("Không tìm thấy role Customer.");
@@ -318,7 +316,6 @@ namespace QLBS.Services.Implementations
                     if (!created)
                         throw new Exception("Không thể tạo tài khoản.");
 
-                    // Reload để có Role + UserProfile
                     account = await _accountRepository.GetByEmailWithProfileAsync(email);
 
                     if (account == null)
@@ -326,7 +323,6 @@ namespace QLBS.Services.Implementations
                 }
                 else
                 {
-                    // 2b. Cập nhật avatar nếu chưa có
                     if (account.UserProfile != null
                         && string.IsNullOrEmpty(account.UserProfile.AvatarUrl)
                         && !string.IsNullOrEmpty(avatarUrl))
@@ -341,11 +337,9 @@ namespace QLBS.Services.Implementations
                     await _accountRepository.UpdateAccountAsync(account);
                 }
 
-                // 3. Kiểm tra bị khoá không
                 if (!account.IsActive)
                     throw new UnauthorizedAccessException("Tài khoản đã bị khoá.");
 
-                // 4. Tạo JWT + Refresh Token dùng method có sẵn
                 var accessToken = GenerateAccessToken(account);
                 var refreshToken = GenerateRefreshToken();
 

@@ -16,7 +16,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ── Cloudinary ────────────────────────────────────────────────────────────────
+
 var cloudinarySection = builder.Configuration.GetSection("CloudinarySettings");
 var account = new CloudinaryDotNet.Account(
     cloudinarySection["CloudName"],
@@ -26,7 +26,7 @@ var account = new CloudinaryDotNet.Account(
 Cloudinary cloudinary = new Cloudinary(account);
 builder.Services.AddSingleton(cloudinary);
 
-// ── CORS — bắt buộc AllowCredentials() cho SignalR ───────────────────────────
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowBlazorOrigin", policy =>
@@ -34,7 +34,7 @@ builder.Services.AddCors(options =>
         policy.WithOrigins("https://localhost:7241", "http://localhost:5285")
               .AllowAnyHeader()
               .AllowAnyMethod()
-              .AllowCredentials(); // ← THÊM DÒNG NÀY
+              .AllowCredentials();
     });
 });
 
@@ -42,7 +42,7 @@ builder.Services.AddControllers();
 builder.Services.AddSignalR();
 builder.Services.AddEndpointsApiExplorer();
 
-// ── Swagger ───────────────────────────────────────────────────────────────────
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "QLCHBS API", Version = "v1" });
@@ -68,11 +68,11 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// ── Database ──────────────────────────────────────────────────────────────────
+
 builder.Services.AddDbContext<QLBSDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// ── Services ──────────────────────────────────────────────────────────────────
+
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
@@ -102,8 +102,11 @@ builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IFavoriteBookRepository, FavoriteBookRepository>();
 builder.Services.AddScoped<IFavoriteBookService, FavoriteBookService>();
 builder.Services.Configure<GoogleAuthSettings>(builder.Configuration.GetSection("GoogleAuth"));
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddScoped<IEmailService, EmailService>();
 
-// ── JWT Authentication + SignalR token support ────────────────────────────────
+
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -125,7 +128,7 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero
     };
 
-    // ← BẮT BUỘC cho SignalR: đọc token từ query string của WebSocket
+
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
@@ -148,9 +151,9 @@ builder.Services.AddAuthentication(options =>
     options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
     options.ClientId = builder.Configuration["GoogleAuth:ClientId"]!;
     options.ClientSecret = builder.Configuration["GoogleAuth:ClientSecret"]!;
-    options.CallbackPath = "/signin-google"; // Google redirect về đây
+    options.CallbackPath = "/signin-google";
 
-    // Lấy thêm thông tin avatar
+
     options.Scope.Add("profile");
     options.SaveTokens = true;
 });
@@ -166,15 +169,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors("AllowBlazorOrigin"); // ← phải đứng TRƯỚC Authentication
-
+app.UseCors("AllowBlazorOrigin"); 
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
-// ← THÊM DÒNG NÀY: đăng ký route cho SignalR Hub
 app.MapHub<NotificationHub>("/notificationHub");
 
 app.Run();
